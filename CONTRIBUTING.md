@@ -28,6 +28,8 @@ We follow a branching strategy with the following branch naming conventions:
 
 ## Pull Request Process
 
+### Raising a Pull Request
+
 1. **Clone the Repository**
    - Clone the repository to your local machine.
      ```bash
@@ -52,17 +54,32 @@ We follow a branching strategy with the following branch naming conventions:
      git push origin feature#<task-id> - <task-name>
      ```
 
-5. **Open a Pull Request**
-   - Open a pull request from your feature branch to the `develop` branch.
+5. **Open a Pull Request to `develop`**
+   - Navigate to the repository on GitHub.
+   - Switch to the branch you just created.
+   - Click on "New Pull Request."
+   - Select the `develop` branch as the base branch.
+   - Provide a clear title and description for your pull request.
 
 6. **Code Review**
    - Await code review from team members.
+   - Address any feedback or comments from reviewers promptly.
 
-7. **Merge Process**
+7. **Merge into `develop`**
    - After approval, the pull request will be merged into the `develop` branch.
 
-8. **Release Process**
-   - Periodically, the `develop` branch will be merged into the `main` branch, marking a new release.
+### Merging into `main` (Release Process)
+
+1. **Create a Pull Request to `main` from a Feature Branch**
+   - Create a pull request from the feature branch to the `main` branch.
+   - Ensure that the feature branch has been thoroughly reviewed and tested successfully.
+
+2. **Code Review for `main`**
+   - Await code review for the pull request against the `main` branch.
+   - Address any feedback or comments from reviewers promptly.
+
+3. **Merge into `main`**
+   - After approval, the pull request will be merged into the `main` branch, marking a new release.
 
 ## Code Review Guidelines
 
