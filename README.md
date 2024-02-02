@@ -6,15 +6,16 @@ This repository contains the source code for a web application with separate fol
 ## Folder Structure
 
 ### 1. Client
-The `client` folder contains all the frontend-related code for the application. This includes HTML, CSS, and JavaScript files, as well as any additional assets such as images or fonts. Below is a brief overview of the main subdirectories within the `client` folder:
+The `client` folder contains the React-based frontend code for the application. This includes JSX, CSS, and JavaScript files, as well as any additional assets such as images or fonts. Below is a brief overview of the main subdirectories within the `client` folder:
 
-- **`src`**: This directory contains the source code for the frontend application. You will find the main components, styles, and scripts here.
+- **`src`**: This directory contains the React components, styles, and scripts for the frontend application.
 
 - **`public`**: Static assets, such as images or favicon.ico, go here. This folder is served as-is and not processed by the build system.
 
-- **`node_modules`**: This directory contains the third-party dependencies required for the frontend. It is typically generated and managed by a package manager like npm.
+- **`node_modules`**: This directory contains the third-party dependencies required for the frontend. It is typically generated and managed by npm.
 
 - **`build`**: After building the frontend code, the resulting files are placed in this directory. This is the folder that is served to users when they access the application.
+
 
 ### 2. Server
 The `server` folder contains all the backend-related code for the application, following a Model-View-Controller (MVC) pattern. Here is a breakdown of the main subdirectories within the `server` folder:
