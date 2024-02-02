@@ -1,0 +1,200 @@
+@use 'sass:map';
+
+html,
+body {
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: map.get($theme-fonts, 'primary-font');
+  background-color: #131313;
+}
+
+h1 {
+  color: $color-shark;
+  font-size: 40px;
+  line-height: 54px;
+  font-weight: 700;
+}
+
+.text-decoration-none {
+  text-decoration: none;
+}
+
+/* bi class missing from bootstrap icons */
+.bi {
+  vertical-align: -0.125em;
+  fill: currentColor;
+}
+
+.errorMsg {
+  color: red;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(159, 159, 159);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(132, 132, 132);
+}
+
+.form-switch {
+  position: relative;
+}
+
+.on-loading {
+  .modal-dialog {
+    width: 100vw;
+    height: 100vh;
+    .modal-content {
+      position: absolute !important;
+      width: 40px !important;
+      background: none !important;
+      top: 50% !important;
+      left: 50% !important;
+      border: 0;
+    }
+  }
+}
+
+.listing-table {
+  th,
+  td {
+    text-align: center;
+    min-width: 200px !important;
+  }
+
+  tr {
+    height: 40px !important;
+  }
+}
+
+/* listing action table width */
+.table-action {
+  width: 90px;
+}
+
+.toaster-position {
+  position: absolute;
+  right: 20px;
+  top: 85px;
+  border: 0;
+  .toast-header {
+    padding: 0;
+    .info-container {
+      padding: 10px 20px;
+      text-align: center;
+      background-color: #008000;
+      .info-icon {
+        color: #ffffff;
+        font-size: 30px;
+      }
+    }
+    .toaster-title {
+      padding: 0 20px;
+    }
+  }
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: table-cell;
+}
+
+th {
+  min-width: 180px !important;
+  text-align: center;
+}
+
+td {
+  text-align: center;
+}
+
+.table-column-filter {
+  max-height: 110px;
+  overflow: auto;
+}
+
+.table-column-btn {
+  background-color: transparent;
+  border: 0;
+}
+
+.table-column-btn:hover,
+.table-column-btn:active {
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.table-column-btn svg {
+  color: #000000;
+  font-size: 25px;
+}
+
+.table-column-btn::after {
+  display: none;
+}
+
+// .show {
+//   border: 0;
+//   border-radius: 10px;
+// }
+
+.table-responsive {
+  max-height: 60vh;
+  margin-bottom: 20px;
+}
+
+.pagination {
+  justify-content: center;
+}
+
+.toast-container > div {
+  background-color: #ca1111;
+}
+.font-text-bold {
+  font-weight: bold;
+}
+.react-datepicker-wrapper {
+  width: auto !important;
+}
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.offcanvas {
+  width: 800px !important;
+}
+
+@media screen and (max-width: '1024px') {
+  .offcanvas {
+    width: 100% !important;
+  }
+}
+// andt toast message styles
+.ant-message-notice {
+  display: flex;
+  justify-content: flex-end;
+}

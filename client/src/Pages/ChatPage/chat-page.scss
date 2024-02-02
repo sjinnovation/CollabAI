@@ -1,0 +1,17 @@
+.chat-box {
+    background-color: #353540;
+    position: relative;
+    line-height: 24px;
+    width: 50vw;
+    height: 100%;
+    width: 100%;
+    color: #d1d5db;
+    font-size: 16px;
+  }
+
+  // chatLogWrapper
+  .chat-list-container {
+    // height: 74vh;
+    height: 80vh;
+    overflow-y: auto;
+  }

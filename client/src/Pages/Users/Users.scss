@@ -1,0 +1,124 @@
+.add-user-container {
+  width: 100%;
+  height: 100%;
+  background-color: darkgray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-user-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  background-color: #FFFFFF;
+  padding: 20px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.update-user-info{
+  margin-top: -20px;
+  
+  label.form-label {
+    margin: 20px 0 5px 0;
+  }
+
+}
+
+.search-container {
+  max-width: 400px;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.add-user-btn { 
+  width: 100px; 
+  height: 38px;
+  // margin-left: 1rem;
+}
+
+.user-prompt-btn {
+  min-width: 100px;
+  height: 38px
+}
+
+.column-custom-style{
+  min-width: 100px;
+}
+
+.team-select-content-container{
+  margin: 2rem 0px;
+}
+
+.Team-select-container{
+  // background: #9e2d2d;
+  // width: 450px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+ 
+}
+
+.team-select-input{
+  // background: #3d2727;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.team-select-title{
+  height: 30px;
+  min-width: 250px;
+  background: #215198;
+  color: #FFFFFF;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: .2rem 0px;
+  border-radius: 6px;
+  cursor: pointer;
+
+}
+
+.team-select-title:hover{
+  background-color: #364864;
+}
+
+.team-select-title p {
+  margin: 0;
+}
+
+.user-info-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-info-box {
+  
+  min-width: 300px;
+  min-height: 300px;
+  background: #8dbdbd;
+  text-align: center;
+  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 1rem;
+
+}
+
+.profile-icon-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0px;
+}
+
+.profile-icon{
+  font-size: 100px;
+
+}

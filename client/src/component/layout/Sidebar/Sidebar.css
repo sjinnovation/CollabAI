@@ -1,0 +1,31 @@
+/* .hide {
+  margin-left: -280px;
+}
+
+.h-100vh {
+  height: 100vh;
+} */
+/*# sourceMappingURL=Sidebar.css.map */
+
+/* .show{
+  display: unset !important;
+} */
+
+.dropdown-menu{
+  width: 100%;
+}
+.dropdown-menu a{
+  text-decoration: none!important;
+  color:rgb(0, 0, 0);
+}
+#dropdown-basic-button {
+  background-color: #212529;
+  border-color: #212529;
+  text-align: left;
+  padding-left: 44px;
+  color: white;
+}
+ .dropdown-menu, .dropdown-menu :hover, .dropdown-menu a{
+  background-color: #212529;
+  color: white;
+ }
