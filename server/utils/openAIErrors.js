@@ -1,0 +1,49 @@
+import {
+	BadRequest,
+	InternalServer,
+	NotFound,
+} from '../middlewares/customError.js';
+
+/**
+ * Handles OpenAI errors and returns a custom error object.
+ * @param {Object} error - The OpenAI API error object.
+ * @returns {Error} Returns a custom error object based on the OpenAI error type.
+ */
+export const handleOpenAIError = (error) => {
+	if (error.type === 'invalid_request_error') {
+		const badRequestMessage = handleInvalidRequestError(error);
+		return BadRequest(badRequestMessage);
+	} else if (error.type === 'internal_server_error') {
+		// Handle internal server error
+		return InternalServer('OpenAI internal server error');
+	} else if (error.type === 'not_found_error') {
+		// Handle not found error
+		return NotFound('Resource not found on OpenAI API');
+	} else {
+		// Handle other types of errors or fallback
+		return InternalServer('An unexpected error occurred with OpenAI API');
+	}
+};
+
+/**
+ * Handles invalid request errors from the OpenAI API.
+ * @param {Object} error - The OpenAI API error object.
+ * @returns {Error} Returns a custom error object based on the OpenAI error type.
+ */
+function handleInvalidRequestError(error) {
+	if (error.code === null) {
+		return 'Invalid request made to OpenAI API';
+	}
+	const message = errorMappings.invalid_request_error[error.code].description;
+	return message;
+}
+
+const errorMappings = {
+	invalid_request_error: {
+		context_length_exceeded: {
+			description:
+				'The message you submitted was too long, please reload the conversation and submit something shorter.',
+		},
+	},
+	// Add other error types if needed
+};
