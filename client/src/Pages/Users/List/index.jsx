@@ -252,7 +252,7 @@ const ListUser = () => {
       <Container className="flex-grow-1 m-5">
         <div className="d-flex align-items-center justify-content-between">
           <div className="col-4">
-            <Title level={2}>Users</Title>
+            <Title level={2}>User Lists</Title>
           </div>
           <div className="col-md-5"></div>
           {role === "admin" || role === "superadmin" ? (
@@ -278,6 +278,12 @@ const ListUser = () => {
                   placeholder: "Search users",
                 }}
               />
+             <Button type="primary" onClick={showTeamAssignModal} disabled={!hasSelected} loading={dataLoader}>
+              <AiOutlineTeam size={27}/>
+            </Button>
+            </div>
+            <div>
+            
             </div>
             <Table
               loading={dataLoader}

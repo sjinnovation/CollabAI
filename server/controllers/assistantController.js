@@ -13,7 +13,7 @@ import {
 	InternalServer,
 	NotFound,
 } from '../middlewares/customError.js';
-import { openAIInstance as openAI } from '../utils/openAI.js';
+import { openAIInstance as openAI } from '../config/openAI.js';
 import { createChatPerAssistantSchema } from '../utils/validations.js';
 
 const DALL_E_MODEL = 'dall-e-3';

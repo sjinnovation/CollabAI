@@ -34,8 +34,12 @@ function handleInvalidRequestError(error) {
 	if (error.code === null) {
 		return 'Invalid request made to OpenAI API';
 	}
-	const message = errorMappings.invalid_request_error[error.code].description;
-	return message;
+	if (errorMappings.invalid_request_error && errorMappings.invalid_request_error[error.code]) {
+        const message = errorMappings.invalid_request_error[error.code].description;
+        return message;
+    } else {
+        return 'Unknown OpenAI error occurred';
+    }
 }
 
 const errorMappings = {
@@ -43,6 +47,10 @@ const errorMappings = {
 		context_length_exceeded: {
 			description:
 				'The message you submitted was too long, please reload the conversation and submit something shorter.',
+		},
+		invalid_api_key: {
+			description:
+				'Invalid API key provided. Please check the API key and try again.',
 		},
 	},
 	// Add other error types if needed

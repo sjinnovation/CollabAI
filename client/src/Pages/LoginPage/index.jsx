@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BiArrowBack } from 'react-icons/bi';
 import Cookies from 'js-cookie';
 import { Spin, message } from 'antd';
@@ -119,13 +119,11 @@ const LoginForm = () => {
                 handleSubmit={handleLoginFormSubmit}
                 defaultValues={defaultValues}
                 layout="vertical"
-                className="form"
+                className="form mb-4"
               />
 
               
-              <div className="text-center mt-4 mb-4">
-                <span className="text-white">Or</span>
-              </div>
+              
 
               <FormButton
                 label="Forgot Password?"
@@ -143,9 +141,9 @@ const LoginForm = () => {
               />
               <div className="copyright">
                 Powered by
-                <Link href="https://sjinnovation.com/" target="_blank" className="underline pl-1">
+                <a href="https://buildyourai.consulting/" target="_blank" className="underline pl-1">
                   BuildYourAI
-                </Link>
+                </a>
               </div>
             </div>
           )}

@@ -23,7 +23,9 @@ import organizationRouter from "./routers/organizationRoutes.js";
 import { errorLogger } from "./middlewares/errorMiddleware.js";
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  exposedHeaders: ["x-token-expiry"],
+}));
 
 connectDb();
 

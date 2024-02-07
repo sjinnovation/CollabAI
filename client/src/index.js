@@ -13,7 +13,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <React.StrictMode>
-    <ConfigProvider theme={config}>
+    <ConfigProvider mode="dark" theme={config}>
       <BrowserRouter>
         <NewAuthProvider>
           <Routes>

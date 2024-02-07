@@ -5,7 +5,8 @@ import {
   updateOpenAIKey,
   updateTemperature,
 } from "../../api/settings";
-import { Form, Input, Button, Select, message, List } from "antd";
+import { Form, Input, Button, Select, message, List, Modal } from "antd";
+const { confirm } = Modal;
 const { Option } = Select;
 
 const Configration = () => {
@@ -69,19 +70,26 @@ const Configration = () => {
             }
             break;
           case "aiModel":
-            const confirmDelete = window.confirm(
-              "Are you sure you want to change GPT Model?"
-            );
-            if (!confirmDelete) {
-              window.location.reload();
-              return;
-            }
-            var res = await updateModel(formState.aiModel);
-            if (res.status == 200) {
-              message.success("Model Updated");
-            } else {
-              message.error("Something went wrong");
-            }
+            confirm({
+              title: 'Are you sure you want to change GPT Model?',
+              // icon: <ExclamationCircleFilled />,
+              async onOk() {
+                try {
+                  const res = await updateModel(formState.aiModel);
+                  if (res.status === 200) {
+                    getConfigData();
+                    message.success("Model Updated");
+                  } else {
+                    message.error("Something went wrong");
+                  }
+                } catch (error) {
+                  console.error("Error updating model:", error);
+                  message.error("Failed to update model");
+                }
+              },
+              onCancel() {},
+            });
+
             break;
           default:
             console.log(`No API found for field ${fieldName}`);
@@ -109,7 +117,7 @@ const Configration = () => {
         await handleUpdateClick("temperature");
         setIsEditing(null);
         getConfigData();
-      } else if (field == "Model" && formState.model != tempState.model) {
+      } else if (field == "Model" && formState.aiModel != tempState.aiModel) {
         await handleUpdateClick("aiModel");
         setIsEditing(null);
         getConfigData();
@@ -120,10 +128,14 @@ const Configration = () => {
   };
 
   const renderSecretKey = () => {
-    const firstThree = formState?.secretKey?.slice(0, 3);
-    const lastThree = formState?.secretKey?.slice(-3);
-    const middlePart = formState?.secretKey?.slice(3, -3).replace(/./g, "*");
-    return firstThree + middlePart + lastThree;
+    if (formState?.secretKey?.length > 3) {
+      const firstThree = formState?.secretKey?.slice(0, 3);
+      const lastThree = formState?.secretKey?.slice(-3);
+      const middlePart = formState?.secretKey?.slice(3, -3).replace(/./g, "*");
+      return firstThree + middlePart + lastThree;
+    } else {
+      return formState?.secretKey;
+    }
   };
 
   const data = [
@@ -169,6 +181,7 @@ const Configration = () => {
                 isEditing == item.title ? (
                   item.title == "OpenAI API key" ? (
                     <Input
+                      type="password"
                       value={item.description}
                       onChange={(e) =>
                         setFormState({
@@ -209,10 +222,9 @@ const Configration = () => {
                       <Option value="gpt-4">GPT-4</Option>
                     </Select>
                   ) : null
-                ) : (
-                  item.title == 'OpenAI API key' ?
+                ) : item.title == "OpenAI API key" ? (
                   renderSecretKey()
-                  :
+                ) : (
                   item.description
                 )
               }

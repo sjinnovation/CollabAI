@@ -16,12 +16,15 @@ import {
   recoverDeletedThread,
   bulkThreadRecover,
   threadDelete,
+  getGptStreamResponse,
 } from "../controllers/promptController.js";
 import authenticateUser from "../middlewares/login.js";
 
 const promptRouter = express.Router();
 
 promptRouter.post("/getprompt/:userid", authenticateUser, getGptPrompt);
+
+promptRouter.post('/stream', authenticateUser, getGptStreamResponse);
 
 promptRouter.get("/userprompts/:userid", authenticateUser, getUserPrompts);
 

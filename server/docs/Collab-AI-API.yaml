@@ -6,6 +6,7 @@ info:
 servers:
   - url: "http://localhost:8011/api"
   - url: "https://collaborativeaiapi-dev.managedcoder.com/api"
+  - url: "https://collaborativeaiapi-staging.managedcoder.com/api"
 
 
 paths:

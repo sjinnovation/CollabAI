@@ -24,6 +24,12 @@ export const PromptMessages = {
 	BAD_REQUEST_OPEN_API: 'Invalid request was made to OpenAI',
 };
 
+export const ImageMessages = {
+	IMAGE_NOT_FOUND: 'Image not found',
+	IMAGE_URL_FETCHED_SUCCESSFULLY: 'Image fetched successfully',
+	CANNOT_GENERATE_URL: 'Error generating signed URL',
+};
+
 export const GPTModels = {
 	GPT_4: 'gpt-4',
 	GPT_3_5_TURBO: 'gpt-3.5-turbo',
@@ -186,11 +192,11 @@ export const AssistantMessages = {
 	USER_DOES_NOT_EXIST: 'User does not exist.',
 };
 export const AssistantThreadMessages = {
-  ASSISTANT_THREAD_NOT_FROUND: "Assistant thread not found.",
-  UNAUTHORIZED_ACTION: "You are not authorized to perform this action.",
-  RETRIEVED_SUCCESSFULLY: "Retrieved successfully",
-  INTERNAL_SERVER_ERROR: "Internal Server Error",
-  THREAD_UPDATED_SUCCESSFULLY: "Thread updated successfully",
-  DELETED_SUCCESSFULLY: "Deleted successfully",
-  SOMETHING_WENT_WRONG: "Something went wrong"
-}
+	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
+	UNAUTHORIZED_ACTION: 'You are not authorized to perform this action.',
+	RETRIEVED_SUCCESSFULLY: 'Retrieved successfully',
+	INTERNAL_SERVER_ERROR: 'Internal Server Error',
+	THREAD_UPDATED_SUCCESSFULLY: 'Thread updated successfully',
+	DELETED_SUCCESSFULLY: 'Deleted successfully',
+	SOMETHING_WENT_WRONG: 'Something went wrong',
+};

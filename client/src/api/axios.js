@@ -1,5 +1,6 @@
 import axios from "axios";
-import { getUserToken } from "../Utility/service";
+import { getUserToken, logoutUserAndRedirect } from "../Utility/service";
+import { message } from "antd";
 
 export const getAuthorizationHeader = () => `Bearer ${getUserToken()}`;
 
@@ -14,6 +15,27 @@ axiosSecureInstance.interceptors.request.use(
   },
   error => {
     // Handle request error
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor - Handling x-token-expiry
+axiosSecureInstance.interceptors.response.use(
+  (response) => {
+    if (response.headers['x-token-expiry'] === 'true') {
+      logoutUserAndRedirect();
+    }
+    
+    return response;
+  },
+  (error) => {
+    console.log("🚀 ~ error:", error)
+    // Check for the x-token-expiry header in error response
+    if (error?.response && error?.response?.headers['x-token-expiry'] === 'true') {
+      message.error('Your session has expired. Please login again.');
+      logoutUserAndRedirect();
+    }
+
     return Promise.reject(error);
   }
 );

@@ -35,6 +35,13 @@ const getUserID = () => {
   const getCompId = () => {
     return (localStorage.getItem("compId"));
   }
+
+  const logoutUserAndRedirect = () => {
+    localStorage.clear();
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 700);
+  };
   
-  export { getUserID, getUserEmail, getUserToken, getUserRole, isLoggedIn, logout, getUserTeamID, getUserTeamAccessStatus, getCompId };
+  export { getUserID, getUserEmail, getUserToken, getUserRole, isLoggedIn, logout, getUserTeamID, getUserTeamAccessStatus, getCompId, logoutUserAndRedirect };
   

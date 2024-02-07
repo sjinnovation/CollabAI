@@ -153,6 +153,7 @@ export const getUsersWithPrompts = async (req, res) => {
 		const count = await User.countDocuments({
 			...regex,
 			role: { $ne: UserRole.SUPER_ADMIN },
+			deletedEmail: { $exists: false },
 		});
 
 		if (count === 0) {

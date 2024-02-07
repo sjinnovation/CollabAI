@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 
 //libraries
 import { Button, Input, Radio, Tabs, Modal, Form } from "antd";
@@ -11,6 +11,7 @@ import useAssistantFileUpload from "../../../Hooks/useAssistantFileUpload";
 //Components
 import AssistantForm from "./AssistantForm";
 import { getUserID } from "../../../Utility/service";
+import { AssistantContext } from "../../../contexts/AssistantContext";
 const { TabPane } = Tabs;
 
 const CreateAssistantModal = ({ data }) => {
@@ -27,6 +28,8 @@ const CreateAssistantModal = ({ data }) => {
   const [form] = Form.useForm();
   const [deleteFileIds, setDeleteFileIds] = useState([]);
   const [selectedTools ,setSelectedTools] =  useState([]);
+
+  const { triggerRefetchAssistants } = useContext(AssistantContext);
 
   //----Callback----//
   const handleDeleteFileId = useCallback(
@@ -103,6 +106,10 @@ const CreateAssistantModal = ({ data }) => {
       console.log("success");
       handleClose();
       handleFetchUserCreatedAssistants();
+      if(editMode) {
+        // update assistant list
+        triggerRefetchAssistants();
+      }
       if(isAdmin){
       handleFetchAllAssistants(1);
       }
@@ -229,7 +236,7 @@ const CreateAssistantModal = ({ data }) => {
                     ]}
                   >
                     <Radio.Group>
-                      <Radio value="ORGANIZATIONAL">Organizational</Radio>
+                      <Radio value="ORGANIZATIONAL">Admin</Radio>
                       <Radio value="PERSONAL">Personal</Radio>
                     </Radio.Group>
                   </Form.Item>

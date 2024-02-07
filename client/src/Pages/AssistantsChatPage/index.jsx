@@ -22,6 +22,7 @@ import useAssistantsChatPage from "../../Hooks/useAssistantsChatPage";
 
 // services & helpers
 import { getUserRole } from "../../Utility/service";
+import ConversationStarter from "./ConversationStarter";
 
 // api
 
@@ -68,6 +69,7 @@ const AssistantsChatPage = () => {
   // ---------- constants ---------
   const userRole = getUserRole();
 
+  console.log(assistantData,"cfgvhbj")
   useEffect(() => {
     const scrollableDiv = chatLogWrapperRef.current;
     if (scrollableDiv) {
@@ -124,6 +126,10 @@ const AssistantsChatPage = () => {
     }
   };
 
+  const handleSelectStarter = (starter) => {
+    setInputPrompt(starter);
+  };
+
   const handleScrollToBottomButton = () => {
     const scrollableDiv = chatLogWrapperRef.current;
 
@@ -137,6 +143,9 @@ const AssistantsChatPage = () => {
 
   // determines access scope for attachments
   const hasFileAttachmentAccess = userRole === "superadmin" ? true : false;
+
+  let isChatLogEmpty = chatLog.length === 0 ? true : false;
+
 
   return (
     <>
@@ -192,7 +201,14 @@ const AssistantsChatPage = () => {
           </div>
         )}
         {/* -----[END] CHAT BOX - ALL PROMPTS ----- */}
-
+        { isChatLogEmpty ? (
+        <ConversationStarter 
+        states = {{
+          StarterQuestions : assistantData,
+          handleSelectStarter
+        }}
+         />
+        ): null}
         {/* -----[START] CHAT BOX - SUBMIT INPUT ----- */}
         <AssistantChatInputPrompt
           states={{

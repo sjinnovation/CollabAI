@@ -95,7 +95,7 @@ const NavContentDuplicate = ({
       return renderMonthlyPrompts(prompts);
     } else {
       return (
-        <div className="mb-4">
+        <div key={category} className="mb-4">
           <small
             style={{
               fontSize: "0.75rem",

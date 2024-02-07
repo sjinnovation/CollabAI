@@ -4,7 +4,7 @@ import { DELETE_A_CHAT_THREAD, FETCH_ALL_CHAT_THREADS, UPDATE_A_CHAT_THREAD } fr
 
 export const getChatThread = async (userid, setChatThread) => {
   try {
-    const response = await axiosSecureInstance.get(FETCH_ALL_CHAT_THREADS() + userid);
+    const response = await axiosSecureInstance.get(FETCH_ALL_CHAT_THREADS(userid));
     setChatThread(response?.data?.data?.prompts);
     return { success: true, data: response?.data?.data?.prompts };
   } catch (error) {

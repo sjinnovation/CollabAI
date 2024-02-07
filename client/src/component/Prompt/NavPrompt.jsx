@@ -39,7 +39,7 @@ const NavPrompt = ({ chatPrompt, setShowMenu, threadId, threadIndex }) => {
             label: (
                 <button
                     onClick={() => setActiveEditPrompt(true)}
-                    className="dropdown-item thread_drop_button"
+                    className="dropdown-item"
                 >
                     <MdOutlineEdit color="white" />
                     <span className="ms-1" style={{ color: "white" }}>Rename</span>
@@ -51,7 +51,7 @@ const NavPrompt = ({ chatPrompt, setShowMenu, threadId, threadIndex }) => {
             label: (
                 <button
                     onClick={()=> setConfirmationModalOpen(true)}
-                    className="dropdown-item thread_drop_button text-error"
+                    className="dropdown-item text-error"
                 >
                     <MdDeleteOutline color="white" />
                     <span className="ms-1 text-error" style={{ color: "white" }}>Delete</span>
@@ -68,17 +68,14 @@ const NavPrompt = ({ chatPrompt, setShowMenu, threadId, threadIndex }) => {
     // -------------------------------- API Calls ----------------------------
 
     const handleFetchPromptTitle = async () => {
-        try {
-          const { success, data, error } = await getPromptTitle(threadId, setPromptTitle, setIsPromptTitleLoading);
-          if (success) {
-            console.log("Prompt Title:", data);
-          } else {
-            console.error("Error fetching prompt title:", error);
-          }
-        } finally {
-          
+        const { success, data, error } = await getPromptTitle(threadId, setIsPromptTitleLoading);
+
+        if(success) {
+            setPromptTitle(data);
+        } else {
+            console.log(error);
         }
-      };
+    };
 
 
    const handleEditPrompt = async () => {

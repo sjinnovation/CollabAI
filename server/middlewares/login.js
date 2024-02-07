@@ -68,7 +68,7 @@ async function authenticateUser(req, res, next) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const decodedToken = jwt.verify(token, config.JWT_SECRET);
+    const decodedToken = jwt.verify(token, config.JWT_SECRET, { ignoreExpiration: true });
     const curTime = new Date().getTime() / 1000;
 
     if (decodedToken.exp < curTime) {

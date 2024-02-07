@@ -1,3 +1,4 @@
+// TODO: Delete this controller and its routes. It is no longer used in front end
 import Company from "../models/companyModel.js";
 import User from "../models/user.js"
 import Config from '../models/configurationModel.js';

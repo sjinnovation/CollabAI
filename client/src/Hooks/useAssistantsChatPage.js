@@ -54,6 +54,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
         setChatMetaData(initialChatMetaData);
         setIsFirstMessage(false);
       }
+      handleFetchAssistantInfo(assistant_id)
       
       return () => { console.log('[UNMOUNT] assistants')};
     }, [thread_id])
@@ -104,7 +105,6 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
   const handleFetchAssistantInfo = async (assistant_id) => {
     try {
       const response = await getSingleAssistant(assistant_id)
-      
       setAssistantData(response?.assistant?.static_questions);
     } catch (error) {
       console.log(error);

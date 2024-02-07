@@ -40,6 +40,7 @@ export const setThresholdValue = async (req, res, next) => {
 			res.status(StatusCodes.OK).json({
 				message: ConfigMessages.THRESHOLD_VALUE_UPDATED,
 			});
+			return;
 		} else {
 			let key = 'threshold';
 			const promptRecord = await config.create({
@@ -49,6 +50,7 @@ export const setThresholdValue = async (req, res, next) => {
 			res.status(StatusCodes.OK).json({
 				message: ConfigMessages.THRESHOLD_VALUE_SAVED,
 			});
+			return;
 		}
 	} catch (error) {
 		next(InternalServer(error.message));
@@ -57,51 +59,37 @@ export const setThresholdValue = async (req, res, next) => {
 
 // insert openai api key
 export const setApiKey = async (req, res, next) => {
-	// get user id from request
-	const {
-		params: { userid: userId },
-	} = req;
 	const { key } = req.body;
 	try {
-		if (key == '') {
-			res.status(StatusCodes.BAD_REQUEST).json({
-				message: 'Key cannot be empty',
-			});
-			return;
-		}
-
-		// check if user is admin or superadmin
-		const user = await User.findOne({ _id: userId });
-		if (user && (user.role == 'admin' || user.role == 'superadmin')) {
-			// check if key already exists
-			const keyRec = await config.findOne({ key: 'openaikey' });
-			if (keyRec) {
-				//update key
-				var newvalues = { $set: { value: key } };
-				config.updateOne(
-					{ key: 'openaikey' },
-					newvalues,
-					function (err, res1) {
-						if (err) throw err;
-						console.log('openai key updated');
-						res.status(StatusCodes.OK).json({
-							message: ConfigMessages.OPENAI_KEY_UPDATED,
-						});
-					}
-				);
-			} else {
-				// insert key
-				const keyRecord = await config.create({
-					key: 'openaikey',
-					value: key,
-				});
-				res.status(StatusCodes.OK).json({
-					message: ConfigMessages.OPENAI_KEY_SAVED,
-				});
-			}
+		// if (key == '') {
+		// 	res.status(StatusCodes.BAD_REQUEST).json({
+		// 		message: 'Key cannot be empty',
+		// 	});
+		// 	return;
+		// }
+		const keyRec = await config.findOne({ key: 'openaikey' });
+		if (keyRec) {
+			//update key
+			var newvalues = { $set: { value: key } };
+			config.updateOne(
+				{ key: 'openaikey' },
+				newvalues,
+				function (err, res1) {
+					if (err) throw err;
+					console.log('openai key updated');
+					res.status(StatusCodes.OK).json({
+						message: ConfigMessages.OPENAI_KEY_UPDATED,
+					});
+				}
+			);
 		} else {
-			res.status(StatusCodes.UNAUTHORIZED).json({
-				message: ConfigMessages.UNAUTHORIZED_TO_ADD_KEY,
+			// insert key
+			const keyRecord = await config.create({
+				key: 'openaikey',
+				value: key,
+			});
+			res.status(StatusCodes.OK).json({
+				message: ConfigMessages.OPENAI_KEY_SAVED,
 			});
 		}
 	} catch (error) {
@@ -125,9 +113,6 @@ export const getApiKey = async (req, res, next) => {
 
 // add openai temperature to config
 export const setTemperature = async (req, res) => {
-	const {
-		params: { userid: userId },
-	} = req;
 	const { temperature } = req.body;
 	// check if temperature is empty
 	if (temperature == '') {
@@ -137,10 +122,7 @@ export const setTemperature = async (req, res) => {
 		return;
 	}
 
-	// check if user is admin or superadmin
-	const user = await User.findOne({ _id: userId });
-	if (user && (user.role == 'admin' || user.role == 'superadmin')) {
-		// check if key already exists
+	try {
 		const keyRec = await config.findOne({ key: 'temperature' });
 		if (keyRec) {
 			//update key
@@ -165,11 +147,10 @@ export const setTemperature = async (req, res) => {
 			res.status(StatusCodes.OK).json({
 				message: ConfigMessages.TEMPERATURE_SAVED,
 			});
+			return;
 		}
-	} else {
-		res.status(StatusCodes.UNAUTHORIZED).json({
-			message: ConfigMessages.UNAUTHORIZED_TO_MODIFY_TEMPERATURE,
-		});
+	} catch (error) {
+		next(InternalServer());
 	}
 };
 
@@ -188,9 +169,6 @@ export const getTemperature = async (req, res, next) => {
 
 // set openai max tokens
 export const setMaxTokens = async (req, res, next) => {
-	const {
-		params: { userid: userId },
-	} = req;
 	const { tokens } = req.body;
 	try {
 		if (tokens == '') {
@@ -207,40 +185,31 @@ export const setMaxTokens = async (req, res, next) => {
 			});
 			return;
 		}
+		const keyRec = await config.findOne({ key: 'tokens' });
+		if (keyRec) {
+			//update key
+			var newvalues = { $set: { value: tokens } };
+			config.updateOne(
+				{ key: 'tokens' },
+				newvalues,
+				function (err, res1) {
+					if (err) throw err;
 
-		// check if user is admin or superadmin
-		const user = await User.findOne({ _id: userId });
-		if (user && (user.role == 'admin' || user.role == 'superadmin')) {
-			// check if key already exists
-			const keyRec = await config.findOne({ key: 'tokens' });
-			if (keyRec) {
-				//update key
-				var newvalues = { $set: { value: tokens } };
-				config.updateOne(
-					{ key: 'tokens' },
-					newvalues,
-					function (err, res1) {
-						if (err) throw err;
-
-						res.status(StatusCodes.OK).json({
-							message: ConfigMessages.TOKENS_UPDATED,
-						});
-					}
-				);
-			} else {
-				// insert key
-				const keyRecord = await config.create({
-					key: 'tokens',
-					value: tokens,
-				});
-				res.status(StatusCodes.OK).json({
-					message: ConfigMessages.TOKENS_SAVED,
-				});
-			}
+					res.status(StatusCodes.OK).json({
+						message: ConfigMessages.TOKENS_UPDATED,
+					});
+				}
+			);
 		} else {
-			res.status(StatusCodes.UNAUTHORIZED).json({
-				message: ConfigMessages.UNAUTHORIZED_TO_MODIFY_TOKENS,
+			// insert key
+			const keyRecord = await config.create({
+				key: 'tokens',
+				value: tokens,
 			});
+			res.status(StatusCodes.OK).json({
+				message: ConfigMessages.TOKENS_SAVED,
+			});
+			return;
 		}
 	} catch (error) {
 		next(InternalServer(error.message));
@@ -261,9 +230,6 @@ export const getMaxTokens = async (req, res, next) => {
 };
 
 export const setOpenaiModel = async (req, res) => {
-	const {
-		params: { userid: userId },
-	} = req;
 	const { model } = req.body;
 	try {
 		if (model == '') {
@@ -272,39 +238,26 @@ export const setOpenaiModel = async (req, res) => {
 			});
 			return;
 		}
-
-		// check if user is admin or superadmin
-		const user = await User.findOne({ _id: userId });
-		if (user && (user.role == 'admin' || user.role == 'superadmin')) {
-			// check if key already exists
-			const keyRec = await config.findOne({ key: 'model' });
-			if (keyRec) {
-				//update key
-				var newvalues = { $set: { value: model } };
-				config.updateOne(
-					{ key: 'model' },
-					newvalues,
-					function (err, res1) {
-						if (err) throw err;
-						res.status(StatusCodes.OK).json({
-							message: ConfigMessages.MODEL_UPDATED,
-						});
-					}
-				);
-			} else {
-				// insert key
-				const keyRecord = await config.create({
-					key: 'model',
-					value: model,
-				});
+		const keyRec = await config.findOne({ key: 'model' });
+		if (keyRec) {
+			//update key
+			var newvalues = { $set: { value: model } };
+			config.updateOne({ key: 'model' }, newvalues, function (err, res1) {
+				if (err) throw err;
 				res.status(StatusCodes.OK).json({
-					message: ConfigMessages.MODEL_SAVED,
+					message: ConfigMessages.MODEL_UPDATED,
 				});
-			}
-		} else {
-			res.status(StatusCodes.UNAUTHORIZED).json({
-				message: ConfigMessages.UNAUTHORIZED_TO_MODIFY_MODEL,
 			});
+		} else {
+			// insert key
+			const keyRecord = await config.create({
+				key: 'model',
+				value: model,
+			});
+			res.status(StatusCodes.OK).json({
+				message: ConfigMessages.MODEL_SAVED,
+			});
+			return;
 		}
 	} catch (error) {
 		next(InternalServer(error.message));

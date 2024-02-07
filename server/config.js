@@ -26,6 +26,8 @@ const config = {
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_KEY_ID: process.env.AWS_SECRET_KEY_ID,
     AWS_REGION: process.env.AWS_REGION,
+    AWS_BUCKET_EXPIRE_TIME: process.env.AWS_BUCKET_EXPIRE_TIME,
+    AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME || 'image-upload-bucket',
 }
 
 export default config;

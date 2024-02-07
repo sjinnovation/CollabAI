@@ -1,3 +1,5 @@
+import { CommonMessages, GPTModels, PromptMessages } from "../constants/enums.js";
+import getOpenAiConfig from "../utils/openAiConfigHelper.js";
 import StatusCodes from 'http-status-codes';
 import OpenAI from 'openai';
 import moment from 'moment';
@@ -6,13 +8,86 @@ import User from '../models/user.js';
 import config from '../models/configurationModel.js';
 import Subscriber from '../models/subscriberModel.js';
 import Subscription from '../models/subscriptionModel.js';
-import { GPTModels, PromptMessages } from '../constants/enums.js';
 import {
 	BadRequest,
 	InternalServer,
 	NotFound,
 } from '../middlewares/customError.js';
 import { handleOpenAIError } from '../utils/openAIErrors.js';
+
+
+export const getGptStreamResponse = async (req, res) => {
+  try {
+      const { _id: userid } = req.user;
+      const {
+          userPrompt,
+          threadId: threadid,
+          chatLog,
+          compId,
+          tags,
+      } = req.body;
+      let temperature, gptModel, openAiKey;
+
+      // getting configs
+      temperature =
+          parseFloat(await getOpenAiConfig("temperature", config)) ?? 0.7;
+      gptModel = await getOpenAiConfig("model", config);
+      openAiKey = await getOpenAiConfig("openaikey", config);
+
+      if (!gptModel || !openAiKey) {
+          return res.status(StatusCodes.BAD_REQUEST).json({
+              success: false,
+              message: messages.OPENAI_MODEL_KEY_NOT_FOUND,
+          });
+      }
+
+      const contextArray = promptServices.generatePrevChatHistoryContext(chatLog);
+      
+      const openai = new OpenAI({
+          apiKey: openAiKey,
+      });
+
+      let gptResponse = "",
+          tokenCount = 0;
+      const stream = await openai.chat.completions.create(
+          {
+              model: gptModel,
+              messages: [
+                  ...contextArray,
+                  { content: userPrompt, role: "user" },
+              ],
+              stream: true,
+          },
+          { responseType: "stream" }
+      );
+
+      // eslint-disable-next-line no-restricted-syntax
+      for await (const part of stream) {
+          tokenCount++;
+          if (part.choices[0].finish_reason === "stop") {
+              await promptModel.create({
+                  tokenused: tokenCount,
+                  threadid,
+                  userid,
+                  description: userPrompt,
+                  promptresponse: gptResponse,
+                  promptdate: moment(new Date()).format("YYYY-MM-DD"),
+                  createdAt: new Date(),
+                  modelused: gptModel,
+                  tags,
+              });
+              res.end();
+              return;
+          }
+          gptResponse += part.choices[0]?.delta?.content || "";
+          res.write(part.choices[0]?.delta?.content || "");
+      }
+  } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: CommonMessages.INTERNAL_SERVER_ERROR,
+      });
+  }
+};
 
 /**
  * Asynchronous function to get GPT prompt.
@@ -28,35 +103,6 @@ export const getGptPrompt = async (req, res, next) => {
     const user = await User.findById(userid);
     if (!user) {
       return next(BadRequest(PromptMessages.USER_NOT_FOUND));
-		}
-
-    if (!user.email.endsWith("@sjinnovation.com")) {
-			const subscriber = await Subscriber.findOne({
-				compid: compId,
-        subscription_status: "active",
-			});
-
-			if (!subscriber) {
-        return next(BadRequest(PromptMessages.NO_ACTIVE_SUBSCRIPTION));
-			}
-
-      const subscription = await Subscription.findById(subscriber.planId);
-			if (subscription) {
-        const startDate = subscriber.createdAt;
-        const endDate = moment(startDate).add(1, "month").toDate();
-				const recs = await promptModel.find({
-          promptdate: { $gte: startDate, $lte: endDate },
-				});
-
-        const tokensUsed = recs.reduce(
-          (sum, rec) => sum + Math.max(rec.tokenused, 0),
-          0
-        );
-
-				if (tokensUsed >= subscription.tokens) {
-          return next(BadRequest(PromptMessages.TOKEN_LIMIT_EXCEEDED));
-				}
-			}
 		}
 
     const contextArray = chatLog

@@ -607,7 +607,7 @@ nav svg {
 }
 
 .assistantInputPromptWrapper {
-  margin-top: 40px;
+  margin-top: 15px;
   left: 50%;
   right: 50%;
   bottom: 0;
@@ -1014,6 +1014,11 @@ nav svg {
   
 }
 
+#table-response-container {
+  max-width: 44rem;
+  overflow-x: auto;
+}
+
 #table-response-container table,
 #table-response-container th, 
 #table-response-container td {
@@ -1038,4 +1043,61 @@ nav svg {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 1rem;
+}
+
+.assistantsConversationStarterWrapper{
+    margin-top: 40px;
+    left: 50%;
+    right: 50%;
+    bottom: 0;
+    position: relative;
+    transform: translate(-50%, -10%);
+    width: 48rem; 
+    resize: none;
+    max-height: 110px;
+    min-height: 110px;
+    border-radius: 5px;
+    display: flex;
+    overflow-y: scroll;
+    
+}
+
+.conversation-starter-box {
+  width: 100%;
+  margin: 10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.conversation-starter {
+  width: 22.6rem;
+  margin: 5px;
+  padding: 5px 8px;
+  border: 1px solid gray;
+  border-radius: 7px;
+  background-color: #41414e;
+  display: flex;
+  align-items: center;
+}
+
+.conversation-starter p {
+  margin: 0px;
+  padding: 0px;
+}
+
+.conversation-contents {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.conversation-starter-icon{
+  color: rgb(134, 132, 132);
+  font-size: 18px;
+}
+
+.conversation-starter-icon:hover{
+  color: rgb(194, 183, 183);
+  font-weight: bold;
 }

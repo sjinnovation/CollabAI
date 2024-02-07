@@ -45,6 +45,7 @@ const AssistantList = ({ propsData }) => {
                                         : "_blank"
                                 }
                                 rel="noreferrer"
+                                key={index}
                                 style={{ textDecoration: "none" }}
                             >
                                 <div className="navPrompt">

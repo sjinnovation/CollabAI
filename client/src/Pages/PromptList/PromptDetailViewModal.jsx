@@ -9,7 +9,7 @@ import { Modal, Row, Col } from "antd";
 const PromptDetailViewModal = ({ show, handleClose, viewDetails }) => {
   return (
     <Modal
-      title="Assistant Information"
+      title="Prompt Details"
       visible={show}
       onCancel={handleClose}
       footer={null}
@@ -38,6 +38,7 @@ const PromptDetailViewModal = ({ show, handleClose, viewDetails }) => {
             className="custom-textarea"
             placeholder="Response"
           />
+          {/* {viewDetails?.promptresponse} */}
         </Col>
       </Row>
     </Modal>

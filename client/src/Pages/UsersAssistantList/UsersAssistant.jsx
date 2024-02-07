@@ -90,7 +90,7 @@ const UserAssistants = () => {
       key: "is_active",
       dataIndex: "is_active",
       width: 100,
-      render: (_, { is_active = false }) => (
+      render: (_, { is_active }) => (
         <Tag color={is_active ? "green" : "red"}>
           {is_active ? "active" : "inactive"}
         </Tag>
