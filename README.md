@@ -57,6 +57,65 @@ Follow the steps below to get the project up and running on your local machine.
     ```bash
     npm install
 
+6. **Start Both Backend & Frontend Server**
+
+    ```bash
+    npm start
+
+To initialize the application data and create a superadmin user, you can use either cURL or Postman:
+
+   ### Using cURL
+
+   If you prefer command-line tools, you can use curl to make a POST request to the /init-setup endpoint. Open your terminal and run the following command:
+
+       curl -X POST http://localhost:8011/api/init -H "Content-Type: application/json" -d '{
+       "fname": "Super",
+       "lname": "Admin",
+       "email": "superadmin@example.com",
+       "password": "yourSecurePassword",
+       "employeeCount": 100,
+       "companyName": "INIT_COMPANY"
+       }'
+
+   ### Initializing Setup with Postman
+
+   - **Open Postman**:  Launch the Postman application.
+
+   - **Create a New Request**: Click on the '+' or 'New' button to create a new request.
+
+   - **Set HTTP Method to POST**: Ensure that the HTTP method is set to POST.
+
+   - **Enter URL**: Enter the URL `http://localhost:8011/api/init`.
+
+   - **Set Headers**: 
+       - Go to the 'Headers' tab.
+       - Set `Content-Type` to `application/json`.
+
+   - **Set Request Body**:
+       - Switch to the 'Body' tab.
+       - Select the 'raw' radio button.
+       - Enter the JSON data for your superadmin user:
+
+       ```json
+       {
+       "fname": "Super",
+       "lname": "Admin",
+       "email": "superadmin@example.com",
+       "password": "securePassword",
+       "employeeCount": 100,
+       "companyName": "INIT_COMPANY"
+       }
+       ```
+
+   - **Send Request**: Click the 'Send' button to make the request.
+
+   This will send a POST request to `http://localhost:8011/api/init` with the provided JSON  payload, creating a superadmin user with the specified details.
+
+
+## Reference
+
+[CollaborativeAI Reference Guide](https://docs.google.com/document/d/1xOyvASQyss3ElNe3-pEpZMrQVFBjqqT4DLq96WtlCoU/edit#heading=h.tbh793g58rjf)
+
 ## Contributing
 
 If you would like to contribute to the project, we welcome your contributions! Please follow the guidelines outlined in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
@@ -64,3 +123,7 @@ If you would like to contribute to the project, we welcome your contributions! P
 Feel free to submit bug reports, suggest new features, or send pull requests to help improve the project. Your involvement is greatly appreciated!
 
 Thank you for considering contributing to our project!
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
