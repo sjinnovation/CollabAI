@@ -6,6 +6,12 @@ export const CommonMessages = {
 	NOT_FOUND_ERROR: 'Not found',
 };
 
+export const InitSetupMessages = {
+	INIT_REQ_BODY_MISSING_ERROR: 'fname, lname, email, password are required fields to initialize the request.',
+	DB_NOT_EMPTY_ERROR: "Data in DB already exists, can't do initial setup.",
+	INIT_SETUP_SUCCESS_MESSAGE: "Successfully completed initial setup, created user and company.",
+};
+
 export const PromptMessages = {
 	THREAD_NOT_FOUND: 'Thread not found',
 	THREAD_RECOVER_FAILED: 'Thread recover failed',
