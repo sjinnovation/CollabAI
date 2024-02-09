@@ -1,7 +1,7 @@
-# Collaborative-AI
+# Collaborative AI
 
-## Description
-This repository contains the source code for a web application with separate folders for the frontend (`client`) and backend (`server`) components.
+## About
+Dive into the future of AI with CollaborativeAi.Software, your solution for using OpenAI's API to power ChatGPT on your server. Our platform simplifies running your ChatGPT, managing access for unlimited employees, creating custom AI assistants with your API, organizing employee groups, and using custom templates for a tailored experience. With complete control over customization and data privacy, elevate your projects and transform how your team leverages AI. Join CollaborativeAi.Software and revolutionize your AI capabilities today. With over 50 deployments, our support structure includes both our dedicated team and an open-source community, ensuring you have all the help you need.
 
 ## Folder Structure
 
@@ -11,10 +11,6 @@ The `client` folder contains the React-based frontend code for the application. 
 - **`src`**: This directory contains the React components, styles, and scripts for the frontend application.
 
 - **`public`**: Static assets, such as images or favicon.ico, go here. This folder is served as-is and not processed by the build system.
-
-- **`node_modules`**: This directory contains the third-party dependencies required for the frontend. It is typically generated and managed by npm.
-
-- **`build`**: After building the frontend code, the resulting files are placed in this directory. This is the folder that is served to users when they access the application.
 
 
 ### 2. Server
@@ -26,15 +22,21 @@ The `server` folder contains all the backend-related code for the application, f
 
 - **`config`**: Configuration files for the backend, such as database configuration or any other service configuration should be stored here, can be stored in this directory.
 
-- **`node_modules`**: Similar to the `client` folder, this directory contains the third-party dependencies required for the backend.
-
 
 ## Getting Started
-Follow the steps below to get the project up and running on your local machine.
+Follow the steps below to get the project up and running.
 
+###Prerequisites
+- Node.js (Version: >=16.x)
+- [MongoDB](https://www.mongodb.com/?ref=collaborativeai.software)
+- NPM
+
+##Development
+
+###Setup
 1. **Clone the Repository**
    ```bash
-   https://github.com/sjinnovation/Collaborative-AI.git
+   https://github.com/sjinnovation/CollaborativeAI.git
    
 
 2. **Navigate to the Client Folder**
@@ -120,9 +122,9 @@ To initialize the application data and create a superadmin user, you can use eit
 
 If you would like to contribute to the project, we welcome your contributions! Please follow the guidelines outlined in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
-Feel free to submit bug reports, suggest new features, or send pull requests to help improve the project. Your involvement is greatly appreciated!
+Feel free to raise issues, suggest new features, or send pull requests to help improve the project. Your involvement is greatly appreciated!
 
-Thank you for considering contributing to our project!
+Thank you for contributing to our project!
 
 ## License
 
