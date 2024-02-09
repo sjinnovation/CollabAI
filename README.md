@@ -3,6 +3,20 @@
 ## About
 Dive into the future of AI with CollaborativeAi.Software, your solution for using OpenAI's API to power ChatGPT on your server. Our platform simplifies running your ChatGPT, managing access for unlimited employees, creating custom AI assistants with your API, organizing employee groups, and using custom templates for a tailored experience. With complete control over customization and data privacy, elevate your projects and transform how your team leverages AI. Join CollaborativeAi.Software and revolutionize your AI capabilities today. With over 50 deployments, our support structure includes both our dedicated team and an open-source community, ensuring you have all the help you need.
 
+## CollaborativeAi.Software Features:
+- Self-Hosting on Your Cloud: Gain full control by hosting the platform on your private cloud. Ensure data privacy by using your API codes, allowing for secure data handling.
+- Team Management: Manage teams with private accounts, and customizable access levels (Departments).
+- Prompt Templates: Utilize generic templates to streamline team usage.
+- Departmental Access & Assistant Assignment: Assign AI assistants to specific departments for shared team access.
+- Customizable AI Assistants: Create personalized AI assistants for users or organizations.
+- Tagging Feature in Chats: Organize and retrieve chat data efficiently with custom tags.
+- Chat Storage and Retrieval: Save all chats and replies for future analysis, with an option to restore accidentally deleted chats from Trash.
+- Optimized Performance: Experience our high-speed, efficient platform. Our clients have been using it for over a year, with some spending $1500-$2000 per month on the API.
+- File Upload & GPT-4 Vision Integration: Enhance interactions by uploading files for analysis and sending pictures for AI description.
+- Future Enhancements: Anticipate new functionalities like API-based function calls, Python code execution, and integration with Gemini and other APIs.
+- Upcoming Free Mobile App: Access CollaborativeAi.Software on the go with a soon-to-be-released app.
+
+
 ## Folder Structure
 
 ### 1. Client
