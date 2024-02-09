@@ -26,14 +26,14 @@ The `server` folder contains all the backend-related code for the application, f
 ## Getting Started
 Follow the steps below to get the project up and running.
 
-###Prerequisites
+### Prerequisites
 - Node.js (Version: >=16.x)
 - [MongoDB](https://www.mongodb.com/?ref=collaborativeai.software)
 - NPM
 
-##Development
+## Development
 
-###Setup
+### Setup
 1. **Clone the Repository**
    ```bash
    https://github.com/sjinnovation/CollaborativeAI.git
