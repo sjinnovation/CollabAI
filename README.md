@@ -18,6 +18,7 @@ Dive into the future of AI with CollaborativeAi.Software, your solution for usin
 
 ![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/a14ca235-a3c9-45b3-9e91-85f0240af5f5) 
 ![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/6b33f541-cb65-4383-83ef-136c9b51a4b0)
+![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/5657a1cf-9134-4e8b-ad2d-14459fb1023c)
 
 
 ## Folder Structure
