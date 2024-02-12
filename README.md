@@ -16,6 +16,9 @@ Dive into the future of AI with CollaborativeAi.Software, your solution for usin
 - **Future Enhancements:** Anticipate new functionalities like API-based function calls, Python code execution, and integration with Gemini and other APIs.
 - **Upcoming Free Mobile App:** Access CollaborativeAi.Software on the go with a soon-to-be-released app.
 
+![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/a14ca235-a3c9-45b3-9e91-85f0240af5f5) 
+![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/6b33f541-cb65-4383-83ef-136c9b51a4b0)
+
 
 ## Folder Structure
 
