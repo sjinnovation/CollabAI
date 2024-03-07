@@ -18,6 +18,7 @@ import {
   AssistantsList,
   AssistantsChatPage,
   ChatPage,
+  AssistantFileDownloadPage,
 } from "./Pages";
 
 import Layout from "./Pages/Layout";
@@ -74,6 +75,10 @@ function App() {
           element={<AssistantsChatPage />}
         />
       </Route>
+      <Route
+          path="assistants/download/:file_id"
+          element={<AssistantFileDownloadPage />}
+        />
     </Routes>
   );
 }

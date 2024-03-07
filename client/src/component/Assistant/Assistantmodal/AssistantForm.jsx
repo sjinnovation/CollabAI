@@ -10,6 +10,7 @@ import {
   Upload,
   Switch,
   Tooltip,
+  Alert,
 } from "antd";
 import { PaperClipOutlined } from "@ant-design/icons";
 
@@ -18,7 +19,24 @@ import ConversationStater from "./ConversationStater";
 
 //Constants
 import { assistantGptModels } from "../../../constants/AssistanceModelConst";
+import { ASSISTANT_CODE_INTERPRETER_NOTE, ASSISTANT_FILE_CREATION_NOTE, ASSISTANT_RETRIEVAL_NOTE } from "../../../constants/FileLIstConstants";
 
+// local component
+const AssistantFileUploadMessage = () => {
+  return <>
+  <p>
+    {ASSISTANT_FILE_CREATION_NOTE}
+  </p>
+  <ul>
+    <li>
+    {ASSISTANT_RETRIEVAL_NOTE}
+    </li>
+    <li>
+    {ASSISTANT_CODE_INTERPRETER_NOTE}
+    </li>
+  </ul>
+  </>
+}
 
 const AssistantForm = ({ data }) => {
   const {
@@ -64,7 +82,13 @@ const AssistantForm = ({ data }) => {
       <Form.Item
         label="Name"
         name="name"
-        rules={[{ required: true, message: "This field is mandatory." }]}
+        rules={[
+          { required: true, message: "This field is mandatory." },
+          {
+            pattern: /^[A-Za-z0-9 ]+$/,
+            message: "Special characters are not allowed.",
+          },
+        ]}
       >
         <Input placeholder="Enter name" />
       </Form.Item>
@@ -79,10 +103,18 @@ const AssistantForm = ({ data }) => {
           },
         ]}
       >
-        <TextArea rows={3} placeholder="You are a helpful assistant." />
+        <TextArea
+          style={{ resize: "vertical" }}
+          rows={3}
+          placeholder="You are a helpful assistant."
+        />
       </Form.Item>
       <Form.Item label="Description" name="description">
-        <TextArea rows={2} placeholder="Enter Description" />
+        <TextArea
+          style={{ resize: "vertical" }}
+          rows={2}
+          placeholder="Enter Description"
+        />
       </Form.Item>
       {isAdmin && (
         <Form.Item
@@ -96,8 +128,8 @@ const AssistantForm = ({ data }) => {
           ]}
         >
           <Radio.Group>
-             <Radio value="ORGANIZATIONAL">Admin</Radio>
-             <Radio value="PERSONAL">Personal</Radio>
+            <Radio value="ORGANIZATIONAL">Organizational</Radio>
+            <Radio value="PERSONAL">Personal</Radio>
           </Radio.Group>
         </Form.Item>
       )}
@@ -122,7 +154,7 @@ const AssistantForm = ({ data }) => {
         rules={[
           {
             required: true,
-            message: "Please Select GPT Modal",
+            message: "Please Select GPT Model",
           },
         ]}
       >
@@ -151,7 +183,9 @@ const AssistantForm = ({ data }) => {
           <span>Code interpreter</span>
           <Tooltip title="Code Interpreter enables the assistant to write and run code. This tool can process files with diverse data and formatting, and generate files such as graphs.">
             <Switch
-              checked={form.getFieldValue("tools")?.includes("code_interpreter")}
+              checked={form
+                .getFieldValue("tools")
+                ?.includes("code_interpreter")}
               onChange={(checked) =>
                 handleSwitchChange("code_interpreter", checked)
               }
@@ -187,6 +221,13 @@ const AssistantForm = ({ data }) => {
           return e && e.fileList;
         }}
       >
+        {/* ----- NOTES FOR ASSISTANT FILE */}
+        <Alert
+          className="mb-2"
+          message={<AssistantFileUploadMessage />}
+          type="info"
+          showIcon
+        />
         <Tooltip title="By uploading files, you enable the assistant to use the content from these files for retrieval and code interpreter.">
           <Upload {...uploadProps} maxCount={5}>
             <Button icon={<PaperClipOutlined />}> Add</Button>
@@ -195,12 +236,16 @@ const AssistantForm = ({ data }) => {
       </Form.Item>
       <Form.Item>
         <Button
-          style={{  display: 'block', marginLeft: 'auto' }}
+          style={{ display: "block", marginLeft: "auto" }}
           type="primary"
           onClick={handleUploadFileAndCreateAssistant}
           loading={isUploading()}
         >
-         {isUploading() ? "Loading..." : editMode ? "Update Assistant" : "Create Assistant"}
+          {isUploading()
+            ? "Loading..."
+            : editMode
+            ? "Update Assistant"
+            : "Create Assistant"}
         </Button>
       </Form.Item>
     </Form>

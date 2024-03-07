@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { message } from "antd";
-import Assistant from "../api/assistant";
+import { createAssistantWithFiles, updateAssistantWithDetailsAndFiles } from "../api/assistant";
 import {
   retrievalFileTypes,
   codeInterpreterFileTypes,
 } from "../constants/FileLIstConstants";
 
-const { createAssistantWithFiles, updateAssistantWithFiles } = Assistant();
-
-const useAssistantFileUpload = (onDeleteFile, selectedTools) => {
+const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  useEffect(() => {
+    const initialFiles = getInitialFiles();
+    const fileListFormatted = initialFiles.map((file, index) => ({
+      uid: `existing-${index}`,
+      name: file,
+      status: "done",
+    }));
+    setFileList(fileListFormatted);
+  }, [getInitialFiles]);
+    
   const handleCreateOrUpdateAssistantWithFiles = async (
     formData,
     editMode,
@@ -21,20 +29,17 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools) => {
       setUploading(true);
 
       const response = editMode
-        ? await updateAssistantWithFiles(formData, assistantId)
+        ? await updateAssistantWithDetailsAndFiles(assistantId, formData)
         : await createAssistantWithFiles(formData);
 
-      console.log(response, "response");
       if (response.data) {
         message.success(
-          response?.data?.message || "Assistant Created successfully"
+          response.message
         );
         return true;
       }
-      message.error(response?.error?.message);
-      return false;
     } catch (error) {
-      message.error("Something went wrong");
+      message.error(error?.response?.data?.message || error.message);
       return false;
     } finally {
       setUploading(false);
@@ -62,7 +67,6 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools) => {
       allowedFileTypes = [...allowedFileTypes, ...codeInterpreterFileTypes];
     }
     if (flatSelectedTools.includes("retrieval")) {
-      console.log("Including retrieval file types");
       allowedFileTypes = [...allowedFileTypes, ...retrievalFileTypes];
     }
 
@@ -73,7 +77,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools) => {
     const isFileAllowed = uniqueAllowedFileTypes.includes(fileExtension);
 
     if (!isFileAllowed) {
-      message.error(`Unsupported file type: ${file.name} select the appropriate tools`);
+      message.error(`Unsupported file type: ${file.name} select the files that are supported for your tools enabled.`);
       return false;
     }
 

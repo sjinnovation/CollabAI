@@ -1,11 +1,12 @@
 import { axiosOpen, axiosSecureInstance } from "./axios";
-
+import axios from "axios";
 // [POST] - @desc: handles creating a new chat per assistant
 export const createChatPerAssistant = async (assistant_id, body) => {
   try {
     const response = await axiosSecureInstance.post(
       `api/assistants/${assistant_id}/chats`,
-      body
+      body,
+     
     );
 
     return { success: true, chat: response.data };

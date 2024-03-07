@@ -10,6 +10,7 @@
     "axios": "^0.27.2",
     "bootstrap": "^5.2.2",
     "bootstrap-icons": "^1.9.1",
+    "dompurify": "^3.0.9",
     "highlight.js": "^11.9.0",
     "js-cookie": "^3.0.5",
     "marked": "^9.1.6",

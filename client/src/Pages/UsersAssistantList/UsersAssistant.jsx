@@ -10,7 +10,7 @@ import {
   Typography,
   Switch,
 } from "antd";
-import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineEdit, AiOutlineArrowUp } from "react-icons/ai";
 
 //Component imports
 import CreateAssistantModal from "../../component/Assistant/Assistantmodal/CreateAssistantModal";
@@ -19,7 +19,11 @@ import CreateAssistantModal from "../../component/Assistant/Assistantmodal/Creat
 import useAssistantPage from "../../Hooks/useAssistantPage";
 
 //-----Helper----------//
-import { showDeleteConfirm }  from "../../Utility/assistant-helper"
+import { showDeleteConfirm } from "../../Utility/assistant-helper"
+import DebouncedSearchInput from "../SuperAdmin/Organizations/DebouncedSearchInput";
+import { axiosSecureInstance } from "../../api/axios";
+import { SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG } from "../../constants/Api_constants";
+import { getUserID } from "../../Utility/service";
 
 const { Title } = Typography;
 
@@ -43,6 +47,7 @@ const UserAssistants = () => {
   const [assistantData, setAssistantData] = useState({
     ...initialAssistantState,
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   //------Side Effects ---------//
   useEffect(() => {
@@ -57,6 +62,10 @@ const UserAssistants = () => {
     handleFetchUserCreatedAssistants,
     handleFetchAllAssistants,
     handleDeleteAssistant,
+    totalCount,
+    setAdminUserAssistants,
+    updateLoader,
+    searchPersonalAssistants
   } = useAssistantPage();
 
   //--------Local functions------------//
@@ -74,6 +83,14 @@ const UserAssistants = () => {
     setAssistantData(() => ({ ...initialAssistantState }));
     setShowModal((value) => !value);
     setEditMode(false);
+  };
+
+  const redirectToAssistant = (record) => {
+    
+    const assistantName = record.name.split(" ").join("-");
+    const assistantId = record.assistant_id;
+    const url = `/assistants/${assistantName}/${assistantId}`;
+    window.open(url, "_blank");
   };
 
   //------Columns----------//
@@ -102,12 +119,16 @@ const UserAssistants = () => {
       render: (_, record) => (
         <Space size="middle">
           <Button
+              onClick={() => redirectToAssistant(record)}
+              icon={<AiOutlineArrowUp />}
+          ></Button>
+          <Button
             onClick={() => showEditModalHandler(record)}
             icon={<AiOutlineEdit />}
           ></Button>
           <Tooltip title="Activate or Deactivate">
             <Switch
-              defaultChecked={record?.is_active}
+              checked={record.is_active}
               onChange={(checked) =>
                 handleUpdateAssistant(record._id, {
                   is_active: checked,
@@ -116,7 +137,7 @@ const UserAssistants = () => {
             />
           </Tooltip>
           <Button
-            onClick={() => showDeleteConfirm(record.assistant_id, record.name,handleDeleteAssistant)}
+            onClick={() => showDeleteConfirm(record.assistant_id, record.name, handleDeleteAssistant)}
             danger
             icon={<AiOutlineDelete />}
           />
@@ -124,6 +145,12 @@ const UserAssistants = () => {
       ),
     },
   ];
+
+  useEffect(() => {
+    searchPersonalAssistants(searchQuery)
+  }, [searchQuery]);
+
+  
 
   return (
     <>
@@ -135,7 +162,7 @@ const UserAssistants = () => {
             </div>
             <div className="col-2 d-flex justify-content-end">
               <Button className="" onClick={handleClose}>
-               + Create New
+                + Create New
               </Button>
             </div>
           </div>
@@ -152,12 +179,29 @@ const UserAssistants = () => {
               handleFetchAllAssistants
             }}
           />
+          <div className="mb-4">
+            <DebouncedSearchInput
+              data={{
+                search: searchQuery,
+                setSearch: setSearchQuery,
+                placeholder: "Search assistants",
+              }}
+            />
+          </div>
           <Table
-             loading={loader.ASSISTANT_LOADING}
+            loading={loader.ASSISTANT_LOADING}
             bordered={true}
             columns={columns}
             dataSource={adminUserAssistants}
             scroll={{ y: "50vh" }}
+            pagination={{
+              pageSize: 10,
+              total: totalCount,
+              onChange: (page) => {
+                handleFetchUserCreatedAssistants(page)
+                
+              }
+            }}
           />
         </div>
       </div>

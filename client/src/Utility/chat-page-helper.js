@@ -32,7 +32,9 @@ export const generateThreadId = () => {
 
 export const scrollToBottomForRefElement = (ref) => {
   if (ref.current) {
-    ref.current.scrollTop =
-    ref.current.scrollHeight;
+    ref.current.scrollTo({
+      top: ref.current.scrollHeight,
+      behavior: "smooth",
+    });
   }
 };

@@ -34,7 +34,7 @@ const initialAssistantState = {
   static_questions: [],
 };
 
-const {Title} = Typography;
+const { Title } = Typography;
 
 //----components-----//
 const AssistantsList = () => {
@@ -44,7 +44,7 @@ const AssistantsList = () => {
     ...initialAssistantState,
   });
 
-//----------Side Effects-------//
+  //----------Side Effects-------//
   useEffect(() => {
     handleFetchUserCreatedAssistants();
     handleFetchUserAssistantStats();
@@ -54,9 +54,12 @@ const AssistantsList = () => {
 
   //---------Hooks ------------//
   const {
+    setAdminUserAssistants,
     adminUserAssistants,
+    totalCount,
     userAssistants,
     assistants,
+    setAssistants,
     teamList,
     loader,
     handleAssignTeamToAssistant,
@@ -66,6 +69,13 @@ const AssistantsList = () => {
     handleDeleteAssistant,
     handleFetchAllAssistants,
     handleFetchTeams,
+    updateLoader,
+    searchOrganizationalAssistants,
+    searchPersonalAssistants,
+    orgAssistantSearchQuery,
+    setOrgAssistantSearchQuery,
+    personalAssistantSearchQuery,
+    setPersonalAssistantSearchQuery
   } = useAssistantPage();
 
   // <---------------local-Functions------------------------->
@@ -101,16 +111,23 @@ const AssistantsList = () => {
             </div>
           </div>
           <Tabs defaultActiveKey="1">
-            {renderTabPane("1", "Personal Assistants", AdminAssistantList, {
+            {renderTabPane("1", "My Assistants", AdminAssistantList, {
+              setAdminUserAssistants,
               adminUserAssistants,
+              totalCount,
               loader,
               handleDeleteAssistant,
               handleUpdateAssistant,
               showEditModalHandler,
               handleFetchUserCreatedAssistants,
+              updateLoader,
+              searchPersonalAssistants,
+              personalAssistantSearchQuery,
+              setPersonalAssistantSearchQuery
             })}
-            {renderTabPane("2", "Admin Assistants", AssistantTable, {
+            {renderTabPane("2", "Organizational Assistants", AssistantTable, {
               assistants,
+              setAssistants,
               loader,
               teamList,
               handleAssignTeamToAssistant,
@@ -118,6 +135,10 @@ const AssistantsList = () => {
               handleUpdateAssistant,
               showEditModalHandler,
               handleFetchAllAssistants,
+              updateLoader,
+              searchOrganizationalAssistants,
+              orgAssistantSearchQuery,
+              setOrgAssistantSearchQuery
             })}
             {renderTabPane("3", "User Assistants", UserAssistantList, {
               userAssistants,
@@ -180,14 +201,14 @@ const renderTabPane = (key, label, Component, data) => (
  */
 const IconComponent = ({ label }) => {
   switch (label) {
-    case "Personal Assistants":
+    case "My Assistants":
       return <MdOutlineAssistant className="me-2" />;
-    case "Admin Assistants":
-      return <BuildFilled className="me-2"/>;
+    case "Organizational Assistants":
+      return <BuildFilled className="me-2" />;
     case "User Assistants":
-      return <UserDeleteOutlined className="me-2"/>;
+      return <UserDeleteOutlined className="me-2" />;
     case "Settings":
-      return <SettingOutlined className="me-2"/>;
+      return <SettingOutlined className="me-2" />;
   }
 };
 

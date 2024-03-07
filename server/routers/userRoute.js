@@ -14,6 +14,7 @@ import {
 	softUserDelete,
 	bulkTeamAssignToUsers,
 	getSingleUserByID,
+	migrateDBForUserCollection,
 } from '../controllers/userController.js';
 
 const userRouter = express.Router();
@@ -45,5 +46,7 @@ userRouter.get('/get-user-tokens/:id', getUserTokens);
 userRouter.patch('/softdelete/:id', softUserDelete);
 
 userRouter.patch('/team-assign', bulkTeamAssignToUsers);
+
+userRouter.get('/migrate', migrateDBForUserCollection);
 
 export default userRouter;

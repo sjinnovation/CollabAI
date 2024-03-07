@@ -1,8 +1,11 @@
 import { Button, Table, } from "antd";
 import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
+import DebouncedSearchInput from "../Organizations/DebouncedSearchInput";
+import { useState } from "react";
 
-const TemplateListTable = ({propsData}) => {
-    const {data, loader, actions} = propsData;
+const TemplateListTable = ({ propsData }) => {
+    const { data, loader, actions } = propsData;
+    const [searchQuery, setSearchQuery] = useState("");
     const columns = [
         {
             title: 'Title',
@@ -20,7 +23,7 @@ const TemplateListTable = ({propsData}) => {
             title: 'Actions',
             key: 'actions',
             render: (text, record) => (
-                <div style={{width: "100px"}}>
+                <div style={{ width: "100px" }}>
                     {/* Edit button */}
 
                     <Button
@@ -55,15 +58,32 @@ const TemplateListTable = ({propsData}) => {
 
     ];
 
+    // filtered templates based on search query
+    const filteredTemplates = data?.filter((template) => {
+        return template.title.toLowerCase().includes(searchQuery.toLowerCase()) 
+        || 
+        template.description.toLowerCase().includes(searchQuery.toLowerCase())
+      }
+      );
+
     return (
         <div>
+            <div className="mb-4">
+                <DebouncedSearchInput
+                    data={{
+                        search: searchQuery,
+                        setSearch: setSearchQuery,
+                        placeholder: "Search templates",
+                    }}
+                />
+            </div>
             <Table
                 loading={loader}
                 columns={columns}
-                dataSource={data}
+                dataSource={filteredTemplates}
                 pagination={{
                     pageSize: 10,
-                    total: data?.length,
+                    total: filteredTemplates?.length,
                     onChange: (page, pageSize) => {
                         // fetchUserDetails(page)
                     },

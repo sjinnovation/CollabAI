@@ -1,5 +1,5 @@
 import express from 'express'
-import  { getAssistantById, getAssistantsCreatedByUser ,getAllUserAssistantStats,createAssistant, createChatPerAssistant, getAllAssistants, getChatPerAssistant, updateAssistantFiles, assignTeamToAssistant, getAllUserAssignedAssistants, deleteAssistant, updateAssistant,updateAssistantDataWithFile, getAllAssistantsByPagination} from '../controllers/assistantController.js';
+import  { getAssistantById, getAssistantsCreatedByUser ,getAllUserAssistantStats,createAssistant, createChatPerAssistant, getAllAssistants, getChatPerAssistant, updateAssistantFiles, assignTeamToAssistant, getAllUserAssignedAssistants, deleteAssistant, updateAssistant,updateAssistantDataWithFile, getAllAssistantsByPagination, downloadAssistantFile} from '../controllers/assistantController.js';
 
 import multer from 'multer';
 import authenticateUser from '../middlewares/login.js';
@@ -24,13 +24,14 @@ router.route('/').get(getAllAssistants).post(upload.array('files',5),createAssis
 router.route('/users').get(authenticateUser, getAllUserAssignedAssistants);
 router.route('/all').get(authenticateUser, getAllAssistantsByPagination);
 router.post("/createassistant", upload.array('files', 5), createAssistant);
+router.patch("/updatedatawithfile/:assistant_id/",upload.array('files', 5),updateAssistantDataWithFile);
+router.get("/users/stats",authenticateUser,getAllUserAssistantStats);
+router.get("/download/:file_id", authenticateUser, downloadAssistantFile)
 router.post("/:assistant_id/files", upload.array('files', 5), updateAssistantFiles);
 router.get("/:assistant_id/chats", authenticateUser, getChatPerAssistant);
 router.post("/:assistant_id/chats", authenticateUser, createChatPerAssistant);
 router.patch("/:assistant_id/teams", assignTeamToAssistant);
 router.route("/:assistant_id").patch(authenticateUser, updateAssistant).delete(authenticateUser, deleteAssistant);
-router.patch("/updatedatawithfile/:assistant_id/",upload.array('files', 5),updateAssistantDataWithFile);
- router.get("/users/stats",authenticateUser,getAllUserAssistantStats);
 ///user/stats/
 router.get("/users/created/:userId",getAssistantsCreatedByUser);
 router.get("/:id/info", getAssistantById);

@@ -1,7 +1,7 @@
 import React from "react";
 
 // libraries
-
+import { MdEditNote } from "react-icons/md";
 // components
 import UserIcon from "./UserIcon";
 import BotIcon from "./BotIcon";
@@ -10,7 +10,7 @@ import Error from "../common/Error";
 import BotResponse from "./BotResponse";
 
 const MessageContainer = ({ states }) => {
-  const { chat, idx, loading, error } = states;
+  const { chat, idx, loading, error} = states;
 
   return (
     <div className="chatLog" key={idx}>
@@ -23,10 +23,14 @@ const MessageContainer = ({ states }) => {
           }}
         >
           <UserIcon />
-          <div id="chatPrompt" className="text-wrap">
-            <pre>{chat.chatPrompt}</pre>
-          </div>
+         
+            <div id="chatPrompt" className="text-wrap">
+              <pre>{chat.chatPrompt}</pre>
+            </div>
+       
+        
         </div>
+        
       </div>
 
       {/* ----- BOT RESPONSE ----- */}
@@ -46,11 +50,11 @@ const MessageContainer = ({ states }) => {
               </div>
               <BotResponse response={chat.botMessage} />
             </div>
-          ) : !loading && error ? (
-            <Error message={error} />
-          ) : (
+          ) : loading ? (
             <Loading />
-          )}
+          ) : error ? (
+            <Error message={error} />
+          ) : null} 
         </div>
       </div>
     </div>

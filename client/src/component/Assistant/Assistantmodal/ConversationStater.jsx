@@ -8,7 +8,8 @@ import {
    List, 
    Space 
   } from "antd";
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
+import { FaTimes } from "react-icons/fa";
 
 
 const QuestionList = ({ questions, onRemove }) => (
@@ -17,14 +18,15 @@ const QuestionList = ({ questions, onRemove }) => (
       <List
         dataSource={questions}
         renderItem={(item, index) => (
-          <List.Item className="listItem">
+          <List.Item className="listItem border border-secondary">
             <Space className="spaceContainer">
               <span className="spanContainer">{item}</span>
               <div className="crossButtonContainer">
                 <Button
-                  type="link"
                   onClick={() => onRemove(index)}
-                  icon={<MinusCircleOutlined/>}
+                  icon={<FaTimes />}
+                  size="small"
+                  danger
                 >
                 </Button>
               </div>
@@ -74,7 +76,7 @@ const ConversationStater = ({
 
   return (
     <div className="question-container">
-      <Space>
+      <div className="question-input-button">
         <Input.TextArea
           className="textarea-container"
           autoSize={{ minRows: 2, maxRows: 3 }}
@@ -87,10 +89,11 @@ const ConversationStater = ({
         <Button
           onClick={handleAddQuestionToParent}
           icon={ <PlusOutlined/>}
+          // size="large"
         >
          
         </Button>
-      </Space>
+      </div>
 
       <QuestionList questions={questions} onRemove={handleRemoveQuestion} />
     </div>

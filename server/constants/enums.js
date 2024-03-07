@@ -72,6 +72,7 @@ export const AuthMessages = {
 	PASSWORD_UPDATED_SUCCESSFULLY: 'Password updated successfully',
 	FAILED_TO_RESET_PASSWORD: 'Failed to update password',
 	SAME_PASSWORD: 'New password cannot be same as old password',
+	FAILED_TO_LOGIN: 'Failed to log in'
 };
 
 export const UserMessages = {
@@ -143,6 +144,7 @@ export const TeamMessages = {
 	TEAM_NOT_FOUND: 'Team not found',
 	TEAMS_CREATION_FAILED: 'Failed to create team',
 	NEW_FIELD_ADDED: 'New field added successfully',
+	TEAM_ALREADY_ASSIGNED: 'Team already assigned to selected users.'
 };
 
 export const ConfigMessages = {
@@ -196,6 +198,9 @@ export const AssistantMessages = {
 	ASSISTANT_THREAD_ID_REQUIRED: 'Thread id is required.',
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
 	USER_DOES_NOT_EXIST: 'User does not exist.',
+	ASSISTANT_NOT_FOUND_ON_OPENAI: 'This assistant is not available on the OpenAI platform. Please delete this assistant and create a new one if necessary.',
+	ASSISTANT_FILE_NOT_FOUND_MESSAGE: 'File not found in openai.',
+	ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE: 'Error downloading file, please try again later.'
 };
 export const AssistantThreadMessages = {
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
