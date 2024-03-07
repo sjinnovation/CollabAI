@@ -3,6 +3,7 @@ import StatusCodes from 'http-status-codes';
 import User from '../models/user.js';
 import { InternalServer } from '../middlewares/customError.js';
 import { ConfigMessages } from '../constants/enums.js';
+import { deleteKeyFromOpenAiConfigCache } from '../utils/openAiConfigHelper.js';
 
 /**
  * @function getThresholdValue
@@ -37,6 +38,9 @@ export const setThresholdValue = async (req, res, next) => {
 					console.log('1 document updated');
 				}
 			);
+
+			deleteKeyFromOpenAiConfigCache('threshold');
+
 			res.status(StatusCodes.OK).json({
 				message: ConfigMessages.THRESHOLD_VALUE_UPDATED,
 			});
@@ -76,7 +80,8 @@ export const setApiKey = async (req, res, next) => {
 				newvalues,
 				function (err, res1) {
 					if (err) throw err;
-					console.log('openai key updated');
+					deleteKeyFromOpenAiConfigCache('openaikey');
+
 					res.status(StatusCodes.OK).json({
 						message: ConfigMessages.OPENAI_KEY_UPDATED,
 					});
@@ -132,6 +137,8 @@ export const setTemperature = async (req, res) => {
 				newvalues,
 				function (err, res1) {
 					if (err) throw err;
+
+					deleteKeyFromOpenAiConfigCache('temperature');
 
 					res.status(StatusCodes.OK).json({
 						message: ConfigMessages.TEMPERATURE_UPDATED,
@@ -195,6 +202,8 @@ export const setMaxTokens = async (req, res, next) => {
 				function (err, res1) {
 					if (err) throw err;
 
+					deleteKeyFromOpenAiConfigCache('tokens');
+
 					res.status(StatusCodes.OK).json({
 						message: ConfigMessages.TOKENS_UPDATED,
 					});
@@ -244,6 +253,9 @@ export const setOpenaiModel = async (req, res) => {
 			var newvalues = { $set: { value: model } };
 			config.updateOne({ key: 'model' }, newvalues, function (err, res1) {
 				if (err) throw err;
+
+				deleteKeyFromOpenAiConfigCache('model');
+				
 				res.status(StatusCodes.OK).json({
 					message: ConfigMessages.MODEL_UPDATED,
 				});

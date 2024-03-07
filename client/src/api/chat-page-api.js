@@ -1,11 +1,14 @@
 import { getUserID } from "../Utility/service";
 import { axiosSecureInstance } from "./axios";
+import axios from "axios";
 
-export const getGptResponse = async (body) => {
+export const getGptResponse = async (body,cancelToken) => {
+
   try {
     const response = await axiosSecureInstance.post(
       `api/prompt/getprompt/${getUserID()}`,
-      body
+      body,
+      { cancelToken: cancelToken.token } 
     );
 
     return {
@@ -14,6 +17,12 @@ export const getGptResponse = async (body) => {
       message: response?.data?.message,
     };
   } catch (error) {
+    if (axios.isCancel(error)) {
+      console.log('Request canceled:', error.message);
+      return { success: false, message: error?.message };
+    } else {
+      console.log("🚀 ~ createChatPerAssistant ~ error:", error);
+    }
     console.log("🚀 ~ getGptResponse ~ error:", error);
     return { success: false, message: error?.response?.data?.message };
   }

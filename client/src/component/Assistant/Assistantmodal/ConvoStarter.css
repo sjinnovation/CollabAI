@@ -1,10 +1,7 @@
 .listItem {
-    border-bottom: 2px solid #e8e8e8;
     border-radius: 8px;
     padding: 16px;
     margin: 8px 0;
-    border-left: 2px solid #e8e8e8;
-    border-right: 2px solid #e8e8e8;
   }
   
   .spaceContainer {
@@ -14,13 +11,14 @@
   }
   
   .crossButtonContainer {
+    padding: 0 8px;
     display: flex;
     align-items: center;
   }
   
   .crossLine {
     border-right: 1px solid #ff4d4f;
-    height: 16px;
+    height: 10px;
     margin-right: 8px;
   }
   
@@ -32,13 +30,19 @@
   }
 
   .question-container {
-    align-items: center;
-    padding: 16px; 
     border-radius: 8px; 
+    width: 100%;
+  }
+
+  .question-input-button {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+    align-items: start;
   }
   
   .textarea-container {
-    margin-right: 450px;
+    flex-grow: 1;
     width: 100%;
   }
   
@@ -50,7 +54,7 @@
   }
 
   .list-container {
-    max-height: 200px; 
+    max-height: 100px; 
     overflow-y: auto; 
   }
   .spanContainer {

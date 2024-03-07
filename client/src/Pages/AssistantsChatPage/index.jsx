@@ -23,6 +23,7 @@ import useAssistantsChatPage from "../../Hooks/useAssistantsChatPage";
 // services & helpers
 import { getUserRole } from "../../Utility/service";
 import ConversationStarter from "./ConversationStarter";
+import AssistantInfo from "./AssistantInfo";
 
 // api
 
@@ -45,6 +46,8 @@ const AssistantsChatPage = () => {
     assistantData,
     selectedFiles,
     inputPrompt,
+    assistantAllInfo,
+
     // BOOLEANS
     isMessageFetching,
     isFirstMessage,
@@ -69,7 +72,6 @@ const AssistantsChatPage = () => {
   // ---------- constants ---------
   const userRole = getUserRole();
 
-  console.log(assistantData,"cfgvhbj")
   useEffect(() => {
     const scrollableDiv = chatLogWrapperRef.current;
     if (scrollableDiv) {
@@ -201,9 +203,19 @@ const AssistantsChatPage = () => {
           </div>
         )}
         {/* -----[END] CHAT BOX - ALL PROMPTS ----- */}
+        {isChatLogEmpty ? (
+          <AssistantInfo
+          dataProps= {{
+            assistantAllInfo,
+            assistant_name,
+            assistant_id
+          }}
+          />
+        ): null}
         { isChatLogEmpty ? (
         <ConversationStarter 
         states = {{
+          assistant_id,
           StarterQuestions : assistantData,
           handleSelectStarter
         }}

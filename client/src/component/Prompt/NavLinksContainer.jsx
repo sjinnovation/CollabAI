@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useCallback } from "react";
 import { getUserID } from "../../Utility/service";
 import { CgProfile } from "react-icons/cg";
 import { Dropdown, Menu } from 'antd';
@@ -10,6 +10,10 @@ import AdminNavLinks from "../layout/NewSidebar/AdminNavLinks";
 import SuperAdminNavLinks from "../layout/NewSidebar/SuperAdminNavLinks";
 import { getUserData } from "../../api/userApiFunctions";
 import { getAssistants } from "../../api/assistantApiFunctions";
+import { FaSearch } from "react-icons/fa";
+import debounce from 'lodash/debounce';
+
+
 
 
 
@@ -17,22 +21,26 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
 
     const userName = localStorage.userName && localStorage.userName;
     const [role, setRole] = useState("");
+   
 
     const userId = getUserID();
 
     // -------------------- Hooks/Contexts -----------------------
     const {
-      assistants,
-      setAssistants,
-      totalPage,
-      setTotalPage,
-      page,
-      setPage,
-      loading,
-      setLoading,
-      handleFetchAssistants,
+        assistants,
+        setAssistants,
+        totalPage,
+        setTotalPage,
+        page,
+        setPage,
+        loading,
+        setLoading,
+        handleFetchAssistants,
+        fetchSearchedAssistants,
+        searchQuery,
+        setSearchQuery
     } = useContext(AssistantContext);
-      console.log("🚀 ~ NavLinksContainer ~ assistants:", assistants)
+    // console.log("🚀 ~ NavLinksContainer ~ assistants:", assistants)
 
     // -------------------- Side Effects -----------------------
 
@@ -44,16 +52,16 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
 
     const handleFetchUserData = async () => {
         try {
-          const { success, data, error } = await getUserData(userId, setRole);
-          if (success) {
-            console.log("User Role:", data);
-          } else {
-            console.error("Error fetching user data:", error);
-          }
+            const { success, data, error } = await getUserData(userId, setRole);
+            if (success) {
+                console.log("User Role:", data);
+            } else {
+                console.error("Error fetching user data:", error);
+            }
         } finally {
-          
+
         }
-      };
+    };
 
     //---------------------- Nav Links ---------------------
     const menu = (
@@ -82,16 +90,23 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
                 </>
             )}
 
-            
+
             <Menu.Item key="common">
                 <CommonNavLinks />
             </Menu.Item>
         </Menu>
     );
 
+ 
 
+const handleSearch = useCallback(
+    debounce(value => {
+      setSearchQuery(value);
+    }, 600),
+    []
+  );
 
-    return (
+return (
         <div
             className="navLinks bottom-navLinks"
             style={{
@@ -100,6 +115,19 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
             }}
         >
             <div>
+                <div className="input-group input-group-sm mb-3">
+                    <span className="input-group-text thread-search" id="basic-addon1"><FaSearch /></span>
+                    <input
+                        type="text"
+                        className="form-control thread-search"
+                        placeholder="Search Assistant"
+                        aria-label="Username"
+                        aria-describedby="basic-addon1"
+                        // value={searchQuery}
+                        onChange={(e)=>handleSearch(e.target.value)}
+                    />
+                </div>
+
                 <AssistantList propsData={{
                     assistants,
                     page,
@@ -112,21 +140,21 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
                 />
             </div>
 
-            <Dropdown 
-            overlay={menu} 
-            placement="top"  
-            className="user-btn"
-            trigger={['click']}
+            <Dropdown
+                overlay={menu}
+                placement="top"
+                className="user-btn"
+                trigger={['click']}
             >
                 <div className="ant-dropdown">
-                <>
-                <CgProfile size={22} color="white"/>
-                    {userName && userName}
-                
-                </>  
+                    <>
+                        <CgProfile size={22} color="white" />
+                        {userName && userName}
+
+                    </>
                 </div>
             </Dropdown>
-         
+
         </div>
     );
 };

@@ -2,11 +2,16 @@ import { DELETE_ASSISTANT_THREADS, FETCH_ALL_ASSISTANTS, FETCH_ASSISTANT_THREADS
 import { axiosSecureInstance } from "./axios";
 import { message } from "antd";
 
-export const getAssistants = async (page, setAssistants, setTotalPage, setLoading) => {
+export const getAssistants = async (page, setAssistants, setTotalPage, setLoading, searchQuery) => {
+  console.log(FETCH_ALL_ASSISTANTS(page,searchQuery ))
     try {
       setLoading(true);
-      const { data } = await axiosSecureInstance.get(FETCH_ALL_ASSISTANTS(page));
-      setAssistants((prevAssistants) => [...prevAssistants, ...data.assistants]);
+      const { data } = await axiosSecureInstance.get(FETCH_ALL_ASSISTANTS(page,searchQuery ));
+      if(searchQuery) {
+        setAssistants(() => [ ...data.assistants]);
+      } else {
+        setAssistants((prevAssistants) => [...prevAssistants, ...data.assistants]);
+      }
       setTotalPage(data?.totalPages);
       return { success: true, data };
     } catch (error) {
@@ -41,7 +46,7 @@ export const getAssistants = async (page, setAssistants, setTotalPage, setLoadin
         title: editedValue,
       });
   
-      if (response.data.success) {
+      if (response.data) {
         setPromptTitle(editedValue);
         message.success('Success! Updated thread.');
       }
@@ -59,9 +64,9 @@ export const getAssistants = async (page, setAssistants, setTotalPage, setLoadin
       setIsThreadDeleting(true);
       const response = await axiosSecureInstance.delete(DELETE_ASSISTANT_THREADS(thread_mongo_id));
   
-      if (response.data.success) {
+      if (response.data) {
         setDeletedAssistantThreadId(thread_mongo_id);
-        message.success('Success! Deleted thread.');
+        message.success(response.data.message);
       }
     } catch (error) {
       console.log(error);

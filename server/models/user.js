@@ -74,6 +74,12 @@ const userSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Teams',
 		},
+		teams: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Teams'
+			}
+		]
 	},
 	{ timestamps: true }
 );

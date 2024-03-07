@@ -3,6 +3,7 @@ import {
 	InternalServer,
 	NotFound,
 } from '../middlewares/customError.js';
+import { AssistantMessages } from '../constants/enums.js';
 
 /**
  * Handles OpenAI errors and returns a custom error object.
@@ -10,9 +11,10 @@ import {
  * @returns {Error} Returns a custom error object based on the OpenAI error type.
  */
 export const handleOpenAIError = (error) => {
+    console.log(error.type,"error")
 	if (error.type === 'invalid_request_error') {
 		const badRequestMessage = handleInvalidRequestError(error);
-		return BadRequest(badRequestMessage);
+		return BadRequest(badRequestMessage);   
 	} else if (error.type === 'internal_server_error') {
 		// Handle internal server error
 		return InternalServer('OpenAI internal server error');
@@ -31,9 +33,14 @@ export const handleOpenAIError = (error) => {
  * @returns {Error} Returns a custom error object based on the OpenAI error type.
  */
 function handleInvalidRequestError(error) {
-	if (error.code === null) {
-		return 'Invalid request made to OpenAI API';
+    if (error.status === 404 && error?.error?.message.startsWith("No assistant found")) {
+		return AssistantMessages.ASSISTANT_NOT_FOUND_ON_OPENAI;
 	}
+
+	if (error.code === null) {
+		return 'Invalid request made to OpenAI API. Please reload the page and try again.';
+	}
+    
 	if (errorMappings.invalid_request_error && errorMappings.invalid_request_error[error.code]) {
         const message = errorMappings.invalid_request_error[error.code].description;
         return message;

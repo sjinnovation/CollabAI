@@ -22,7 +22,7 @@ import config from '../config.js';
  */
 export const registerUser = async (req, res, next) => {
   try {
-    const { fname, lname, password, email, username, companyId, teamId, status } = req.body;
+    const { fname, lname, password, email, username, companyId, teams, status } = req.body;
 
     // Check if email already exists
     const emailExist = await User.findOne({ email });
@@ -54,7 +54,7 @@ export const registerUser = async (req, res, next) => {
       username,
       companyId,
       maxusertokens: maxUserTokens,
-      teamId,
+      teams,
       status
     });
 
@@ -84,6 +84,7 @@ export const loginUser = async (req, res, next) => {
     const { email: tempEmail, password } = req.body;
     const email = tempEmail.toLowerCase();
 
+
     if (!email || !password) {
       return next(BadRequest(AuthMessages.EMPTY_EMAIL_OR_PASSWORD));
     }
@@ -108,8 +109,20 @@ export const loginUser = async (req, res, next) => {
       return next(Unauthorized(AuthMessages.INACTIVE_COMPANY));
     }
 
-    const team = user.teamId ? await Team.findOne({ _id: user.teamId }) : null;
-    const hasAccess = team ? team.hasAssistantCreationAccess || false : false;
+
+    const teams = user?.teams?.length ? await Team.find({ _id: { $in: user?.teams } }) : [];
+
+    let hasAccess = false;
+
+    for (const team of teams) {
+      if (team.hasAssistantCreationAccess) {
+        hasAccess = true
+        break
+      } else {
+        hasAccess = false
+      }
+
+    }
 
     const token = await user.createJWT();
     return res.status(StatusCodes.OK).json({
@@ -119,11 +132,12 @@ export const loginUser = async (req, res, next) => {
       compId: user.companyId,
       role: user.role,
       user_email: user.email,
-      teamId: user.teamId,
+      teams: user.teams,
       hasAccess: hasAccess
     });
   } catch (error) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Failed to log in" });
+    console.log("Error:", error)
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: AuthMessages.FAILED_TO_LOGIN });
   }
 };
 
@@ -151,7 +165,7 @@ export const UpdateUserPassword = async (req, res, next) => {
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hash = bcrypt.hashSync(resetToken, 10);
-    
+
     // Store new reset token in the database
     await new ResetToken({
       userId: user._id,
@@ -161,7 +175,7 @@ export const UpdateUserPassword = async (req, res, next) => {
 
     const clientUrl = config.CLIENT_URL;
     const link = `${clientUrl}/passwordReset/${resetToken}/${user._id}`;
-    
+
     // Send password reset email
     sendEmail(user.email, "Password Reset Request", { name: user.fname, link }, "../utils/template/requestResetPassword.handlebars", false);
 
@@ -199,7 +213,7 @@ export const resetPassword = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, Number(BcryptSalt));
     const user = await User.findById(userId);
-    if(user.password === hashedPassword){
+    if (user.password === hashedPassword) {
       return next(BadRequest(AuthMessages.SAME_PASSWORD));
     }
     await User.findByIdAndUpdate(userId, { password: hashedPassword });
@@ -209,7 +223,7 @@ export const resetPassword = async (req, res, next) => {
     // sendEmail(user.email, "Password Reset Successfully", { name: user.fname }, "../utils/template/requestResetPassword.handlebars");
 
     await passwordResetToken.deleteOne();
-    
+
     res.status(StatusCodes.OK).json({ msg: AuthMessages.PASSWORD_UPDATED_SUCCESSFULLY });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: AuthMessages.FAILED_TO_RESET_PASSWORD });

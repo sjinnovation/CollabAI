@@ -2,11 +2,12 @@ import React, { useState } from "react";
 
 const SendIcon = () => {
   const [isHover, setHover] = useState(false)
+  
   return (
     <svg
       fill= {isHover ? "white" : "#ADACBF"}
-      width={15}
-      height={20}
+      width={22}
+      height={22}
       viewBox="0 0 32 32"
       xmlns="http://www.w3.org/2000/svg"
       stroke="#212023"

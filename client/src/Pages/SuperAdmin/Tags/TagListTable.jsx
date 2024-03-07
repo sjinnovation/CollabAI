@@ -1,9 +1,12 @@
 import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
 import { Button, Table } from "antd";
+import DebouncedSearchInput from "../Organizations/DebouncedSearchInput";
+import { useState } from "react";
 
 
 const TagListTable = ({ propsData }) => {
     const { loader, data, actions } = propsData;
+    const [searchQuery, setSearchQuery] = useState("");
     const columns = [
         {
             title: 'Tag',
@@ -15,18 +18,18 @@ const TagListTable = ({ propsData }) => {
             render: (text, record) => (
                 <div>
                     {/* Edit button */}
-                    
-                        <Button
+
+                    <Button
                         type="link"
                         style={{ marginRight: 8 }}
                         onClick={() => {
                             actions.setTagIdToEdit(record._id)
                             actions.fetchTagToEdit(record._id)
                         }}
-                        >
-                            <AiOutlineEdit />
-                        </Button>
-                    
+                    >
+                        <AiOutlineEdit />
+                    </Button>
+
                     {/* Delete button */}
                     <Button
                         shape="circle"
@@ -43,15 +46,31 @@ const TagListTable = ({ propsData }) => {
             ),
         },
     ]
+
+    const filteredTags = data?.filter((tag) => {
+        return tag.title.toLowerCase().includes(searchQuery.toLowerCase())
+    }
+    );
+
     return (
         <div>
+            <div className="mb-4">
+                <DebouncedSearchInput
+                    data={{
+                        search: searchQuery,
+                        setSearch: setSearchQuery,
+                        placeholder: "Search tag",
+                    }}
+                />
+            </div>
+
             <Table
                 loading={loader}
                 columns={columns}
-                dataSource={data}
+                dataSource={filteredTags}
                 pagination={{
                     pageSize: 10,
-                    total: data?.length,
+                    total: filteredTags?.length,
                     onChange: (page, pageSize) => {
                         // fetchUserDetails(page)
                     },

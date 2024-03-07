@@ -1,7 +1,7 @@
 import React from "react";
 
 // libraries
-import { FaRegWindowClose } from "react-icons/fa";
+import { FaRegWindowClose , FaRegStopCircle } from "react-icons/fa";
 import { BsFillPlusSquareFill } from "react-icons/bs";
 
 // components
@@ -17,6 +17,7 @@ const ChatPromptInputForm = ({ states, actions, refs }) => {
     onSelectingTag,
     handleKeyDown,
     onInputPromptChange,
+    handleStopGeneratingButton,
   } = actions;
 
   return (
@@ -94,10 +95,17 @@ const ChatPromptInputForm = ({ states, actions, refs }) => {
           id="input-button"
           className="CustomNewButton"
           type="submit"
-          disabled={loading}
-        >
+        > 
           <SendIcon />
+          {/* {loading ? (
+            <button onClick={() => handleStopGeneratingButton()}>
+              <FaRegStopCircle />
+            </button>
+          ) : (
+            <SendIcon />
+          )} */}
         </button>
+        
       </div>
     </form>
   );

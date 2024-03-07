@@ -4,8 +4,7 @@ import React from "react";
 import { Space, Table, Tag, Switch, message } from "antd";
 
 //--------api ------//
-import Assistant from "../../api/assistant";
-const { toggleAssistantAccess } = Assistant();
+import { updateAssistantAccessForTeam } from "../../api/assistant";
 
 const AssistantSettings = ({ data }) => {
   const { loader, teamList, handleFetchTeams } = data;
@@ -14,13 +13,18 @@ const AssistantSettings = ({ data }) => {
   //------Api calls------//
   const handleToggleAssistantAccess = async (record) => {
     try {
-      const updatedValue = !record.hasAssistantCreationAccess;
-      await toggleAssistantAccess(record._id, updatedValue, (updatedTeam) => {
+      const updatedAccessBoolean = !record.hasAssistantCreationAccess;
+      const payload = {
+        hasAssistantCreationAccess: updatedAccessBoolean,
+      };
+      const response = await updateAssistantAccessForTeam(record._id, payload);
+
+      if (response) {
         handleFetchTeams();
-        message.success(`Team ${updatedTeam.teamTitle} updated successfully`);
-      });
+        message.success(`Team ${record?.teamTitle} updated successfully`);
+      }
     } catch (error) {
-      message.error("Something went wrong");
+      message.error(error.response.data.message || error.message);
     }
   };
 

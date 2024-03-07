@@ -1,7 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
+import axios from "axios";
 
 // libraries
 import { useNavigate, useParams } from "react-router-dom";
+import { FaArrowDown } from "react-icons/fa";
 
 // components
 import ChatSkeleton from "../../component/Chat/ChatSkeleton";
@@ -24,10 +26,13 @@ const ChatPage = () => {
   // ----- STATES ----- //
   const [selectedTags, setSelectedTags] = useState([]);
   const [inputPrompt, setInputPrompt] = useState("");
+    const [showScrollToBottomButton, setShowScrollToBottomButton] =
+    useState(true);
 
   // ----- REFS ----- //
   const chatLogWrapperRef = useRef(null);
   const promptInputRef = useRef(null);
+  const cancelTokenSourceRef = useRef();
 
   // ----- HOOK & CONTEXT VARIABLES ----- //
   const { currentPromptTemplate } = useContext(
@@ -48,11 +53,16 @@ const ChatPage = () => {
     fetchChatLogPerThread,
     fetchTagList,
     fetchTemplates,
+      setEditedPrompt,
+      editedPrompt,
+      handleEdit,
+      handleCancelClick,
+      handleSaveClick
+   
   } = useChatPage();
   const { thread_id } = useParams();
   const navigate = useNavigate();
   const { setTriggerNavContent } = useContext(SidebarContext);
-
   // ----- SIDE EFFECTS ----- //
   useEffect(() => {
     if (thread_id && !isFirstMessage) {
@@ -74,6 +84,19 @@ const ChatPage = () => {
   }, [thread_id]);
 
   useEffect(() => {
+    const scrollableDiv = chatLogWrapperRef.current;
+    if (scrollableDiv) {
+      scrollableDiv.addEventListener("scroll", handleScrollToBottomButton);
+    }
+
+    return () => {
+      if (scrollableDiv) {
+        scrollableDiv.removeEventListener("scroll", handleScrollToBottomButton);
+      }
+    };
+  }, [chatLogWrapperRef.current]);
+
+  useEffect(() => {
     fetchTagList();
     fetchTemplates();
 
@@ -92,12 +115,17 @@ const ChatPage = () => {
     inputElementAutoGrow(promptInputRef.current);
   }, [inputPrompt])
 
+
+
   // ----- HANDLE API CALLS ----- //
   // [TODO] - change the way tags are getting sent to the backend
   const handlePromptSubmit = async (e) => {
     e.preventDefault();
 
+    cancelTokenSourceRef.current = axios.CancelToken.source();
+
     try {
+      scrollToBottomForRefElement(chatLogWrapperRef);
       setErrorMessage(null);
       setIsGeneratingResponse(true);
 
@@ -129,7 +157,7 @@ const ChatPage = () => {
         //   `${process.env.REACT_APP_BASE_URL}api/prompt/stream`,
         //   generateFetchConfig("POST", body, getUserToken())
         // );
-        const { success, promptResponse, message } = await getGptResponse(body);
+        const { success, promptResponse, message } = await getGptResponse(body,cancelTokenSourceRef.current);
 
         let tagsList = [];
         if (tagIds.length) {
@@ -208,6 +236,13 @@ const ChatPage = () => {
     }
   };
 
+  const handleStopGeneratingButton = async () => {
+    if (cancelTokenSourceRef.current) {
+      cancelTokenSourceRef.current.cancel('Canceled.!! Ask a new question.');
+    }
+    setIsGeneratingResponse(false)
+  };
+
   const handleRemoveTag = (obj) => {
     setSelectedTags((prevSelected) =>
       prevSelected.filter((selectedObj) => selectedObj._id !== obj._id)
@@ -226,6 +261,17 @@ const ChatPage = () => {
         ...prevSelected,
         { _id: obj._id, title: obj.title },
       ]);
+    }
+  };
+
+  const handleScrollToBottomButton = () => {
+    const scrollableDiv = chatLogWrapperRef.current;
+
+    if (scrollableDiv) {
+      const isScrolledUp = scrollableDiv.scrollTop >= 0;
+      const isAtBottom = scrollableDiv.scrollTop + scrollableDiv.clientHeight >= scrollableDiv.scrollHeight - 1;
+  
+      setShowScrollToBottomButton(isScrolledUp && !isAtBottom);
     }
   };
 
@@ -266,6 +312,14 @@ const ChatPage = () => {
                     }}
                   />
                 ))}
+                 {showScrollToBottomButton && (
+                <button
+                  onClick={() => scrollToBottomForRefElement(chatLogWrapperRef)}
+                  className="GptScrollUpButton"
+                >
+                  <FaArrowDown />
+                </button>
+              )}
               </>
             )}
           </>
@@ -287,6 +341,7 @@ const ChatPage = () => {
           onSelectingTag: handleSelectTag,
           handleKeyDown,
           onInputPromptChange: handleInputPromptChange,
+          handleStopGeneratingButton,
         }}
       />
     </section>

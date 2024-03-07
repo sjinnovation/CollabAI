@@ -30,9 +30,9 @@ export const getGptStreamResponse = async (req, res) => {
 
       // getting configs
       temperature =
-          parseFloat(await getOpenAiConfig("temperature", config)) ?? 0.7;
-      gptModel = await getOpenAiConfig("model", config);
-      openAiKey = await getOpenAiConfig("openaikey", config);
+          parseFloat(await getOpenAiConfig("temperature"));
+      gptModel = await getOpenAiConfig("model");
+      openAiKey = await getOpenAiConfig("openaikey");
 
       if (!gptModel || !openAiKey) {
           return res.status(StatusCodes.BAD_REQUEST).json({
@@ -99,6 +99,9 @@ export const getGptStreamResponse = async (req, res) => {
 export const getGptPrompt = async (req, res, next) => {
 	const userid = req.params.userid;
 	const { temp, threadId: threadid, chatLog, compId, tags } = req.body;
+
+	let temperature, gptModel, openAiKey;
+
 	try {
     const user = await User.findById(userid);
     if (!user) {
@@ -113,24 +116,28 @@ export const getGptPrompt = async (req, res, next) => {
         content: item.botMessage ? item.botMessage : item.chatPrompt,
       }));
 
-    const temperature = parseFloat(
-      (await config.findOne({ key: "temperature" }))?.value || "0.7"
-    );
+    // const temperature = parseFloat(
+    //   (await config.findOne({ key: "temperature" }))?.value || "0.7"
+    // );
 
-    const configModel = await config.findOne({ key: "model" });
-    if (!configModel) {
-      return next(BadRequest(PromptMessages.MODEL_NOT_FOUND));
-		}
+    // const configModel = await config.findOne({ key: "model" });
+    // if (!configModel) {
+    //   return next(BadRequest(PromptMessages.MODEL_NOT_FOUND));
+		// }
 
-    const configOpenAI = await config.findOne({ key: "openaikey" });
-    if (!configOpenAI) {
-      return next(BadRequest(PromptMessages.OPENAI_KEY_NOT_FOUND));
-		}
+    // const configOpenAI = await config.findOne({ key: "openaikey" });
+    // if (!configOpenAI) {
+    //   return next(BadRequest(PromptMessages.OPENAI_KEY_NOT_FOUND));
+		// }
 
-    const openai = new OpenAI({ apiKey: configOpenAI.value });
+		temperature = parseFloat(await getOpenAiConfig("temperature"));
+    gptModel = await getOpenAiConfig("model");
+    openAiKey = await getOpenAiConfig("openaikey");
+
+    const openai = new OpenAI({ apiKey:  openAiKey });
     const completion = await openai.chat.completions.create({
       messages: [...contextArray, { role: "user", content: temp }],
-      model: configModel.value,
+      model: gptModel,
       temperature,
 		});
 
@@ -143,7 +150,7 @@ export const getGptPrompt = async (req, res, next) => {
       promptresponse: completion.choices[0].message.content,
       promptdate: promptDate,
 			createdAt: new Date(),
-      modelused: configModel.value,
+      modelused: gptModel,
 			tags,
 		});
 

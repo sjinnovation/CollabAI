@@ -17,6 +17,7 @@ import TeamList from "./SuperAdmin/Team/Teams";
 import AssistantsList from './SuperAdmin/Assistant/AssistantsList';
 import ChatPage from "./ChatPage";
 import AssistantsChatPage from "./AssistantsChatPage";
+import AssistantFileDownloadPage from "./AssistantFileDownload";
 
 export {
   LoginForm,
@@ -35,5 +36,6 @@ export {
   TeamList,
   AssistantsList,
   ChatPage,
-  AssistantsChatPage
+  AssistantsChatPage,
+  AssistantFileDownloadPage
 };

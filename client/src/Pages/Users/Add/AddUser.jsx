@@ -3,7 +3,7 @@ import { addUser, getTeams } from "../../../api/user";
 import "./AddUser.css";
 import { compId } from "../../../constants/localStorage";
 import FormComponent from "../../../component/common/FormComponent";
-import { message } from "antd";
+import { message, Select, Space } from "antd";
 
 const AddUser = (props) => {
   const [teams, setTeams] = useState([]);
@@ -30,11 +30,13 @@ const AddUser = (props) => {
       password: values.password,
       branch: "",
       email: values.email.toLowerCase(),
-      status: values.status,
+      status: values?.status,
       role: "user",
       companyId: compId,
-      teamId: values.team,
+      teams: values.teams,
     };
+
+
     (async () => {
       try {
         let res = await addUser(requestBody);
@@ -42,7 +44,7 @@ const AddUser = (props) => {
         message.success(res.data.msg);
         props.setAddModal(false);
       } catch (err) {
-        if (err && err.response.status === 400) {
+        if (err && err.response?.status === 400) {
           alert("User already exists");
         }
         message.error(err)
@@ -50,6 +52,8 @@ const AddUser = (props) => {
       }
     })();
   };
+
+
 
   const formItems = [
     {
@@ -96,21 +100,29 @@ const AddUser = (props) => {
         },
       ],
     },
+
     {
-      name: "team",
-      label: "Team",
-      type: "select",
-      options: teams.map((team) => ({
+      name: "teams",
+      label: "Teams",
+      type: "multiselect",
+
+      style: {
+        width: '100%',
+      },
+      placeholder: "Please select your team",
+      options: teams?.map((team) => ({
         label: team.teamTitle,
         value: team._id,
       })),
-      rules: [
-        {
-          required: true,
-          message: "Please select your team!",
-        },
-      ],
+      optionRender: (option) => (
+        <Space>
+          <span role="img" aria-label={option.label}>
+            {option.label}
+          </span>
+        </Space>
+      ),
     },
+
     {
       name: "status",
       label: "Status",
@@ -141,6 +153,8 @@ const AddUser = (props) => {
       loading: loading
     },
   ];
+
+
 
   return (
     <>

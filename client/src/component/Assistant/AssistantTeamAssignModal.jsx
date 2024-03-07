@@ -22,7 +22,7 @@ const AssistantTeamAssignModal = ({ data }) => {
     useEffect(() => {
         if(selectedAssistant !== null && selectedAssistant) {
             setSelectedTeamList(() => {
-                return selectedAssistant?.teamId.map(team => team._id)
+                return selectedAssistant?.teamId?.map(team => team._id)
             });
         }
     }, [selectedAssistant]);

@@ -14,12 +14,29 @@ export const SUPER_ADMIN_FETCH_A_TAG_SLUG = (id) => `/api/meetingTypes/get/${id}
 export const SUPER_ADMIN_EDIT_A_TAG_SLUG = (id) => `/api/meetingTypes/update/${id}`;
 
 //------------------ASSISTANT_API_SLUG----------------------
-export const SUPER_ADMIN_GET_ALL_ASSISTANTS_SLUG = (page, limit) => `/api/assistants?page=${page}&limit=${limit}`;
-export const USER_GET_ALL_USER_CREATED_ASSISTANTS_SLUG = (id) => `/api/assistants/users/created/${id}`;
+export const SUPER_ADMIN_GET_ALL_ASSISTANTS_SLUG = (page=1, limit=10, orgAssistantSearchQuery) =>
+  `/api/assistants?page=${page}&limit=${limit}&searchQuery=${orgAssistantSearchQuery ? orgAssistantSearchQuery : ''}`;
+export const USER_GET_ALL_USER_CREATED_ASSISTANTS_SLUG = (id, page=1, limit=10, personalAssistantSearchQuery) =>
+  `/api/assistants/users/created/${id}?page=${page}&pageSize=${limit}&searchQuery=${personalAssistantSearchQuery ? personalAssistantSearchQuery : ''}`;
 export const SUPER_ADMIN_CREATE_NEW_ASSISTANT_SLUG = () => `/api/assistants`;
-export const SUPER_ADMIN_DELETE_ASSISTANT_SLUG = (id) => `/api/assistants/${id}`;
-export const SUPER_ADMIN_FETCH_USER_STATS_ASSISTANT_SLUG = () => `/api/assistants/users/stats`;
-export const SUPER_ADMIN_EDIT_A_ASSISTANT_SLUG = (id) => `/api/assistants/${id}`;
+export const SUPER_ADMIN_DELETE_ASSISTANT_SLUG = (id) =>
+  `/api/assistants/${id}`;
+export const SUPER_ADMIN_FETCH_USER_STATS_ASSISTANT_SLUG = () =>
+  `/api/assistants/users/stats`;
+export const SUPER_ADMIN_EDIT_A_ASSISTANT_SLUG = (id) =>
+  `/api/assistants/${id}`;
+export const SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG = (id, searchQuery) =>
+  `/api/assistants/users/created/${id}?searchQuery=${searchQuery}`;
+export const SEARCH_ALL_ORGANIZATIONAL_ASSISTANTS_SLUG = (searchQuery) =>
+  `/api/assistants?searchQuery=${searchQuery}`;
+export const UPDATE_ASSISTANT_TEAM_LIST_API = (assistantId) =>
+  `/api/assistants/${assistantId}/teams`;
+export const UPDATE_SINGLE_ASSISTANT_API = (assistantId) =>
+  `/api/assistants/${assistantId}`;
+export const UPDATE_ASSISTANT_WITH_FILES_API = (assistantId) =>
+  `/api/assistants/updatedatawithfile/${assistantId}`;
+export const CREATE_SINGLE_ASSISTANT_API = "/api/assistants";
+export const UPDATE_ASSISTANT_ACCESS_FOR_TEAM_API =(teamId) => `/api/teams/${teamId}`;
 
 //----------------USERS_PROMPTS_DETAILS_API 
 export const USER_PROMPTS_API_SLUG = (page, limit, searchInputValue) =>
