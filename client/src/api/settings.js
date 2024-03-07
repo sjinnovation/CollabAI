@@ -4,15 +4,16 @@ import {
   GET_OPEN_AI_MODEL_SLUG,
   GET_TEMPERATURE_SLUG,
 } from "../constants/setting_api_constant";
-import { axiosSecure } from "./axios";
+import { axiosSecureInstance } from "./axios";
+
 
 const userId = getUserID();
 
 export const getConfig = async () => {
   try {
-    const key = await axiosSecure.get(GET_OPEN_AI_API_KEY_SLUG());
-    const temp = await axiosSecure.get(GET_TEMPERATURE_SLUG());
-    const model = await axiosSecure.get(GET_OPEN_AI_MODEL_SLUG());
+    const key = await axiosSecureInstance.get(GET_OPEN_AI_API_KEY_SLUG);
+    const temp = await axiosSecureInstance.get(GET_TEMPERATURE_SLUG);
+    const model = await axiosSecureInstance.get(GET_OPEN_AI_MODEL_SLUG);
 
     const response = {
       key: key?.data?.key?.value,
@@ -31,7 +32,7 @@ export const updateOpenAIKey = async (key) => {
     let body = {
       key: key,
     }
-    const response = await axiosSecure.post(`/api/config/set-key/${userId}`, body)
+    const response = await axiosSecureInstance.post(`/api/config/set-key/${userId}`, body)
     return response;
   } catch (error) {
     return error;
@@ -43,7 +44,7 @@ export const updateTemperature = async (temperature) => {
     let body = {
       temperature: temperature,
     }
-    const response = await axiosSecure.post(`/api/config/set-temperature/${userId}`, body)
+    const response = await axiosSecureInstance.post(`/api/config/set-temperature/${userId}`, body)
     return response;
   } catch (error) {
     return error;
@@ -55,7 +56,7 @@ export const updateModel = async (model) => {
     let body = {
       model: model,
     }
-    const response = await axiosSecure.post(`/api/config/set-openai-model/${userId}`, body)
+    const response = await axiosSecureInstance.post(`/api/config/set-openai-model/${userId}`, body)
     return response;
   } catch (error) {
     return error;

@@ -65,11 +65,12 @@ const EditUser = (props) => {
     fetchTeams();
   }, []);
 
+  const fetchSingleUserById = async () => {
+    const response = await getUser(props.id);
+    setUserInfo(response?.data?.user);
+  };
+
   useEffect(() => {
-    const fetchSingleUserById = async () => {
-      const response = await getUser(props.id);
-      setUserInfo(response?.data?.user);
-    };
     fetchSingleUserById();
   }, [props.id]);
 
@@ -97,20 +98,22 @@ const EditUser = (props) => {
       lname: values.lastname,
       email: state.email.toLowerCase(),
     };
-    if (values.team) {
-      requestBody.teamId = values.team;
-    } else if (userInfo.teamId) {
-      requestBody.teamId = userInfo?.teamId;
+    if (values.teams) {
+      requestBody.teams = values.teams;
+    } else if (userInfo.teams) {
+      requestBody.teams = userInfo?.teams?.map(team => team._id);
     }
     if (values.status) {
       requestBody.status = values.status;
     } else {
       requestBody.status = userInfo?.status;
     }
+
     (async () => {
       try {
         await editUser(props.id, requestBody);
         props.setEditModal(false);
+        fetchSingleUserById();
         setLoading(false);
       } catch (err) {
         if (err && err?.response?.status == 400) {
@@ -124,13 +127,14 @@ const EditUser = (props) => {
   };
 
   const defaultValues = {
-    currentteam: userInfo?.teamId
-      ? userInfo?.teamId?.teamTitle
+    currentteam: userInfo?.teams
+      ? userInfo.teams?.map(team=> team.teamTitle)
       : "Not assigned",
     email: state.email,
     firstname: state.firstName,
     lastname: state.lastName,
-    status: userInfo.status
+    status: userInfo.status,
+    teams: userInfo?.teams?.map(team=> team._id)
   };
 
   const formItems = [
@@ -163,9 +167,9 @@ const EditUser = (props) => {
       disabled: true,
     },
     {
-      name: "team",
+      name: "teams",
       label: "Change Team",
-      type: "select",
+      type: "multiselect",
       options: teams.map((team) => ({
         label: team.teamTitle,
         value: team._id,

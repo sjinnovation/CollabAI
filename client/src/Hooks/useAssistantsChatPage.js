@@ -3,15 +3,12 @@ import React, { useContext, useEffect, useState } from "react";
 // libraries
 import { useNavigate } from "react-router-dom";
 
-// components
-
 // hooks & contexts
 import { AssistantContext } from "../contexts/AssistantContext";
 
 // services & helpers
 
 // api
-import { axiosOpen, axiosSecureInstance } from "../api/axios";
 import { createChatPerAssistant, getAssistantChatsPerThread, getSingleAssistant, uploadFilesForAssistant } from "../api/assistant-chat-page-api";
 
 
@@ -32,10 +29,11 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isFirstMessage, setIsFirstMessage] = useState(false);
   const [assistantData, setAssistantData] = useState(null);
+  const [assistantAllInfo, setAssistantAllInfo] = useState(null)
   // loading states
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isMessageFetching, setIsMessageFetching] = useState(false);
-
+  
 
     const navigate = useNavigate();
     const { setTriggerUpdateThreads } = useContext(AssistantContext);
@@ -106,10 +104,12 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
     try {
       const response = await getSingleAssistant(assistant_id)
       setAssistantData(response?.assistant?.static_questions);
+      setAssistantAllInfo(response?.assistant)
     } catch (error) {
       console.log(error);
     }
   };
+  
 
   const handleCreateAssistantChat = async (event) => {
     try {
@@ -118,6 +118,9 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
       if (isGeneratingResponse || inputPrompt.trim() === "") return;
   
       setIsGeneratingResponse(true);
+
+  
+
       const userPrompt = inputPrompt.trim();
       setInputPrompt("");
       prependToChatLog(userPrompt);
@@ -125,8 +128,8 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
       const reqBody = { question: userPrompt };
       if (thread_id) reqBody.thread_id = thread_id;
   
-      const { success, chat, message } = await createChatPerAssistant(assistant_id, reqBody);
-  
+    
+      const { success, chat, message } = await createChatPerAssistant(assistant_id, reqBody   );
       if (success) {
         chat.userPrompt = inputPrompt;
         appendBotResponseToChat(chat);
@@ -192,6 +195,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id }) => {
     assistantData,
     selectedFiles,
     inputPrompt,
+    assistantAllInfo,
     // BOOLEANS
     isMessageFetching,
     isFirstMessage,

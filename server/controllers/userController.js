@@ -3,7 +3,7 @@ import StatusCodes from 'http-status-codes';
 import sendEmail from '../utils/mailGun.js';
 import promptModel from '../models/promptModel.js';
 import Company from '../models/companyModel.js';
-import { CommonMessages, UserMessages } from '../constants/enums.js';
+import { CommonMessages, TeamMessages, UserMessages } from '../constants/enums.js';
 import { BadRequest } from '../middlewares/customError.js';
 
 /**
@@ -47,7 +47,7 @@ export const getAllUsers = async (req, res) => {
 			.skip(skip);
 
 		if (role === UserRole.SUPER_ADMIN) {
-			query = query.populate('teamId');
+			query = query.populate('teams');
 		}
 
 		const users = await query;
@@ -211,7 +211,7 @@ export const getSingleUserByID = async (req, res, next) => {
 	try {
 		const user = await User.findOne({ _id: userId })
 			.select('-password')
-			.populate('teamId');
+			.populate('teams');
 		if (!user) {
 			return next(BadRequest(UserMessages.USER_NOT_FOUND));
 		}
@@ -221,7 +221,7 @@ export const getSingleUserByID = async (req, res, next) => {
 		});
 	} catch (error) {
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: CommonMessages.INTERNAL_SERVER_ERROR,error
+			message: CommonMessages.INTERNAL_SERVER_ERROR, error
 		});
 	}
 };
@@ -254,19 +254,29 @@ export const getSingleUserByID = async (req, res, next) => {
 export const UpdateUser = async (req, res, next) => {
 	const { id } = req.params;
 	const {
-		body: { fname, lname, email, teamId, status },
+		body: { fname, lname, email, teams, status },
 	} = req;
 
 	if (!fname || !lname || !email) {
 		return next(BadRequest(UserMessages.PROVIDE_REQUIRED_FIELDS));
 	}
 
+	const updateFields = {
+		fname,
+		lname,
+		email,
+		...(teams && { teams }),
+		...(status && { status }),
+	};
+
+	// console.log("UpdatedFields:", updateFields)
+
 	try {
 		const updateFields = {
 			fname,
 			lname,
 			email,
-			...(teamId && { teamId }),
+			...(teams && { teams }),
 			...(status && { status }),
 		};
 
@@ -540,6 +550,7 @@ export const softUserDelete = async (req, res, next) => {
  *
  * @returns {Response} Update result for users.
  */
+
 export const bulkTeamAssignToUsers = async (req, res) => {
 	const { selectedUsersIds, assignedTeamId } = req.body;
 
@@ -547,8 +558,19 @@ export const bulkTeamAssignToUsers = async (req, res) => {
 		// Define the condition to match the documents by their ObjectIds
 		const condition = { _id: { $in: selectedUsersIds } };
 
-		// Define the update you want to apply
-		const update = { teamId: assignedTeamId };
+		// Fetch the existing teams of the selected users
+		const users = await User.find(condition);
+		const existingTeams = users?.map(user => user.teams);
+
+		// Check if assignedTeamId already exists in any of the teams arrays
+		const teamAlreadyExists = existingTeams.some(teams => teams.includes(assignedTeamId));
+
+		if (teamAlreadyExists) {
+			return res.status(StatusCodes.BAD_REQUEST).json({ message: TeamMessages.TEAM_ALREADY_ASSIGNED });
+		}
+
+		// Define the update 
+		const update = { $addToSet: { teams: assignedTeamId } };
 
 		// Use updateMany to update all documents that match the condition
 		const result = await User.updateMany(condition, update);
@@ -560,3 +582,29 @@ export const bulkTeamAssignToUsers = async (req, res) => {
 			.json({ message: CommonMessages.INTERNAL_SERVER_ERROR });
 	}
 };
+
+
+export const migrateDBForUserCollection = async (req, res) => {
+	try {
+		const users = await User.find({})
+		// Iterate through each user
+		for (const user of users) {
+			// Check if the user has a "teamId" field
+			if (user.deletedEmail) {
+
+				continue
+			}
+			if (user.teamId) {
+				// Update the "teams" field with the value of "teamId"
+				user.teams = [user.teamId];
+				//   console.log(user)
+				// Save the updated user
+				await user.save();
+			}
+		}
+		res.send({ users })
+		console.log("let's migrate", users)
+	} catch (error) {
+		console.log("Migration Failed:", error)
+	}
+}

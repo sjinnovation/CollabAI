@@ -1,7 +1,11 @@
 import { useState, useEffect, useContext } from "react";
-import Assistant from "../api/assistant";
 import { message } from "antd";
 import { AssistantContext } from "../contexts/AssistantContext";
+import { SEARCH_ALL_ORGANIZATIONAL_ASSISTANTS_SLUG, SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG } from "../constants/Api_constants";
+import { axiosSecureInstance } from "../api/axios";
+import { getUserID } from "../Utility/service";
+import { SEARCH_ASSISTANTS } from "../api/assistant_api_constant";
+import { deleteAssistant, fetchAllAssistants, fetchAssistantStatisticsForUser, fetchAssistantsCreatedByUser, fetchTeams, updateAssistant, updateAssistantTeams } from "../api/assistant";
 
 const initialLoaderState = {
   ASSISTANT_UPDATING: false,
@@ -12,15 +16,6 @@ const initialLoaderState = {
   ASSISTANT_STATS_LOADING: true,
   TEAM_LOADING: true,
 };
-const {
-  fetchSingleUserAssistants,
-  deleteAssistant,
-  updateAssistant,
-  fetchUsersAssistantsStats,
-  fetchTeams,
-  fetchAllAssistants,
-  handleAssignTeam,
-} = Assistant();
 
 const useAssistantPage = () => {
   const [adminUserAssistants, setAdminUserAssistants] = useState([]);
@@ -30,26 +25,57 @@ const useAssistantPage = () => {
   const [loader, setLoader] = useState({
     ...initialLoaderState,
   });
+  const [totalCount, setTotalCount] = useState()
+  const [orgAssistantSearchQuery, setOrgAssistantSearchQuery] = useState('')
+  const [personalAssistantSearchQuery, setPersonalAssistantSearchQuery] = useState('')
 
   const { triggerRefetchAssistants } = useContext(AssistantContext);
 
   useEffect(() => {
-    handleFetchUserCreatedAssistants();
+    handleFetchUserCreatedAssistants(1);
     handleFetchUserAssistantStats();
     handleFetchAllAssistants(1);
     handleFetchTeams();
   }, []);
 
-  const handleAssignTeamToAssistant = async (assistantId, teamIds) => {
+  useEffect(()=>{
+    handleFetchAllAssistants(1, orgAssistantSearchQuery)
+  },[orgAssistantSearchQuery])
+
+  useEffect(()=>{
+    handleFetchUserCreatedAssistants(1, personalAssistantSearchQuery)
+  },[personalAssistantSearchQuery])
+
+  const updateLoader = (newState) => {
+    setLoader((prevLoader) => ({ ...prevLoader, ...newState }));
+  };
+
+  const handleShowMessage = (receivedMessage) => {
+    if (receivedMessage instanceof Error) {
+      message.error(
+        receivedMessage?.response?.data?.message || receivedMessage.message
+      );
+    } else if (typeof receivedMessage === "string") {
+      message.success(receivedMessage);
+    }
+  };
+
+  // API FUNCTIONS
+
+  const handleAssignTeamToAssistant = async (assistantId, teamIds, successCb) => {
+    updateLoader({ ASSISTANT_UPDATING: assistantId });
     try {
-      updateLoader({ ASSISTANT_UPDATING: assistantId });
-      const response = await handleAssignTeam(assistantId, teamIds, () => {
+      const payload = { teamIds };
+      const response = await updateAssistantTeams(assistantId, payload);
+
+      if (response) {
+        handleShowMessage(response.message);
         handleFetchUserCreatedAssistants();
         handleFetchAllAssistants(1);
-      });
-      handleShowMessage(response);
+        successCb();
+      }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ASSISTANT_UPDATING: false });
     }
@@ -59,28 +85,32 @@ const useAssistantPage = () => {
     try {
       updateLoader({ ASSISTANT_UPDATING: assistantId });
       const response = await updateAssistant(assistantId, data);
-      handleFetchUserCreatedAssistants();
-      handleFetchAllAssistants(1);
-      handleShowMessage(response);
 
-      if(response?.data) {
+      if(response) {
+        handleFetchUserCreatedAssistants();
+        handleFetchAllAssistants(1);
+        handleShowMessage(response.message);
         triggerRefetchAssistants();
       }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ASSISTANT_UPDATING: false });
     }
   };
 
-  const handleFetchUserCreatedAssistants = async () => {
+  const handleFetchUserCreatedAssistants = async (page, personalAssistantSearchQuery) => {
+    
     try {
       updateLoader({ ASSISTANT_LOADING: true });
-      await fetchSingleUserAssistants(1, (assistantsData) => {
-        setAdminUserAssistants(assistantsData.assistants);
-      });
+      const response = await fetchAssistantsCreatedByUser(page, false , personalAssistantSearchQuery);
+
+      if(response) {
+        setAdminUserAssistants(response.data);
+        setTotalCount(response.meta.total);
+      }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ASSISTANT_LOADING: false });
     }
@@ -89,9 +119,11 @@ const useAssistantPage = () => {
   const handleFetchUserAssistantStats = async () => {
     try {
       updateLoader({ ASSISTANT_STATS_LOADING: true });
-      await fetchUsersAssistantsStats((assistantsData) => {
+      const response = await fetchAssistantStatisticsForUser();
+
+      if(response) {
         setUserAssistants(
-          assistantsData.userStats.map((item) => {
+          response.data.map((item) => {
             return {
               ...item,
               key: item._id,
@@ -100,42 +132,45 @@ const useAssistantPage = () => {
             };
           })
         );
-      });
+      }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ASSISTANT_STATS_LOADING: false });
     }
   };
 
   const handleDeleteAssistant = async (assistantId) => {
+    updateLoader({ ASSISTANT_DELETING: assistantId });
     try {
-      updateLoader({ ASSISTANT_DELETING: assistantId });
       const response = await deleteAssistant(assistantId);
-      handleFetchUserCreatedAssistants();
-      handleFetchUserAssistantStats();
-      handleFetchAllAssistants(1)
-      handleShowMessage(response);
-      
-      if(response?.data) {
+
+      if(response) {
+        handleFetchUserCreatedAssistants();
+        handleFetchUserAssistantStats();
+        handleFetchAllAssistants(1)
+        handleShowMessage(response.message);
         triggerRefetchAssistants();
       }
     } catch (error) {
       console.log(error);
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ASSISTANT_DELETING: false });
     }
   };
 
-  const handleFetchAllAssistants = async (page) => {
+  const handleFetchAllAssistants = async (page, orgAssistantSearchQuery) => {
+    
     try {
       updateLoader({ ALL_ASSISTANT_LOADING: true });
-      await fetchAllAssistants(page, 10, (response) => {
+      const response = await fetchAllAssistants(page, 10, orgAssistantSearchQuery);
+
+      if(response) {
         setAssistants(response);
-      });
+      }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ ALL_ASSISTANT_LOADING: false });
     }
@@ -144,34 +179,53 @@ const useAssistantPage = () => {
   const handleFetchTeams = async () => {
     try {
       updateLoader({ TEAM_LOADING: true });
-      await fetchTeams((response) => {
-        setTeamList(response);
-      });
+      const response = await fetchTeams();
+
+      if(response) {
+        setTeamList(response.data);
+      }
     } catch (error) {
-      handleShowMessage(error?.response?.data?.message);
+      handleShowMessage(error);
     } finally {
       updateLoader({ TEAM_LOADING: false });
     }
   };
 
-  const updateLoader = (newState) => {
-    setLoader((prevLoader) => ({ ...prevLoader, ...newState }));
-  };
-
-  const handleShowMessage = (response) => {
-    if (response?.error) {
-      message.error(response.error);
-    } else if (response?.data) {
-      message.success(response.data.message);
-    } else {
-      message.error("Something went wrong!");
+  const searchOrganizationalAssistants = async (searchQuery) => {
+    try {
+      updateLoader({ ALL_ASSISTANT_LOADING: true });
+      const response = await axiosSecureInstance.get(SEARCH_ALL_ORGANIZATIONAL_ASSISTANTS_SLUG(searchQuery))
+      setAssistants(response.data)
+      updateLoader({ ALL_ASSISTANT_LOADING: false });
+    } catch (error) {
+      console.log(error)
+      updateLoader({ ALL_ASSISTANT_LOADING: false });
     }
-  };
+
+  }
+
+  const searchPersonalAssistants = async (searchQuery) => {
+    try {
+      updateLoader({ ASSISTANT_LOADING: true });
+      const response = await axiosSecureInstance.get(SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG(getUserID(), searchQuery))
+      setAdminUserAssistants(response.data?.assistants)
+      updateLoader({ ASSISTANT_LOADING: false });
+    } catch (error) {
+      console.log(error)
+      updateLoader({ ASSISTANT_LOADING: false });
+    }
+
+  }
+
+  
 
   return {
+    setAdminUserAssistants,
     adminUserAssistants,
+    totalCount,
     userAssistants,
     assistants,
+    setAssistants,
     teamList,
     loader,
     handleAssignTeamToAssistant,
@@ -181,6 +235,15 @@ const useAssistantPage = () => {
     handleDeleteAssistant,
     handleFetchAllAssistants,
     handleFetchTeams,
+    updateLoader,
+    searchOrganizationalAssistants,
+    searchPersonalAssistants,
+    //Search query for organizational assistants
+    orgAssistantSearchQuery,
+    setOrgAssistantSearchQuery,
+    //Search query for personal assistants
+    personalAssistantSearchQuery,
+    setPersonalAssistantSearchQuery
   };
 };
 

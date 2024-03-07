@@ -8,6 +8,7 @@ import FormEmail from "./FormEmail";
 import FormButton from "./FormButton";
 import FormTextArea from "./FormTextArea";
 import FormFileInput from "./FormFileInput";
+import MultiSelect from "./MultiSelect";
 
 const FormComponent = ({
   title,
@@ -64,6 +65,8 @@ const FormComponent = ({
               return <FormInput key={index} {...item} />;
             case "select":
               return <FormSelect key={index} {...item} />;
+            case "multiselect":
+              return <MultiSelect key={index} {...item} />;
             case "datePicker":
               return (
                 <FormDatePicker

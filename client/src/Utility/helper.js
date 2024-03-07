@@ -153,4 +153,26 @@ const convertDate = (args) => {
   }
 };
 
+export const copyToClipboard = (textToCopy) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    // Navigator clipboard api method'
+    navigator.clipboard.writeText(textToCopy);
+    return true;
+  } else {
+    let textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Unable to copy to clipboard', err);
+    }
+    document.body.removeChild(textArea);
+    return true;
+  }
+};
+
 export { convertDate };

@@ -149,7 +149,7 @@ const AssistantThread = ({
                             }}
                         >
                             <input
-                                defaultValue={title}
+                                defaultValue={promptTitle || title}
                                 ref={threadInputRef}
                                 style={{ width: "100%" }}
                                 className="editPromptTextArea"
@@ -185,6 +185,7 @@ const AssistantThread = ({
 
             <>
                 <ConfirmationModal
+                    loading={isThreadDeleting}
                     open={confirmationModalOpen}
                     onConfirm={handleDeleteThread}
                     onCancel={handleCancel}

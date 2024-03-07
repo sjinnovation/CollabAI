@@ -2,7 +2,7 @@ import React from "react";
 
 // libraries
 import { HiOutlineUpload } from "react-icons/hi";
-import { CgAttachment } from "react-icons/cg";
+import { CgAttachment} from "react-icons/cg";
 import { MdDeleteOutline } from "react-icons/md";
 
 // components
@@ -20,7 +20,7 @@ const AssistantChatInputPrompt = ({ states, actions, refs }) => {
     isMessageFetching,
     isUploadingFile,
     hasFileAttachmentAccess,
-    inputPrompt, 
+    inputPrompt,
   } = states;
   const { fileInputRef } = refs;
   const {
@@ -35,9 +35,7 @@ const AssistantChatInputPrompt = ({ states, actions, refs }) => {
 
   return (
     <form onSubmit={onSubmit}>
-      <div
-        className="assistantInputPromptWrapper"
-      >
+      <div className="assistantInputPromptWrapper">
         {/* -----[START] CHAT BOX - SELECTED FILE LIST ----- */}
         {selectedFiles.length ? (
           <>
@@ -75,7 +73,7 @@ const AssistantChatInputPrompt = ({ states, actions, refs }) => {
           ></textarea>
 
           {/* -----[START] CHAT BOX - ATTACHMENT BUTTON ----- */}
-          {hasFileAttachmentAccess ? (
+          {
             <div className="p-2 d-flex align-items-center gap-2">
               {/* ----- files are selected, show file upload button ----- */}
               {selectedFiles?.length ? (
@@ -130,7 +128,7 @@ const AssistantChatInputPrompt = ({ states, actions, refs }) => {
                 </div>
               )}
             </div>
-          ) : null}
+          }
         </div>
         <button
           aria-label="form submit"

@@ -11,7 +11,6 @@ import {
   getTeams,
   searchUsers,
 } from "../../../api/user";
-import { loggedInUserRole } from "../../../constants/localStorage";
 import DebouncedSearchInput from "../../SuperAdmin/Organizations/DebouncedSearchInput";
 import { getUserRole } from "../../../Utility/service";
 import AddUser from "../Add/AddUser";
@@ -37,6 +36,7 @@ const ListUser = () => {
   const [editModal, setEditModal] = useState(false);
   const [editActive, setEditActive] = useState(null);
   const limit = 10;
+  const userRole = getUserRole();
 
   const showTeamAssignModal = () => {
     setIsModalOpen(true);
@@ -49,16 +49,18 @@ const ListUser = () => {
     setIsModalOpen(false);
   };
 
+  const fetchTeams = async () => {
+    try {
+      const response = await getTeams();
+      setTeamList(response.data.teams);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
   useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await getTeams();
-        setTeamList(response.data.teams);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    if (loggedInUserRole === "admin" || loggedInUserRole === "superadmin") {
+    if (userRole === "admin" || userRole === "superadmin") {
       fetchTeams();
       fetchInitialData();
     }
@@ -174,11 +176,21 @@ const ListUser = () => {
       dataIndex: "username",
     },
     {
-      title: "Team Title",
-      dataIndex: "teamTitle",
-      key: "teamTitle",
+      title: "Teams",
+      dataIndex: "teams",
+      key: "teams",
       className: "column-custom-style",
-      render: (text, record) => (record.teamId ? record.teamId.teamTitle : ""),
+      render: (_, { teams }) => (
+        <div className="d-flex align-items-center flex-wrap gap-1">
+          {(teams || [])?.map((team) => {
+            return (
+              <Tag color="geekblue" key={team._id}>
+                {team.teamTitle.toUpperCase()}
+              </Tag>
+            );
+          })}
+        </div>
+      ),
     },
     {
       title: "Role",
@@ -246,10 +258,12 @@ const ListUser = () => {
   });
 
   const showTotal = (total) => `Total ${total} items`;
-
+  
+  
   return (
     <>
-      <Container className="flex-grow-1 m-5">
+      <div className="container mt-5">
+      <div className="flex-grow-1 ">
         <div className="d-flex align-items-center justify-content-between">
           <div className="col-4">
             <Title level={2}>User Lists</Title>
@@ -377,7 +391,8 @@ const ListUser = () => {
         >
           <EditUser setEditModal={setEditModal} id={editActive} />
         </Modal>
-      </Container>
+      </div>
+      </div>
     </>
   );
 };

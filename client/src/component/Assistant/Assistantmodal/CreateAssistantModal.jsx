@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from "react";
 
 //libraries
-import { Button, Input, Radio, Tabs, Modal, Form } from "antd";
+import { Button, Input, Radio, Tabs, Modal, Form, message } from "antd";
 import { BsRobot } from "react-icons/bs";
 import { FaHashtag } from "react-icons/fa6";
 
@@ -28,6 +28,7 @@ const CreateAssistantModal = ({ data }) => {
   const [form] = Form.useForm();
   const [deleteFileIds, setDeleteFileIds] = useState([]);
   const [selectedTools ,setSelectedTools] =  useState([]);
+  const [activeKey, setActiveKey] = useState("unoptimized-data");
 
   const { triggerRefetchAssistants } = useContext(AssistantContext);
 
@@ -40,23 +41,21 @@ const CreateAssistantModal = ({ data }) => {
     [assistantData.file_ids, setDeleteFileIds]
   );
 
+
+  const getInitialFiles = useCallback(() => assistantData?.fileNames || [], [assistantData?.fileNames]);
+
   //--Side Effects---//
   useEffect(() => {
     form.setFieldsValue(assistantData);
-    setFileList(
-      assistantData?.fileNames
-        ? assistantData?.fileNames.map((file, index) => ({
-            uid: `existing-${index}`,
-            name: file,
-            status: "done",
-          }))
-        : []
-    );
-    
-    setDeleteFileIds([]);
-  }, [assistantData, form]);
 
-  // console.log(assistantData)
+    const newSelectedTools = assistantData?.tools?.map((tool) => tool) || [];
+    setSelectedTools(newSelectedTools);
+
+    //cleanup
+    return () => {
+      setDeleteFileIds([]);
+    }
+  }, [assistantData, form]);
 
   //------Hooks Declaration ------//
   const {
@@ -66,53 +65,62 @@ const CreateAssistantModal = ({ data }) => {
     handleCreateOrUpdateAssistantWithFiles,
     handleRemoveFile,
     handleAddFile,
-  } = useAssistantFileUpload(handleDeleteFileId,selectedTools);
+  } = useAssistantFileUpload(
+    handleDeleteFileId,
+    selectedTools,
+    getInitialFiles
+  );
 
   //------Api calls --------//
   const handleUploadFileAndCreateAssistant = async () => {
-    const formData = new FormData();
+    try {
+      await form.validateFields();
 
-    fileList.forEach((file) => {
-      formData.append("files", file);
-    });
-    if (deleteFileIds.length > 0) {
-      formData.append("deleted_files", JSON.stringify(deleteFileIds));
-    }
-    if(!editMode){
-      formData.append("userId", getUserID());
-    }
-    if (!isAdmin ) {
-      formData.append("category", "PERSONAL");
-    }
-    const formValues = form.getFieldsValue();
-    Object.entries(formValues).forEach(([key, value]) => {
-      if (key === "tools") {
-        formData.append("tools", JSON.stringify(value));
-      } 
-      else if(key === "static_questions"){
-        formData.append("staticQuestions", JSON.stringify(value));
-      }
-      else {
-        formData.append(key, value);
-      }
-    });
-    const success = await handleCreateOrUpdateAssistantWithFiles(
-      formData,
-      editMode,
-      assistantData?.assistant_id
-    );
+      const formData = new FormData();
+      const formValues = form.getFieldsValue();
 
-    if (success) {
-      console.log("success");
-      handleClose();
-      handleFetchUserCreatedAssistants();
-      if(editMode) {
-        // update assistant list
-        triggerRefetchAssistants();
+      fileList.forEach((file) => {
+        formData.append("files", file);
+      });
+      if (deleteFileIds.length > 0) {
+        formData.append("deleted_files", JSON.stringify(deleteFileIds));
       }
-      if(isAdmin){
-      handleFetchAllAssistants(1);
+      if (!editMode) {
+        formData.append("userId", getUserID());
       }
+      if (!isAdmin) {
+        formData.append("category", "PERSONAL");
+      }
+
+      Object.entries(formValues).forEach(([key, value]) => {
+        if (key === "tools") {
+          formData.append("tools", JSON.stringify(value));
+        } else if (key === "static_questions") {
+          formData.append("staticQuestions", JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
+      });
+      const success = await handleCreateOrUpdateAssistantWithFiles(
+        formData,
+        editMode,
+        assistantData?.assistant_id
+      );
+
+      if (success) {
+        console.log("success");
+        handleClose();
+        handleFetchUserCreatedAssistants();
+        if (editMode) {
+          // update assistant list
+          triggerRefetchAssistants();
+        }
+        if (isAdmin) {
+          handleFetchAllAssistants(1);
+        }
+      }
+    } catch (error) {
+      message.error("Please correct the errors in the form before proceeding.");
     }
   };
 
@@ -135,7 +143,6 @@ const CreateAssistantModal = ({ data }) => {
   };
 
 
-  const [activeKey, setActiveKey] = useState("unoptimized-data");
   function handleTabChange(key) {
     setActiveKey(key);
   }
@@ -236,7 +243,7 @@ const CreateAssistantModal = ({ data }) => {
                     ]}
                   >
                     <Radio.Group>
-                      <Radio value="ORGANIZATIONAL">Admin</Radio>
+                      <Radio value="ORGANIZATIONAL">Organizational</Radio>
                       <Radio value="PERSONAL">Personal</Radio>
                     </Radio.Group>
                   </Form.Item>
