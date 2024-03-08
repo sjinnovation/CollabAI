@@ -18,7 +18,7 @@ import {
   AssistantsList,
   AssistantsChatPage,
   ChatPage,
-  AssistantFileDownloadPage,
+  AssistantFileDownloadPage
 } from "./Pages";
 
 import Layout from "./Pages/Layout";
