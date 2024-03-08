@@ -39,6 +39,10 @@ app.get("/", (req, res) => {
 var upload = multer();
 
 
+
+
+
+
 app.post("/api/init", initSetup);
 app.use("/api/auth", router);
 app.use("/api/user", userRouter);
