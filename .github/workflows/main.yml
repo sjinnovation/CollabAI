@@ -1,0 +1,32 @@
+name: demo deployement
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+        - 'client/**' 
+        - 'server/**'
+    
+jobs:
+  build-and-deploy-client:
+    name: Build and Deploy Client
+    runs-on: amazonlinux-2
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Build client
+        run: |
+          cd client
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Deploy client
+        uses: easingthemes/ssh-deploy@v2
+        with:
+          REMOTE_HOST : ${{ secrets.SERVER_IP }}
+          REMOTE_USER : ${{ secrets.FE_USER }}
+          SSH_PRIVATE_KEY : ${{ secrets.EC2_FE_SSH_KEY }}
+          SOURCE : 'client/build'
+          TARGET : '/home/hackathon-test'

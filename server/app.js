@@ -21,7 +21,7 @@ import assistantThreadRouter from './routers/assistantThreadRoutes.js';
 import teamRouter from "./routers/teamRoutes.js";
 import organizationRouter from "./routers/organizationRoutes.js";
 import { errorLogger } from "./middlewares/errorMiddleware.js";
-import { initSetup } from './controllers/initController.js'
+import { initSetup } from './controllers/initController.js';
 
 const app = express();
 app.use(cors({
@@ -37,6 +37,10 @@ app.get("/", (req, res) => {
   res.send(" API is running ....");
 });
 var upload = multer();
+
+
+
+
 
 
 app.post("/api/init", initSetup);
