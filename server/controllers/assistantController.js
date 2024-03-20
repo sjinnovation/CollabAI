@@ -1,24 +1,32 @@
-import { StatusCodes } from 'http-status-codes';
-import OpenAI from 'openai';
-import fs from 'fs';
-import mime from 'mime-types';
-import Assistant from '../models/assistantModel.js';
-import AssistantThread from '../models/assistantThreadModel.js';
-import { meeting_summary,hardDeleteAssistant, retrieveOpenAIFile, processAssistantMessage, retrieveOpenAIFileObject  } from '../service/assistantService.js';
-import User from '../models/user.js';
-import * as errorMessage from '../locale/index.js';
-import { AssistantMessages, CommonMessages } from '../constants/enums.js';
+import { StatusCodes } from "http-status-codes";
+import OpenAI from "openai";
+import fs from "fs";
+import mime from "mime-types";
+import Assistant from "../models/assistantModel.js";
+import AssistantThread from "../models/assistantThreadModel.js";
 import {
-	BadRequest,
-	Conflict,
-	InternalServer,
-	NotFound,
-} from '../middlewares/customError.js';
-import { getOpenAIInstance } from '../config/openAI.js';
-import { createChatPerAssistantSchema } from '../utils/validations.js';
-import { handleOpenAIError } from '../utils/openAIErrors.js';
+  meeting_summary,
+  hardDeleteAssistant,
+  retrieveOpenAIFile,
+  processAssistantMessage,
+  retrieveOpenAIFileObject,
+} from "../service/assistantService.js";
+import User from "../models/user.js";
+import * as errorMessage from "../locale/index.js";
+import { AssistantMessages, CommonMessages } from "../constants/enums.js";
+import {
+  BadRequest,
+  Conflict,
+  InternalServer,
+  NotFound,
+} from "../middlewares/customError.js";
+import { getOpenAIInstance } from "../config/openAI.js";
+import { createChatPerAssistantSchema } from "../utils/validations.js";
+import { handleOpenAIError } from "../utils/openAIErrors.js";
+import FunctionDefinition from "../models/functionDefinitionModel.js";
+import axios from "axios";
 
-const DALL_E_MODEL = 'dall-e-3';
+const DALL_E_MODEL = "dall-e-3";
 /**
  * @function createAssistant
  * @async
@@ -31,153 +39,179 @@ const DALL_E_MODEL = 'dall-e-3';
  * @throws {Error} Will throw an error if no assistant found or if assistant creation failed
  */
 export const createAssistant = async (req, res, next) => {
-	const {
-		name,
-		instructions,
-		description,
-		assistantId,
-		tools: toolsString,
-		model: userSelectedModel,
-		userId,
-		category,
-		imageGeneratePrompt,
-		staticQuestions,
-	} = req.body;
-	const files = req.files;
-	let newAssistantInstance = null;
+  const {
+    name,
+    instructions,
+    description,
+    assistantId,
+    tools: toolsString,
+    model: userSelectedModel,
+    userId,
+    category,
+    imageGeneratePrompt,
+    staticQuestions,
+  } = req.body;
+  const files = req.files;
+  let newAssistantInstance = null;
 
-	const tools = JSON.parse(toolsString);
-	const parsedTools = tools.map((tool) => ({ type: tool }));
+  const tools = JSON.parse(toolsString);
+  const parsedTools = tools.map((tool) => ({ type: tool }));
 
-	try {
-		const openai = 	await getOpenAIInstance();
+  try {
+    const openai = await getOpenAIInstance();
 
-		const isNameExist = await Assistant.findOne({
-			is_deleted: false,
-			name: name,
-		});
-		if (isNameExist) {
-			return next(Conflict(AssistantMessages.NAME_EXISTS));
-		}
+    const isNameExist = await Assistant.findOne({
+      is_deleted: false,
+      name: name,
+    });
+    if (isNameExist) {
+      return next(Conflict(AssistantMessages.NAME_EXISTS));
+    }
 
-		// Handle file uploads for the new assistant
-		const filePromises = files.map(async (file) => {
-			const uploadedFile = await openai.files.create({
-				file: fs.createReadStream(file.path),
-				purpose: 'assistants',
-			});
+    // Handle file uploads for the new assistant
+    const filePromises = files.map(async (file) => {
+      const uploadedFile = await openai.files.create({
+        file: fs.createReadStream(file.path),
+        purpose: "assistants",
+      });
 
-			return uploadedFile.id;
-		});
+      return uploadedFile.id;
+    });
 
-		// TODO: Handle promises here. If one promise is rejected then the entire promises will be rejected
-		const newFileIds = await Promise.all(filePromises);
+    // TODO: Handle promises here. If one promise is rejected then the entire promises will be rejected
+    const newFileIds = await Promise.all(filePromises);
 
-		let image_url = null;
+    let image_url = null;
 
-		// Check if imageGeneratePrompt is provided and generate an image
-		if (imageGeneratePrompt) {
-			const imageResponse = await openai.createImage({
-				model: DALL_E_MODEL,
-				prompt: imageGeneratePrompt,
-				n: 1,
-				size: '1024x1024',
-			});
+    // Check if imageGeneratePrompt is provided and generate an image
+    if (imageGeneratePrompt) {
+      const imageResponse = await openai.createImage({
+        model: DALL_E_MODEL,
+        prompt: imageGeneratePrompt,
+        n: 1,
+        size: "1024x1024",
+      });
 
-			image_url = imageResponse.data.data[0].url;
-		}
+      image_url = imageResponse.data.data[0].url;
+    }
 
-		// if assistantId is given, then we have to retrieve the assistant and create it in our database
-		if (assistantId) {
-			// check if already an assistant exists with the given assistantId
-			const existingAssistant = await Assistant.findOne({
-				assistant_id: assistantId,
-			});
-			if (existingAssistant)
-				return next(
-					Conflict(AssistantMessages.ASSISTANT_ALREADY_EXISTS)
-				);
+    // if assistantId is given, then we have to retrieve the assistant and create it in our database
+    if (assistantId) {
+      // check if already an assistant exists with the given assistantId
+      const existingAssistant = await Assistant.findOne({
+        assistant_id: assistantId,
+      });
+      if (existingAssistant)
+        return next(Conflict(AssistantMessages.ASSISTANT_ALREADY_EXISTS));
 
-			const myAssistant = await openai.beta.assistants.retrieve(
-				assistantId
-			);
-			if (myAssistant) {
-				newAssistantInstance = new Assistant({
-					assistant_id: myAssistant.id,
-					name: myAssistant.name,
-					model: myAssistant.model,
-					instructions: myAssistant.instructions,
-					file_ids: myAssistant.file_ids,
-					tools: myAssistant.tools,
-					userId: userId,
-					category: category,
-					description: description,
-					image_url: image_url,
-					static_questions:  staticQuestions ? parseStaticQuestions(staticQuestions) : []
-				});
-			}
-		} else {
-			// create new assistant and save it in our database
-			const assistant = await openai.beta.assistants.create({
-				name,
-				instructions,
-				tools: parsedTools,
-				model: userSelectedModel || 'gpt-4-1106-preview',
-				file_ids: newFileIds,
-			});
+      const myAssistant = await openai.beta.assistants.retrieve(assistantId);
+      if (myAssistant) {
+        newAssistantInstance = new Assistant({
+          assistant_id: myAssistant.id,
+          name: myAssistant.name,
+          model: myAssistant.model,
+          instructions: myAssistant.instructions,
+          file_ids: myAssistant.file_ids,
+          tools: myAssistant.tools,
+          userId: userId,
+          category: category,
+          description: description,
+          image_url: image_url,
+          static_questions: staticQuestions
+            ? parseStaticQuestions(staticQuestions)
+            : [],
+        });
+      }
+    } else {
+      // create new assistant and save it in our database
+      const assistant = await openai.beta.assistants.create({
+        name,
+        instructions,
+        tools: parsedTools,
+        model: userSelectedModel || "gpt-4-1106-preview",
+        file_ids: newFileIds,
+      });
 
-			if (assistant) {
-				newAssistantInstance = new Assistant({
-					assistant_id: assistant.id,
-					name: assistant.name,
-					model: assistant.model,
-					instructions: assistant.instructions,
-					tools: assistant.tools,
-					file_ids: assistant.file_ids,
-					userId: userId,
-					category: category,
-					description: description,
-					image_url: image_url,
-					static_questions:  staticQuestions ? parseStaticQuestions(staticQuestions) : [],
-				});
-			}
-		}
+      if (assistant) {
+        newAssistantInstance = new Assistant({
+          assistant_id: assistant.id,
+          name: assistant.name,
+          model: assistant.model,
+          instructions: assistant.instructions,
+          tools: assistant.tools,
+          file_ids: assistant.file_ids,
+          userId: userId,
+          category: category,
+          description: description,
+          image_url: image_url,
+          static_questions: staticQuestions
+            ? parseStaticQuestions(staticQuestions)
+            : [],
+        });
+      }
+    }
 
-		if (newAssistantInstance) {
-			// Delete the uploaded files from the temporary directory
-			files.forEach((file) => {
-				fs.unlink(file.path, (err) => {
-					if (err) {
-						console.error(`Error deleting file: ${file.path}`, err);
-					}
-				});
-			});
+    if (newAssistantInstance) {
+      // Delete the uploaded files from the temporary directory
+      files.forEach((file) => {
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error(`Error deleting file: ${file.path}`, err);
+          }
+        });
+      });
 
-			// Save the new assistant instance to the database
-			newAssistantInstance.model = userSelectedModel; // Save the user-selected model
-			const result = await newAssistantInstance.save();
+      // Save the new assistant instance to the database
+      newAssistantInstance.model = userSelectedModel; // Save the user-selected model
+      const result = await newAssistantInstance.save();
 
-			if (result) {
-				res.status(StatusCodes.CREATED).json({
-					message: AssistantMessages.ASSISTANT_CREATED_SUCCESSFULLY,
-					assistant: newAssistantInstance,
-				});
-			}
-		} else {
-			return next(
-				InternalServer(AssistantMessages.ASSISTANT_CREATION_FAILED)
-			);
-		}
-	} catch (error) {
-		if (error instanceof OpenAI.APIError) {
-			const customOpenAIError = handleOpenAIError(error);
-			return next(customOpenAIError);
-		}
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+      if (result) {
+        res.status(StatusCodes.CREATED).json({
+          message: AssistantMessages.ASSISTANT_CREATED_SUCCESSFULLY,
+          assistant: newAssistantInstance,
+        });
+      }
+    } else {
+      return next(InternalServer(AssistantMessages.ASSISTANT_CREATION_FAILED));
+    }
+  } catch (error) {
+    if (error instanceof OpenAI.APIError) {
+      const customOpenAIError = handleOpenAIError(error);
+      return next(customOpenAIError);
+    }
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
+
+// Function to fetch all function definitions and map them
+async function createFunctionMap() {
+  try {
+    // Get all function definitions from the database
+    const definitions = await FunctionDefinition.find({});
+
+    // Map function names to executable functions
+    const functionMap = definitions.reduce((acc, def) => {
+      try {
+        const funcDefinition = def.definition.replace("()", "(axios)");
+
+        const func = new Function("axios", `return async ${funcDefinition}`)(
+          axios
+        );
+
+        acc[def.name] = func;
+      } catch (error) {
+        console.error(`Failed to compile function ${def.name}:`, error);
+      }
+      return acc;
+    }, {});
+
+    return functionMap;
+  } catch (err) {
+    console.error("Error fetching function definitions:", err);
+  }
+}
 
 /**
  * @async
@@ -189,28 +223,16 @@ export const createAssistant = async (req, res, next) => {
  * @returns {Response} 201 - Returns created chat and thread ID
  * @throws {Error} Will throw an error if chat creation failed
  */
-export const createChatPerAssistant = async (req, res, next) => {
-	const { _id: userId } = req.user;
-	const { assistant_id } = req.params;
-	const { question, thread_id = false } = req.body;
-	let threadId = null,
-		finalMessage = [];
+export const createChatPerAssistant = async (req, res) => {
+  const { _id: userId } = req.user;
+  const { assistant_id } = req.params;
+  const { question, thread_id = false } = req.body;
+  let threadId = null,
+    finalMessage = [];
 
-	const validationResult = createChatPerAssistantSchema.validate(req.body, {
-		abortEarly: false,
-		stripUnknown: true,
-	});
-
-	if (validationResult.error) {
-		return next(
-			BadRequest(
-				'The message you submitted was too long, please reload the conversation and submit something shorter.'
-			)
-		);
-	}
-
-	try {
-    const openai = await getOpenAIInstance();
+  try {
+    const openai = new OpenAI({
+		apiKey: process.env.OPEN_AI_API_KEY,    });
 
     // Step 1: create a thread if doesn't exist for the requested user
     // const ExistingAssistantThread = await AssistantThread.findOne({ assistant_id, user: userId });
@@ -247,13 +269,14 @@ export const createChatPerAssistant = async (req, res, next) => {
 
     // Step 4: now we have to create a polling mechanism to check if the assistant has responded
     // TODO: handle all the possible cases including errors that can happen
-    let openAIErrorFlag = false;
     while (retrieveRun.status !== "completed") {
       console.log(
         `${retrieveRun.status}`,
         "Waiting for the Assistant to process..."
       );
       if (retrieveRun.status === "requires_action") {
+        // console.log('Function Calling');
+
         let retrieveRuntwo = await openai.beta.threads.runs.retrieve(
           threadId,
           runId
@@ -268,18 +291,34 @@ export const createChatPerAssistant = async (req, res, next) => {
           const funcName = action.function.name;
           const argument = JSON.parse(action.function.arguments);
           console.log(argument, "arg");
-          if (funcName === "meeting_summary") {
-            const output = await meeting_summary(
-              // argument.tags,
-              argument.start_date,
-              argument.end_date,
-              argument.meeting_type || []
-            );
-            console.log(runId);
-            toolOutputs.push({
-              tool_call_id: action.id,
-              output: output,
-            });
+
+          const myAssistant = await openai.beta.assistants.retrieve(
+            assistant_id
+          );
+
+          const propertiesKeys = Object.keys(
+            myAssistant.tools[0].function.parameters.properties
+          );
+
+          if (propertiesKeys) {
+            const argumentsList = propertiesKeys.map((key) => argument[key]);
+
+            // Assuming argumentsList now is an array of values from the argument object based on propertiesKeys
+            const functionName = myAssistant.tools[0].function.name;
+            const functionVar = [functionName];
+
+            const functionMap = await createFunctionMap();
+            // Create the function call dynamically using the spread operator
+            if (typeof functionMap[functionName] === "function") {
+              const output = await functionMap[functionName](...argumentsList);
+
+              console.log("outttttttttttttttttttttt", output);
+
+              toolOutputs.push({
+                tool_call_id: action.id,
+                output: JSON.stringify(output),
+              });
+            }
           } else {
             throw new Error(`Unknown function: ${funcName}`);
           }
@@ -295,10 +334,7 @@ export const createChatPerAssistant = async (req, res, next) => {
           }
         );
       }
-      await new Promise((resolve) => {
-        console.log("timeout....");
-        return setTimeout(resolve, 1000);
-      });
+      await new Promise((resolve) => setTimeout(resolve, 500));
       retrieveRun = await openai.beta.threads.runs.retrieve(threadId, runId);
 
       // Check for failed, cancelled, or expired status
@@ -306,53 +342,35 @@ export const createChatPerAssistant = async (req, res, next) => {
         console.log(
           `Run status is '${retrieveRun.status}'. Unable to complete the request.`
         );
-        openAIErrorFlag = true;
         break; // Exit the loop if the status indicates a failure or cancellation
       }
     }
 
-    if (openAIErrorFlag) {
-      return next(
-        BadRequest(
-          "Received an error from openAI, please reload the conversation."
-        )
-      );
-    }
     const threadMessages = await openai.beta.threads.messages.list(threadId);
 
-    const mostRecentMessage = threadMessages.data.find(
-      (message) => message.run_id === runId && message.role === "assistant"
-    );
+    const mostRecentMessage = threadMessages.data
+      .filter(
+        (message) => message.run_id === run.id && message.role === "assistant"
+      )
+      .pop();
 
     if (mostRecentMessage) {
-      const responsePayload = {
+      // res.status(StatusCodes.CREATED).json({ response: mostRecentMessage });
+      res.status(StatusCodes.CREATED).json({
+        response: mostRecentMessage.content[0].text.value,
         msg_id: mostRecentMessage.id,
         thread_id: threadId,
-        response: "",
-      };
-      responsePayload.response = await processAssistantMessage(
-        mostRecentMessage
-      );
-
-      return res.status(StatusCodes.CREATED).json({
-        response: responsePayload.response,
-        msg_id: responsePayload.msg_id,
-        thread_id: responsePayload.thread_id,
       });
-      return;
     } else {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: AssistantMessages.SOMETHING_WENT_WRONG,
-      });
+      res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ errorMessage: "Something went wrong" });
     }
   } catch (error) {
-    if (error instanceof OpenAI.APIError) {
-      const customOpenAIError = handleOpenAIError(error);
-      return next(customOpenAIError);
-    }
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      errorMessage: error.message,
-    });
+    console.log(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ errorMessage: error.message });
   }
 };
 
@@ -366,65 +384,61 @@ export const createChatPerAssistant = async (req, res, next) => {
  * @returns {Response} 200 - Returns assistants list and total assistant count
  */
 export const getAllAssistants = async (req, res) => {
-	try {
-		const { page = 1, limit = 10, searchQuery = '' } = req.query;
+  try {
+    const { page = 1, limit = 10, searchQuery = "" } = req.query;
 
-		console.log("page:", page, "Limit:", limit)
+    console.log("page:", page, "Limit:", limit);
 
-		//openai init
-		const openai = 	await getOpenAIInstance();
+    //openai init
+    const openai = await getOpenAIInstance();
 
-		// Define the query object with the is_deleted condition
-		const query = { is_deleted: false, category: 'ORGANIZATIONAL' };
+    // Define the query object with the is_deleted condition
+    const query = { is_deleted: false, category: "ORGANIZATIONAL" };
 
-		if (typeof searchQuery === 'string' && searchQuery?.length) {
-			query.$or = [
-			  { name: { $regex: new RegExp(searchQuery, 'i') } },
-			  
-			];
-		  }
+    if (typeof searchQuery === "string" && searchQuery?.length) {
+      query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
+    }
 
-		  const totalAssistantCount = await Assistant.countDocuments(query);
+    const totalAssistantCount = await Assistant.countDocuments(query);
 
-		// Find assistants based on the query
-		const assistants = await Assistant.find(query)
+    // Find assistants based on the query
+    const assistants = await Assistant.find(query)
 
-			.populate({
-				path: 'userId',
-				model: 'User',
-				select: 'fname',
-			})
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "fname",
+      })
 
-			.populate('teamId')
-			.sort({ createdAt: -1 })
-			.skip((Number(page) - 1) * Number(limit))
-			.limit(limit)
-			.lean();
+      .populate("teamId")
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(limit)
+      .lean();
 
-		// Iterate over each assistant and fetch filenames for file_ids
-		for (const assistant of assistants) {
-			const fileNames = await Promise.all(
-				assistant.file_ids.map(async (fileId) => {
-					const fileInfo = await openai.files.retrieve(fileId);
-					return fileInfo.filename;
-				})
-			);
-			// Update the assistant object with fileNames
-			assistant.fileNames = fileNames;
-		}
-		
+    // Iterate over each assistant and fetch filenames for file_ids
+    for (const assistant of assistants) {
+      const fileNames = await Promise.all(
+        assistant.file_ids.map(async (fileId) => {
+          const fileInfo = await openai.files.retrieve(fileId);
+          return fileInfo.filename;
+        })
+      );
+      // Update the assistant object with fileNames
+      assistant.fileNames = fileNames;
+    }
 
-		res.status(StatusCodes.OK).json({
-			assistants,
-			totalAssistantCount,
-			message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      assistants,
+      totalAssistantCount,
+      message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -437,52 +451,52 @@ export const getAllAssistants = async (req, res) => {
  * @returns {Response} 200 - Returns fetched assistant
  */
 export const getAssistantById = async (req, res) => {
-	try {
-		const { id: assistant_id } = req.params;
+  try {
+    const { id: assistant_id } = req.params;
 
-		//openai init
-		const openai = 	await getOpenAIInstance();
-		// console.log(assistant_id, "assistant_id");
+    //openai init
+    const openai = await getOpenAIInstance();
+    // console.log(assistant_id, "assistant_id");
 
-		// Find assistants based on the query
-		const assistant = await Assistant.findOne({ assistant_id })
-		.populate({
-			path: 'userId',
-			select: 'fname lname',
-		  })
-			.lean();
+    // Find assistants based on the query
+    const assistant = await Assistant.findOne({ assistant_id })
+      .populate({
+        path: "userId",
+        select: "fname lname",
+      })
+      .lean();
 
-		if (!assistant) {
-			return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
-		}
+    if (!assistant) {
+      return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+    }
 
-		// Check if the assistant has file_ids
-		if (assistant.file_ids && assistant.file_ids.length > 0) {
-			// Iterate over each assistant and fetch filenames for file_ids
-			const fileNames = await Promise.all(
-				assistant.file_ids.map(async (fileId) => {
-					const fileInfo = await openai.files.retrieve(fileId);
-					return fileInfo.filename;
-				})
-			);
+    // Check if the assistant has file_ids
+    if (assistant.file_ids && assistant.file_ids.length > 0) {
+      // Iterate over each assistant and fetch filenames for file_ids
+      const fileNames = await Promise.all(
+        assistant.file_ids.map(async (fileId) => {
+          const fileInfo = await openai.files.retrieve(fileId);
+          return fileInfo.filename;
+        })
+      );
 
-			// Update the assistant object with fileNames
-			assistant.fileNames = fileNames;
-		} else {
-			// Set an empty array for fileNames if file_ids is not present
-			assistant.fileNames = [];
-		}
+      // Update the assistant object with fileNames
+      assistant.fileNames = fileNames;
+    } else {
+      // Set an empty array for fileNames if file_ids is not present
+      assistant.fileNames = [];
+    }
 
-		res.status(StatusCodes.OK).json({
-			assistant,
-			message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      assistant,
+      message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -495,64 +509,64 @@ export const getAssistantById = async (req, res) => {
  * @returns {Response} 200 - Returns statistics of assistants for all users
  */
 export const getAllUserAssistantStats = async (req, res) => {
-	try {
-		const { page = 1, limit = 10 } = req.query;
+  try {
+    const { page = 1, limit = 10 } = req.query;
 
-		// Use Aggregation Framework for counting
-		const userStats = await Assistant.aggregate([
-			{
-				$match: {
-					userId: { $exists: true, $ne: null },
-					is_deleted: false,
-					category: 'PERSONAL',
-				},
-			},
-			{
-				$group: {
-					_id: '$userId',
-					totalAssistants: { $sum: 1 },
-					activeAssistants: {
-						$sum: {
-							$cond: [{ $eq: ['$is_active', true] }, 1, 0],
-						},
-					},
-				},
-			},
-			{
-				$lookup: {
-					from: 'users', // Collection name for the User model
-					localField: '_id',
-					foreignField: '_id',
-					as: 'userDetails',
-				},
-			},
-			{
-				$unwind: '$userDetails',
-			},
-			{
-				$project: {
-					_id: 1,
-					username: '$userDetails.fname',
-					totalAssistants: 1,
-					activeAssistants: 1,
-					status: '$userDetails.status',
-				},
-			},
-			{ $sort: { totalAssistants: -1 } },
-			{ $skip: (page - 1) * limit },
-			// { $limit: limit },
-		]);
+    // Use Aggregation Framework for counting
+    const userStats = await Assistant.aggregate([
+      {
+        $match: {
+          userId: { $exists: true, $ne: null },
+          is_deleted: false,
+          category: "PERSONAL",
+        },
+      },
+      {
+        $group: {
+          _id: "$userId",
+          totalAssistants: { $sum: 1 },
+          activeAssistants: {
+            $sum: {
+              $cond: [{ $eq: ["$is_active", true] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users", // Collection name for the User model
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: "$userDetails",
+      },
+      {
+        $project: {
+          _id: 1,
+          username: "$userDetails.fname",
+          totalAssistants: 1,
+          activeAssistants: 1,
+          status: "$userDetails.status",
+        },
+      },
+      { $sort: { totalAssistants: -1 } },
+      { $skip: (page - 1) * limit },
+      // { $limit: limit },
+    ]);
 
-		res.status(StatusCodes.OK).json({
-			userStats,
-			message: AssistantMessages.ASSISTANT_STATS_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      userStats,
+      message: AssistantMessages.ASSISTANT_STATS_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -565,75 +579,74 @@ export const getAllUserAssistantStats = async (req, res) => {
  * @returns {Response} 200 - Returns a list of assistants created by the user
  */
 export const getAssistantsCreatedByUser = async (req, res) => {
-	try {
-		const { userId } = req.params;
-		const { page = 1, pageSize = 10, searchQuery = '' } = req.query;
+  try {
+    const { userId } = req.params;
+    const { page = 1, pageSize = 10, searchQuery = "" } = req.query;
 
-		
-		//openai init
-		const openai = 	await getOpenAIInstance();
+    //openai init
+    const openai = await getOpenAIInstance();
 
-		const skip = (Number(page) - 1) * Number(pageSize);
-		const limit = parseInt(pageSize);
+    const skip = (Number(page) - 1) * Number(pageSize);
+    const limit = parseInt(pageSize);
 
-		const query = {
-			userId: userId,
-			category: 'PERSONAL', // Filter by category "PERSONAL"
-			is_deleted: false,
-			//  is_active: true
-		};
+    const query = {
+      userId: userId,
+      category: "PERSONAL", // Filter by category "PERSONAL"
+      is_deleted: false,
+      //  is_active: true
+    };
 
-		if (typeof searchQuery === 'string' && searchQuery?.length) {
-			query.$or = [
-			  { name: { $regex: new RegExp(searchQuery, 'i') } },
-			  
-			];
-		  }
+    if (typeof searchQuery === "string" && searchQuery?.length) {
+      query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
+    }
 
-		  const [assistants, totalCount] = await Promise.all([
-			Assistant.find(query)
-			  .sort({ createdAt: -1 })
-			  .skip(skip)
-			  .limit(limit)
-			  .lean(),
-			Assistant.countDocuments(query),
-		  ]);
+    const [assistants, totalCount] = await Promise.all([
+      Assistant.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Assistant.countDocuments(query),
+    ]);
 
-		// Iterate over each assistant and fetch filenames for file_ids
-		for (const assistant of assistants) {
-			try {
-				const fileNames = await Promise.all(
-					assistant.file_ids.map(async (fileId) => {
-						try {
-							const fileInfo = await openai.files.retrieve(fileId);
-							return fileInfo.filename;
-						} catch (fileError) {
-							console.error(`Error retrieving file ${fileId}: ${fileError.message}`);
-							return null; // Handle file retrieval error gracefully
-						}
-					})
-				);
+    // Iterate over each assistant and fetch filenames for file_ids
+    for (const assistant of assistants) {
+      try {
+        const fileNames = await Promise.all(
+          assistant.file_ids.map(async (fileId) => {
+            try {
+              const fileInfo = await openai.files.retrieve(fileId);
+              return fileInfo.filename;
+            } catch (fileError) {
+              console.error(
+                `Error retrieving file ${fileId}: ${fileError.message}`
+              );
+              return null; // Handle file retrieval error gracefully
+            }
+          })
+        );
 
-				// Update the assistant object with fileNames
-				assistant.fileNames = fileNames;
-			} catch (error) {
-				console.error(`Error processing assistant ${assistant._id}: ${error.message}`);
-				// Handle assistant processing error gracefully
-			}
-		}
+        // Update the assistant object with fileNames
+        assistant.fileNames = fileNames;
+      } catch (error) {
+        console.error(
+          `Error processing assistant ${assistant._id}: ${error.message}`
+        );
+        // Handle assistant processing error gracefully
+      }
+    }
 
-
-		res.status(StatusCodes.OK).json({
-			assistants,
-			totalCount,
-			message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      assistants,
+      totalCount,
+      message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -646,88 +659,87 @@ export const getAssistantsCreatedByUser = async (req, res) => {
  * @returns {Response} 200 - Returns a list of assistants assigned to the user including pagination details
  */
 export const getAllUserAssignedAssistants = async (req, res) => {
-	const { _id: user_id } = req.user;
-	const pageSize = parseInt(req.query.pageSize) || 10;
-	const currentPage = parseInt(req.query.page) || 1;
+  const { _id: user_id } = req.user;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const currentPage = parseInt(req.query.page) || 1;
 
-	const searchQuery = req.query.searchQuery || "" ;
-	const searchConditionOnName = { $regex: new RegExp(searchQuery, 'i') };
+  const searchQuery = req.query.searchQuery || "";
+  const searchConditionOnName = { $regex: new RegExp(searchQuery, "i") };
 
-	try {
-		const reqUser = await User.findById(user_id).populate("teams");
+  try {
+    const reqUser = await User.findById(user_id).populate("teams");
 
-		if (!reqUser) {
-			return next(BadRequest(AssistantMessages.USER_DOES_NOT_EXIST));
-		}
-		let query = {};
-		let notDeletedAndActive = { is_deleted: false, is_active: true };
-		let getPersonalAssistant = {
-			...notDeletedAndActive,
-			userId: reqUser._id,
-			category: 'PERSONAL',
-		};
+    if (!reqUser) {
+      return next(BadRequest(AssistantMessages.USER_DOES_NOT_EXIST));
+    }
+    let query = {};
+    let notDeletedAndActive = { is_deleted: false, is_active: true };
+    let getPersonalAssistant = {
+      ...notDeletedAndActive,
+      userId: reqUser._id,
+      category: "PERSONAL",
+    };
 
-		if (reqUser.role === 'superadmin') {
-			// Query for superadmin to fetch all active organizational assistants and personal created assistants
-			query = {
-				$or: [
-					{ ...notDeletedAndActive, category: 'ORGANIZATIONAL', name: searchConditionOnName }, // Organizational assistants
-					{ ...getPersonalAssistant, name: searchConditionOnName }, // Personal created assistants by the user
-					
-				],
-			};
-			
-		} else if (reqUser.teams.length) {
-			// Query for normal user to fetch organizational assistants for the user's team and personal created assistants
-			query = {
-				$or: [
-					{
-						...notDeletedAndActive,
-						teamId: { $in: reqUser.teams },
-						category: 'ORGANIZATIONAL',
-						name: searchConditionOnName
-					}, // Organizational assistants for the user's team
-					{ ...getPersonalAssistant, name: searchConditionOnName }, // Personal created assistants by the user
-					
-				],
-			};
-			
-		} else if (!reqUser.teams.length) {
-			
-			return res.status(StatusCodes.OK).json({ assistants: [] });
-		}
+    if (reqUser.role === "superadmin") {
+      // Query for superadmin to fetch all active organizational assistants and personal created assistants
+      query = {
+        $or: [
+          {
+            ...notDeletedAndActive,
+            category: "ORGANIZATIONAL",
+            name: searchConditionOnName,
+          }, // Organizational assistants
+          { ...getPersonalAssistant, name: searchConditionOnName }, // Personal created assistants by the user
+        ],
+      };
+    } else if (reqUser.teams.length) {
+      // Query for normal user to fetch organizational assistants for the user's team and personal created assistants
+      query = {
+        $or: [
+          {
+            ...notDeletedAndActive,
+            teamId: { $in: reqUser.teams },
+            category: "ORGANIZATIONAL",
+            name: searchConditionOnName,
+          }, // Organizational assistants for the user's team
+          { ...getPersonalAssistant, name: searchConditionOnName }, // Personal created assistants by the user
+        ],
+      };
+    } else if (!reqUser.teams.length) {
+      return res.status(StatusCodes.OK).json({ assistants: [] });
+    }
 
-		const [assistants, totalCount] = await Promise.all([
-			Assistant.find(query)
-				.skip((currentPage - 1) * pageSize)
-				.limit(pageSize)
-				.sort({ createdAt: -1 }),
-			Assistant.countDocuments(query),
-		]);
+    const [assistants, totalCount] = await Promise.all([
+      Assistant.find(query)
+        .skip((currentPage - 1) * pageSize)
+        .limit(pageSize)
+        .sort({ createdAt: -1 }),
+      Assistant.countDocuments(query),
+    ]);
 
-		const totalPages = Math.ceil(totalCount / pageSize);
+    const totalPages = Math.ceil(totalCount / pageSize);
 
-		console.log(
-			'totalPages:',
-			totalPages,
-			'totalCount:',
-			totalCount,
-			'pageSize:',
-			pageSize,
-			"Assistants:",
-			// assistants
-		);
-		return res.status(StatusCodes.OK).json({
-			assistants,
-			totalPages,
-			message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    console.log(
+      "totalPages:",
+      totalPages,
+      "totalCount:",
+      totalCount,
+      "pageSize:",
+      pageSize,
+      "Assistants:"
+      // assistants
+    );
+    return res.status(StatusCodes.OK).json({
+      assistants,
+      totalPages,
+      message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -740,41 +752,41 @@ export const getAllUserAssignedAssistants = async (req, res) => {
  * @returns {Response} 200 - Returns a list of assistants assigned to the user including pagination details
  */
 export const getAllAssistantsByPagination = async (req, res) => {
-	const { _id: user_id } = req.user;
-	const pageSize = parseInt(req.query.pageSize) || 10;
-	const currentPage = parseInt(req.query.page) || 1;
-	try {
-		let query = {};
-		const reqUser = await User.findById(user_id);
+  const { _id: user_id } = req.user;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const currentPage = parseInt(req.query.page) || 1;
+  try {
+    let query = {};
+    const reqUser = await User.findById(user_id);
 
-		if (!reqUser) {
-			return next(BadRequest(AssistantMessages.USER_DOES_NOT_EXIST));
-		}
-		const totalAssistants = await Assistant.find({ is_deleted: false });
-		const totalPages = Math.ceil(totalAssistants.length / pageSize);
+    if (!reqUser) {
+      return next(BadRequest(AssistantMessages.USER_DOES_NOT_EXIST));
+    }
+    const totalAssistants = await Assistant.find({ is_deleted: false });
+    const totalPages = Math.ceil(totalAssistants.length / pageSize);
 
-		if (reqUser.teamId) {
-			query.teamId = reqUser.teamId;
-		} else if (reqUser.role !== 'superadmin') {
-			return res.status(StatusCodes.OK).json({ assistants: [] });
-		}
+    if (reqUser.teamId) {
+      query.teamId = reqUser.teamId;
+    } else if (reqUser.role !== "superadmin") {
+      return res.status(StatusCodes.OK).json({ assistants: [] });
+    }
 
-		const allAssistants = await Assistant.find({ is_deleted: false })
-			.skip((currentPage - 1) * pageSize + 3)
-			.limit(pageSize)
-			.sort({ createdAt: -1 });
+    const allAssistants = await Assistant.find({ is_deleted: false })
+      .skip((currentPage - 1) * pageSize + 3)
+      .limit(pageSize)
+      .sort({ createdAt: -1 });
 
-		res.status(StatusCodes.OK).json({
-			allAssistants,
-			currentPage,
-			totalPages,
-			message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      allAssistants,
+      currentPage,
+      totalPages,
+      message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -787,87 +799,91 @@ export const getAllAssistantsByPagination = async (req, res) => {
  * @returns {Response} 200 - Returns chat messages and metadata
  */
 export const getChatPerAssistant = async (req, res, next) => {
-	const { _id: user_id } = req.user;
-	const { assistant_id } = req.params;
-	const { thread_id, limit, after, before } = req.query;
+  const { _id: user_id } = req.user;
+  const { assistant_id } = req.params;
+  const { thread_id, limit, after, before } = req.query;
 
-	if (!thread_id) {
-		return next(BadRequest(AssistantMessages.ASSISTANT_THREAD_NOT_FROUND));
-	}
+  if (!thread_id) {
+    return next(BadRequest(AssistantMessages.ASSISTANT_THREAD_NOT_FROUND));
+  }
 
-	let messages = [],
-		metadata = { first_id: null, last_id: null, has_more: false };
+  let messages = [],
+    metadata = { first_id: null, last_id: null, has_more: false };
 
-	let query = {
-		order: 'desc', // changing order in future will require change in formatting data at line 239
-		limit: limit || 20,
-	};
+  let query = {
+    order: "desc", // changing order in future will require change in formatting data at line 239
+    limit: limit || 20,
+  };
 
-	if (after) {
-		query.after = after;
-	}
+  if (after) {
+    query.after = after;
+  }
 
-	if (before) {
-		query.before = before;
-	}
+  if (before) {
+    query.before = before;
+  }
 
-	try {
-		const existingThread = await AssistantThread.findOne({
-			assistant_id,
-			user: user_id,
-			thread_id,
-		}).lean();
+  try {
+    const existingThread = await AssistantThread.findOne({
+      assistant_id,
+      user: user_id,
+      thread_id,
+    }).lean();
 
-		if (existingThread) {
-			console.log(existingThread);
-			// initialize openai to retrieve messages
-			const openai = 	await getOpenAIInstance();
+    if (existingThread) {
+      console.log(existingThread);
+      // initialize openai to retrieve messages
+      const openai = await getOpenAIInstance();
 
-			const threadMessages = await openai.beta.threads.messages.list(
-				existingThread.thread_id,
-				query
-			);
-			if (threadMessages.data) {
-				messages = await threadMessages.data.reduce(async (accPrevious, message) => {
-					const acc = await accPrevious;
-					const { id, created_at, role, content } = message;
+      const threadMessages = await openai.beta.threads.messages.list(
+        existingThread.thread_id,
+        query
+      );
+      if (threadMessages.data) {
+        messages = await threadMessages.data.reduce(
+          async (accPrevious, message) => {
+            const acc = await accPrevious;
+            const { id, created_at, role, content } = message;
 
-					if(content.length === 0)  return acc;
+            if (content.length === 0) return acc;
 
-					if (role === 'assistant') {
-						const formattedResponse = await processAssistantMessage(message);
-						acc.push({
-							botMessage: formattedResponse,
-							chatPrompt: '',
-						});
-					} else if (role === 'user') {
-						const lastMessage = acc[acc.length - 1];
-						if (lastMessage) {
-							lastMessage.chatPrompt = content[0]?.text?.value;
-							lastMessage.msg_id = id;
-							lastMessage.created_at = new Date(created_at * 1000).toISOString();
-						}
-					}
-					return acc;
-				}, Promise.resolve([]));
-			
-				metadata = {
-					first_id: threadMessages.body?.first_id,
-					last_id: threadMessages.body?.last_id,
-					has_more: !!threadMessages.body?.has_more,
-				};
-			}
-		}
+            if (role === "assistant") {
+              const formattedResponse = await processAssistantMessage(message);
+              acc.push({
+                botMessage: formattedResponse,
+                chatPrompt: "",
+              });
+            } else if (role === "user") {
+              const lastMessage = acc[acc.length - 1];
+              if (lastMessage) {
+                lastMessage.chatPrompt = content[0]?.text?.value;
+                lastMessage.msg_id = id;
+                lastMessage.created_at = new Date(
+                  created_at * 1000
+                ).toISOString();
+              }
+            }
+            return acc;
+          },
+          Promise.resolve([])
+        );
 
-		res.status(StatusCodes.OK).json({ messages: messages, metadata });
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+        metadata = {
+          first_id: threadMessages.body?.first_id,
+          last_id: threadMessages.body?.last_id,
+          has_more: !!threadMessages.body?.has_more,
+        };
+      }
+    }
+
+    res.status(StatusCodes.OK).json({ messages: messages, metadata });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
-
 
 /**
  * Downloads a file via the assistant interface given a file ID.
@@ -883,34 +899,38 @@ export const downloadAssistantFile = async (req, res, next) => {
   try {
     const { file_id } = req.params;
     const openai = await getOpenAIInstance();
-    
+
     // Retrieve the file metadata to get the filename
     const fileMetadata = await openai.files.retrieve(file_id);
-    
+
     // Retrieve the file content
     const fileContentResponse = await openai.files.content(file_id);
-    
+
     if (fileContentResponse) {
-			const buffer = await fileContentResponse.arrayBuffer();
-			const bufferData = Buffer.from(buffer)
-      const filename = fileMetadata.filename || 'download.pdf';
-      const mimeType = mime.lookup(filename) || 'application/octet-stream';
+      const buffer = await fileContentResponse.arrayBuffer();
+      const bufferData = Buffer.from(buffer);
+      const filename = fileMetadata.filename || "download.pdf";
+      const mimeType = mime.lookup(filename) || "application/octet-stream";
 
       res.writeHead(StatusCodes.OK, {
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Type': mimeType,
-				'Access-Control-Expose-Headers': 'Content-Disposition'
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Type": mimeType,
+        "Access-Control-Expose-Headers": "Content-Disposition",
       });
-      
+
       res.end(bufferData);
     } else {
       // Incase fileContentResponse doesn't have data
-      return res.status(StatusCodes.NOT_FOUND).send(AssistantMessages.ASSISTANT_FILE_NOT_FOUND_MESSAGE);
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .send(AssistantMessages.ASSISTANT_FILE_NOT_FOUND_MESSAGE);
     }
   } catch (error) {
     console.error(error);
     if (!res.headersSent) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(AssistantMessages.ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE);
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send(AssistantMessages.ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE);
     }
   }
 };
@@ -925,77 +945,75 @@ export const downloadAssistantFile = async (req, res, next) => {
  * @returns {Response} 201 - Returns successfully updated assistant
  */
 export const updateAssistantFiles = async (req, res, next) => {
-	const { assistant_id } = req.params;
-	const files = req.files;
+  const { assistant_id } = req.params;
+  const files = req.files;
 
-	try {
-		const existingAssistant = await Assistant.findOne({ assistant_id });
+  try {
+    const existingAssistant = await Assistant.findOne({ assistant_id });
 
-		// TODO: Handle the case when the assistant is not found in a separate function
-		if (!existingAssistant) {
-			next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
-			return;
-		}
+    // TODO: Handle the case when the assistant is not found in a separate function
+    if (!existingAssistant) {
+      next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+      return;
+    }
 
-		const openai = 	await getOpenAIInstance();
+    const openai = await getOpenAIInstance();
 
-		const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
 
-		let fileIds = [...myAssistant.file_ids];
+    let fileIds = [...myAssistant.file_ids];
 
-		/*
+    /*
         You can attach a maximum of 20 files per Assistant, and they can be at most 512 MB each.
         ref: https://platform.openai.com/docs/assistants/how-it-works/creating-assistants
          */
-		if (fileIds.length === 20 || fileIds.length + files.length >= 20) {
-			return next(
-				BadRequest(AssistantMessages.FILES_AND_PROPERTIES_UPDATED)
-			);
-		}
+    if (fileIds.length === 20 || fileIds.length + files.length >= 20) {
+      return next(BadRequest(AssistantMessages.FILES_AND_PROPERTIES_UPDATED));
+    }
 
-		if (files) {
-			const filePromises = files.map(async (file) => {
-				const uploadedFile = await openai.files.create({
-					file: fs.createReadStream(file.path),
-					purpose: 'assistants',
-				});
+    if (files) {
+      const filePromises = files.map(async (file) => {
+        const uploadedFile = await openai.files.create({
+          file: fs.createReadStream(file.path),
+          purpose: "assistants",
+        });
 
-				return uploadedFile.id;
-			});
+        return uploadedFile.id;
+      });
 
-			fileIds = [...fileIds, ...(await Promise.all(filePromises))];
+      fileIds = [...fileIds, ...(await Promise.all(filePromises))];
 
-			// Delete the uploaded files from the "docs" directory
-			files.forEach((file) => {
-				fs.unlink(file.path, (err) => {
-					if (err) {
-						console.error(`Error deleting file: ${file.path}`, err);
-					}
-				});
-			});
-		}
+      // Delete the uploaded files from the "docs" directory
+      files.forEach((file) => {
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error(`Error deleting file: ${file.path}`, err);
+          }
+        });
+      });
+    }
 
-		const myUpdatedAssistant = await openai.beta.assistants.update(
-			assistant_id,
-			{
-				file_ids: [...fileIds],
-			}
-		);
+    const myUpdatedAssistant = await openai.beta.assistants.update(
+      assistant_id,
+      {
+        file_ids: [...fileIds],
+      }
+    );
 
-		if (myUpdatedAssistant) {
-			existingAssistant.file_ids = fileIds;
-			existingAssistant.save();
-		}
+    if (myUpdatedAssistant) {
+      existingAssistant.file_ids = fileIds;
+      existingAssistant.save();
+    }
 
-		res.status(StatusCodes.CREATED).json({
-			message: AssistantMessages.FILES_UPDATED,
-			assistant: myAssistant,
-		});
-	} catch (error) {
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: CommonMessages.INTERNAL_SERVER_ERROR,
-		});
-	}
+    res.status(StatusCodes.CREATED).json({
+      message: AssistantMessages.FILES_UPDATED,
+      assistant: myAssistant,
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: CommonMessages.INTERNAL_SERVER_ERROR,
+    });
+  }
 };
 
 /**
@@ -1008,31 +1026,31 @@ export const updateAssistantFiles = async (req, res, next) => {
  * @returns {Response} 200 - Returns success message and result of the operation
  */
 export const assignTeamToAssistant = async (req, res, next) => {
-	const { assistant_id } = req.params;
-	const { teamIds } = req.body;
+  const { assistant_id } = req.params;
+  const { teamIds } = req.body;
 
-	try {
-		const isExistingAssistant = await Assistant.findOne({
-			_id: assistant_id,
-		});
+  try {
+    const isExistingAssistant = await Assistant.findOne({
+      _id: assistant_id,
+    });
 
-		if (isExistingAssistant && Array.isArray(teamIds)) {
-			isExistingAssistant.teamId = teamIds;
-			const result = await isExistingAssistant.save();
+    if (isExistingAssistant && Array.isArray(teamIds)) {
+      isExistingAssistant.teamId = teamIds;
+      const result = await isExistingAssistant.save();
 
-			res.status(StatusCodes.OK).json({
-				result,
-				message: AssistantMessages.ASSISTANT_ASSIGNED_TO_TEAM,
-			});
-		} else {
-			next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
-			return;
-		}
-	} catch (error) {
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+      res.status(StatusCodes.OK).json({
+        result,
+        message: AssistantMessages.ASSISTANT_ASSIGNED_TO_TEAM,
+      });
+    } else {
+      next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+      return;
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /**
@@ -1045,38 +1063,37 @@ export const assignTeamToAssistant = async (req, res, next) => {
  * @returns {Response} 200 - Returns success message and result of the operation
  */
 export const updateAssistant = async (req, res, next) => {
-	const { assistant_id } = req.params;
-	const { name, model, is_active = null } = req.body; // add more value as per the requirements
+  const { assistant_id } = req.params;
+  const { name, model, is_active = null } = req.body; // add more value as per the requirements
 
-	try {
-		const isExistingAssistant = await Assistant.findOne({
-			_id: assistant_id,
-		});
+  try {
+    const isExistingAssistant = await Assistant.findOne({
+      _id: assistant_id,
+    });
 
-		if (isExistingAssistant) {
-			isExistingAssistant.name = name || isExistingAssistant.name;
-			isExistingAssistant.model = model || isExistingAssistant.model;
-			isExistingAssistant.is_active =
-				is_active !== null ? is_active : isExistingAssistant.is_active;
+    if (isExistingAssistant) {
+      isExistingAssistant.name = name || isExistingAssistant.name;
+      isExistingAssistant.model = model || isExistingAssistant.model;
+      isExistingAssistant.is_active =
+        is_active !== null ? is_active : isExistingAssistant.is_active;
 
-			const result = await isExistingAssistant.save();
+      const result = await isExistingAssistant.save();
 
-			res.status(StatusCodes.OK).json({
-				result,
-				message: AssistantMessages.ASSISTANT_UPDATED_SUCCESSFULLY,
-			});
-			return;
-		} else {
-			next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
-			return;
-		}
-	} catch (error) {
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+      res.status(StatusCodes.OK).json({
+        result,
+        message: AssistantMessages.ASSISTANT_UPDATED_SUCCESSFULLY,
+      });
+      return;
+    } else {
+      next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+      return;
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
-
 
 /**
  * @async
@@ -1088,34 +1105,32 @@ export const updateAssistant = async (req, res, next) => {
  * @returns {Response} 200 - Returns success message
  */
 export const deleteAssistant = async (req, res, next) => {
-	const { assistant_id } = req.params;
+  const { assistant_id } = req.params;
 
-	try {
-		const openai = 	await getOpenAIInstance();
+  try {
+    const openai = await getOpenAIInstance();
 
-		const existingAssistant = await Assistant.findOne({
-			assistant_id: assistant_id,
-		});
+    const existingAssistant = await Assistant.findOne({
+      assistant_id: assistant_id,
+    });
 
+    if (!existingAssistant) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: AssistantMessages.ASSISTANT_NOT_FOUND });
+    }
 
-		if (!existingAssistant) {
-			return res
-				.status(StatusCodes.BAD_REQUEST)
-				.json({ message: AssistantMessages.ASSISTANT_NOT_FOUND });
-		}
+    await hardDeleteAssistant(assistant_id, existingAssistant);
 
-
-		await hardDeleteAssistant(assistant_id, existingAssistant);
-
-		res.status(StatusCodes.OK).json({
-			message: errorMessage.ASSISTANT_DELETED_SUCCESSFULLY,
-		});
-	} catch (error) {
-		console.log(error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: CommonMessages.INTERNAL_SERVER_ERROR,
-		});
-	}
+    res.status(StatusCodes.OK).json({
+      message: errorMessage.ASSISTANT_DELETED_SUCCESSFULLY,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: CommonMessages.INTERNAL_SERVER_ERROR,
+    });
+  }
 };
 
 /**
@@ -1128,161 +1143,525 @@ export const deleteAssistant = async (req, res, next) => {
  * @returns {Response} 201 - Returns success message and updated assistant
  */
 export const updateAssistantDataWithFile = async (req, res, next) => {
-	try {
-		const { assistant_id } = req.params;
-		const files = req.files;
-		const {
-			name,
-			instructions,
-			model,
-			tools: toolsString,
-			teamId,
-			staticQuestions,
-			category,
-			deleted_files,
-			description,
-		} = req.body;
+  try {
+    const { assistant_id } = req.params;
+    const files = req.files;
+    const {
+      name,
+      instructions,
+      model,
+      tools: toolsString,
+      teamId,
+      staticQuestions,
+      category,
+      deleted_files,
+      description,
+    } = req.body;
 
-		const openai = 	await getOpenAIInstance();
+    const openai = await getOpenAIInstance();
 
-		const existingAssistant = await Assistant.findOne({ assistant_id });
+    const existingAssistant = await Assistant.findOne({ assistant_id });
 
-		if (!existingAssistant) {
-			return res.status(StatusCodes.NOT_FOUND).json({
-				message: AssistantMessages.ASSISTANT_NOT_FOUND,
-			});
-		}
+    if (!existingAssistant) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: AssistantMessages.ASSISTANT_NOT_FOUND,
+      });
+    }
 
-		const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
 
-		let fileIds = [...myAssistant.file_ids];
+    let fileIds = [...myAssistant.file_ids];
 
-		if (deleted_files) {
-			fileIds = await deleteAssistantFilesAndFilterIds(
-				openai,
-				assistant_id,
-				fileIds,
-				JSON.parse(deleted_files)
-			);
-		}
+    if (deleted_files) {
+      fileIds = await deleteAssistantFilesAndFilterIds(
+        openai,
+        assistant_id,
+        fileIds,
+        JSON.parse(deleted_files)
+      );
+    }
 
-		if (
-			fileIds.length === 20 ||
-			(files && fileIds.length + files.length >= 20)
-		) {
-			return res.status(StatusCodes.BAD_REQUEST).json({
-				message: AssistantMessages.FILE_LIMIT_REACHED,
-			});
-		}
+    if (
+      fileIds.length === 20 ||
+      (files && fileIds.length + files.length >= 20)
+    ) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: AssistantMessages.FILE_LIMIT_REACHED,
+      });
+    }
 
-		if (files) {
-			fileIds = [...fileIds, ...(await uploadFiles(openai, files))];
+    if (files) {
+      fileIds = [...fileIds, ...(await uploadFiles(openai, files))];
 
-			files.forEach((file) => {
-				fs.unlink(file.path, (err) => {
-					if (err) {
-						console.error(`Error deleting file: ${file.path}`, err);
-					}
-				});
-			});
-		}
+      files.forEach((file) => {
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error(`Error deleting file: ${file.path}`, err);
+          }
+        });
+      });
+    }
 
-		const updateData = {
-			file_ids: fileIds,
-			name,
-			instructions,
-			model,
-			tools: toolsString ? parseTools(toolsString) : [],
-		};
+    const updateData = {
+      file_ids: fileIds,
+      name,
+      instructions,
+      model,
+      tools: toolsString ? parseTools(toolsString) : [],
+    };
 
-		const myUpdatedAssistant = await updateAssistantProperties(
-			openai,
-			assistant_id,
-			updateData
-		);
+    const myUpdatedAssistant = await updateAssistantProperties(
+      openai,
+      assistant_id,
+      updateData
+    );
 
-		if (myUpdatedAssistant) {
-			const updatedAssistantFieldsObject = {
-				file_ids: fileIds,
-				name: myUpdatedAssistant.name,
-				instructions: myUpdatedAssistant.instructions,
-				model: myUpdatedAssistant.model,
-				tools: updateData.tools,
-				static_questions: staticQuestions ? parseStaticQuestions(staticQuestions) : [],
-				category,
-				description,
-			};
+    if (myUpdatedAssistant) {
+      const updatedAssistantFieldsObject = {
+        file_ids: fileIds,
+        name: myUpdatedAssistant.name,
+        instructions: myUpdatedAssistant.instructions,
+        model: myUpdatedAssistant.model,
+        tools: updateData.tools,
+        static_questions: staticQuestions
+          ? parseStaticQuestions(staticQuestions)
+          : [],
+        category,
+        description,
+      };
 
-			if(teamId !== undefined) {
-				updatedAssistantFieldsObject.teamId = teamId
-			}
+      if (teamId !== undefined) {
+        updatedAssistantFieldsObject.teamId = teamId;
+      }
 
-			Object.assign(existingAssistant, updatedAssistantFieldsObject);
+      Object.assign(existingAssistant, updatedAssistantFieldsObject);
 
-			await existingAssistant.save();
-		}
+      await existingAssistant.save();
+    }
 
-		res.status(StatusCodes.CREATED).json({
-			message: AssistantMessages.FILES_AND_PROPERTIES_UPDATED,
-			assistant: existingAssistant,
-		});
-	} catch (error) {
-        if (error instanceof OpenAI.APIError) {
-			const customOpenAIError = handleOpenAIError(error);
-			return next(customOpenAIError);
-		} 
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-			message: error.message,
-		});
-	}
+    res.status(StatusCodes.CREATED).json({
+      message: AssistantMessages.FILES_AND_PROPERTIES_UPDATED,
+      assistant: existingAssistant,
+    });
+  } catch (error) {
+    if (error instanceof OpenAI.APIError) {
+      const customOpenAIError = handleOpenAIError(error);
+      return next(customOpenAIError);
+    }
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
 };
 
 /** ============== UTILITY FUNCTION =================== */
 const parseTools = (toolsString) => {
-	try {
-		return JSON.parse(toolsString).map((tool) => ({ type: tool }));
-	} catch (error) {
-		console.error('Error parsing tools:', error);
-		throw new Error('Invalid tools format');
-	}
+  try {
+    return JSON.parse(toolsString).map((tool) => ({ type: tool }));
+  } catch (error) {
+    console.error("Error parsing tools:", error);
+    throw new Error("Invalid tools format");
+  }
 };
 
 const parseStaticQuestions = (staticQuestionsString) => {
-	try {
-	  return JSON.parse(staticQuestionsString);
-	} catch (error) {
-	  console.error('Error parsing static questions:', error);
-	  throw new Error('Invalid static questions format');
-	}
-  };
-  
+  try {
+    return JSON.parse(staticQuestionsString);
+  } catch (error) {
+    console.error("Error parsing static questions:", error);
+    throw new Error("Invalid static questions format");
+  }
+};
 
-  const deleteAssistantFilesAndFilterIds = async (openai, assistantId, fileIds, deletedFileIds) => {
-	try {
-	  for (const deletedFileId of deletedFileIds) {
-		await openai.beta.assistants.files.del(assistantId, deletedFileId);
-	  }
-	  return fileIds.filter((fileId) => !deletedFileIds.includes(fileId));
-	} catch (error) {
-	  console.error('Error deleting assistant files:', error);
-	  throw error;
-	}
-  };
-  
+const deleteAssistantFilesAndFilterIds = async (
+  openai,
+  assistantId,
+  fileIds,
+  deletedFileIds
+) => {
+  try {
+    for (const deletedFileId of deletedFileIds) {
+      await openai.beta.assistants.files.del(assistantId, deletedFileId);
+    }
+    return fileIds.filter((fileId) => !deletedFileIds.includes(fileId));
+  } catch (error) {
+    console.error("Error deleting assistant files:", error);
+    throw error;
+  }
+};
 
 const uploadFiles = async (openai, files) => {
-	const filePromises = files.map(async (file) => {
-		const uploadedFile = await openai.files.create({
-			file: fs.createReadStream(file.path),
-			purpose: 'assistants',
-		});
+  const filePromises = files.map(async (file) => {
+    const uploadedFile = await openai.files.create({
+      file: fs.createReadStream(file.path),
+      purpose: "assistants",
+    });
 
-		return uploadedFile.id;
-	});
+    return uploadedFile.id;
+  });
 
-	return Promise.all(filePromises);
+  return Promise.all(filePromises);
 };
 
 const updateAssistantProperties = async (openai, assistantId, updateData) => {
-	return openai.beta.assistants.update(assistantId, updateData);
+  return openai.beta.assistants.update(assistantId, updateData);
+};
+
+//Function Calling
+
+export const fetchFunctionNamesPerAssistant = async (req, res) => {
+  try {
+    const { assistantName } = req.body;
+    console.log(assistantName);
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+    if (
+      !assistantName ||
+      assistantName == "" ||
+      assistantName == null ||
+      assistantName == undefined
+    ) {
+      res.status(400).send({ message: "Assistant name required" });
+    } else {
+      const assistant = await Assistant.findOne({ name: assistantName });
+
+      const myAssistant = await openai.beta.assistants.retrieve(
+        assistant.assistant_id
+      );
+
+      const functionNames = myAssistant.tools.map((tool) => tool.function.name);
+
+      res.status(200).send({ assistantFunctionName: functionNames });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const functionsParametersPerFunctionName = async (req, res) => {
+  try {
+    const { assistantName, functionName } = req.body;
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+
+    if (!assistantName || !functionName) {
+      return res.status(400).send({
+        message: "Both Function name and Assistant name are required",
+      });
+    }
+
+    const assistant = await Assistant.findOne({ name: assistantName });
+
+    const myAssistant = await openai.beta.assistants.retrieve(
+      assistant.assistant_id
+    );
+
+    // Find the function by the given name
+    const functionObj = myAssistant.tools.find(
+      (tool) => tool.function.name === functionName
+    );
+
+    // Check if function with functionName exists
+    if (!functionObj) {
+      return res
+        .status(404)
+        .send({ message: `Function ${functionName} not found` });
+    }
+
+    // Extract the properties from the parameters object
+    const properties = functionObj.function.parameters?.properties;
+    const parametersList = properties ? Object.keys(properties) : [];
+
+    res.status(200).send({ parametersPerFunctionName: parametersList });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const validateFunctionDefinition = async (req, res) => {
+  try {
+    const { functionDefinition, functionName, parameters } = req.body;
+
+    const openai = new OpenAI({
+		apiKey: process.env.OPEN_AI_API_KEY,    });
+
+    if (!functionDefinition) {
+      return res.status(400).send({
+        message: "Function Definition is required",
+      });
+    }
+
+    const funcDefinition = functionDefinition.replace("()", "(axios)");
+
+    const func = new Function("axios", `return async ${funcDefinition}`)(axios);
+    console.log("", func);
+
+    const organization = "Sjinnovation";
+    const email = "akshay@sjinnovation.com";
+    const result = func(...Object.values(parameters));
+    console.log(result);
+
+    res.status(200).send({ message: "Function is correct" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+export const addFunctionDefinition = async (req, res) => {
+  try {
+    const { name, definition } = req.body;
+    if (!name || !definition) {
+      res.status(401).send({ error: "Both fields are mandatory" });
+    }
+
+    const nameExists = await FunctionDefinition.findOne({ name });
+    if (nameExists) {
+      res.status(400).json({ error: "Name already exists" });
+    } else {
+      const newFunctionDefinition = new FunctionDefinition({
+        name: name,
+        definition: definition,
+      });
+      console.log(newFunctionDefinition);
+      await newFunctionDefinition.save();
+      res.status(201).send(newFunctionDefinition);
+    }
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+
+export const getAllFunctionCallingAssistants = async (req, res) => {
+  try {
+    const query = {
+      functionCalling: true,
+      is_deleted: false,
+    };
+
+    const assistants = await Assistant.find(query).sort({ createdAt: -1 });
+
+    // Map over the assistants and extract the names into an array
+    const assistantNames = assistants.map((assistant) => assistant.name);
+
+    res.status(StatusCodes.OK).json({ assistants: assistantNames });
+  } catch (error) {
+    console.error(error); // Use console.error here for better error stack tracing
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
+};
+
+export const getFunctionCallingAssistantsCreatedByUser = async (req, res) => {
+  try {
+    // const { userId } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    //openai init
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+
+    const skip = (page - 1) * pageSize;
+    const limit = parseInt(pageSize);
+
+    const query = {
+      // userId: userId,
+      functionCalling: true,
+      is_deleted: false,
+    };
+
+    const assistants = await Assistant.find(query)
+      .skip(skip)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    res.status(StatusCodes.OK).json({ assistants });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+    });
+  }
+};
+
+export const createAssistantWithFunctionCalling = async (req, res) => {
+  try {
+    const {
+      name,
+      instructions,
+      tools, // Instead of toolsString, directly use an array of tools in req.body
+      userSelectedModel,
+      category = "ORGANIZATIONAL",
+      description,
+      userId,
+    } = req.body;
+
+    let newAssistantInstance = null;
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+
+    // Check if an assistant with the same name and user ID already exists
+    const isNameAndUserExist = await Assistant.findOne({
+      is_deleted: false,
+      name,
+    });
+
+    if (isNameAndUserExist) {
+      return res.status(StatusCodes.CONFLICT).json({
+        message: "An assistant with this name already exists for the user",
+      });
+    }
+
+    const assistantTools = tools.map((tool) => {
+      return {
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters || {}, // If parameters are not provided, default to an empty object
+        },
+      };
+    });
+
+    const assistant = await openai.beta.assistants.create({
+      instructions,
+      tools: assistantTools,
+      model: userSelectedModel || "gpt-4-1106-preview",
+    });
+
+    if (assistant) {
+      newAssistantInstance = new Assistant({
+        assistant_id: assistant.id,
+        name: name,
+        model: assistant.model,
+        instructions: assistant.instructions,
+        tools: assistant.tools,
+        userId: userId,
+        category: category,
+        description: description,
+        functionCalling: true,
+      });
+    }
+
+    if (newAssistantInstance) {
+      const result = await newAssistantInstance.save();
+
+      if (result) {
+        console.log("Assistant created successfully:", newAssistantInstance);
+      }
+    }
+
+    res.status(StatusCodes.CREATED).json({
+      message: AssistantMessages.ASSISTANT_CREATED_SUCCESSFULLY,
+      assistant: newAssistantInstance,
+    });
+  } catch (error) {
+    console.error("Error during assistant creation:", error);
+    InternalServer(AssistantMessages.ASSISTANT_CREATION_FAILED);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "An error occurred during the creation of the assistant.",
+      error: error.message,
+    });
+  }
+};
+
+export const getAssistantInfo = async (req, res) => {
+  try {
+    const { assistant_id } = req.params;
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+
+    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    res.status(200).send(myAssistant);
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
+};
+
+export const updateFunctionCallingAssistantdata = async (req, res) => {
+  const { assistant_id } = req.params;
+  const {
+    name,
+    instructions,
+    userSelectedModel: model,
+    tools,
+    description,
+  } = req.body;
+
+  try {
+    const existingAssistant = await Assistant.findOne({ assistant_id });
+
+    if (!existingAssistant || existingAssistant.functionCalling === false) {
+      throw new Error("Assistant not found");
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_API_KEY,
+    });
+
+    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+
+    let assistantTools;
+
+    if (tools) {
+      assistantTools = tools.map((tool) => {
+        return {
+          type: "function",
+          function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters || {}, // If parameters are not provided, default to an empty object
+          },
+        };
+      });
+    }
+
+    // Only include properties in the updateData if they are present in the request body
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (instructions) updateData.instructions = instructions;
+    if (description) updateData.description = description;
+    if (model) updateData.model = model;
+    if (tools.length > 0) updateData.tools = assistantTools;
+
+    const myUpdatedAssistant = await openai.beta.assistants.update(
+      assistant_id,
+      updateData
+    );
+
+    if (myUpdatedAssistant) {
+      if (name) existingAssistant.name = myUpdatedAssistant.name;
+      if (instructions)
+        existingAssistant.instructions = myUpdatedAssistant.instructions;
+      if (model) existingAssistant.model = myUpdatedAssistant.model;
+      if (tools) existingAssistant.tools = assistantTools;
+      if (description) existingAssistant.description = description;
+
+      await existingAssistant.save();
+    }
+
+    res.status(StatusCodes.CREATED).json({
+      message: "Updated Function calling assistant successfully",
+      assistant: existingAssistant,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
 };
