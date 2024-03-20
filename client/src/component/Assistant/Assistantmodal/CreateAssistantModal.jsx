@@ -12,19 +12,26 @@ import useAssistantFileUpload from "../../../Hooks/useAssistantFileUpload";
 import AssistantForm from "./AssistantForm";
 import { getUserID } from "../../../Utility/service";
 import { AssistantContext } from "../../../contexts/AssistantContext";
+import FunctionCallingAssistantForm from "./FunctionCallingAssistantForm";
 const { TabPane } = Tabs;
 
 const CreateAssistantModal = ({ data }) => {
   const {
     assistantData,
     setAssistantData,
+    assistantFunctionCallData,
+    setAssistantFunctionCallData,
     showModal,
     handleClose,
     editMode,
     isAdmin,
     handleFetchUserCreatedAssistants,
-    handleFetchAllAssistants
+    handleFetchAllAssistants,
+    handleFetchFunctionCallingAssistants,
+    isFunctionCallingAssistant,
   } = data;
+
+
   const [form] = Form.useForm();
   const [deleteFileIds, setDeleteFileIds] = useState([]);
   const [selectedTools ,setSelectedTools] =  useState([]);
@@ -124,9 +131,19 @@ const CreateAssistantModal = ({ data }) => {
     }
   };
 
+
+
+  
   //----Local Functions--------//
   const handleFormChange = (changedValues, allValues) => {
     setAssistantData((prevData) => ({
+      ...prevData,
+      ...changedValues,
+    }));
+  };
+
+  const handleFunctionCallingFormChange =(changedValues, allValues)=>{
+    setAssistantFunctionCallData((prevData)=> ({
       ...prevData,
       ...changedValues,
     }));
@@ -146,6 +163,8 @@ const CreateAssistantModal = ({ data }) => {
   function handleTabChange(key) {
     setActiveKey(key);
   }
+
+//  console.log(assistantFunctionCallData.functionCalling);
 
   return (
     <>
@@ -171,7 +190,7 @@ const CreateAssistantModal = ({ data }) => {
           tabBarStyle={{ justifyContent: "space-around" }}
           centered
         >
-          <TabPane
+           {(editMode && isFunctionCallingAssistant ===false) || !editMode?(<TabPane
             key="unoptimized-data"
             tab={
               <div
@@ -203,7 +222,66 @@ const CreateAssistantModal = ({ data }) => {
                 editMode,
               }}
             />
-          </TabPane>
+          </TabPane>): null}
+          
+
+          {(editMode && isFunctionCallingAssistant === true) || !editMode? (<TabPane
+                key="create-assistant-by-functionCalling"
+                tab={
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: ".6rem",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                     {editMode ? "" : <BsRobot />}
+                <span>{editMode ? "Update Function Calling Assistant" : "New Function Calling Assistant"}</span>
+              </div>
+            }
+              >
+            <FunctionCallingAssistantForm
+              data={{
+                form,
+                handleFunctionCallingFormChange,
+                handleSwitchChange,
+                isAdmin,
+                fileList,
+                isUploading,
+                handleRemoveFile,
+                handleAddFile,
+                handleFetchFunctionCallingAssistants,
+                assistantData,
+                setAssistantData,
+                editMode,
+                assistantFunctionCallData,
+                setAssistantFunctionCallData,
+                
+                handleClose,
+                // editMode={editMode}
+                // setEditMode={setEditMode}
+                // showToast={showToast}
+                // showModal={showDetailsModal}
+                // assistantData={assistantData}
+                // setAssistantData={setAssistantData}
+                // assistantFunctionCallData={assistantFunctionCallData}
+                // setAssistantFunctionCallData={setAssistantFunctionCallData}
+                // handleCreateAssistant={handleCreateAssistant}
+                // handleFileChange={handleFileChange}
+                // handleToolChange={handleToolChange}
+                // removeFile={removeFile}
+                // showFileLimitMessage={showFileLimitMessage}
+                // setShowFileLimitMessage={setShowFileLimitMessage}
+                // assistantModels={assistantModels}
+                // loading={loading}
+                // setShowDetailsModal={setShowDetailsModal}
+                // isFunctionCallingAssistant = {isFunctionCallingAssistant}
+              }}
+            /> 
+          </TabPane>): null}
+
+
           {editMode ? null : (
             <TabPane
               key={"optimized-data"}

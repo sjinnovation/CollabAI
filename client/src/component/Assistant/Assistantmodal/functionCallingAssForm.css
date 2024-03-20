@@ -1,0 +1,24 @@
+.inputField{
+    background: #141414;
+    /* border-width: 1px; */
+    /* border-style: solid; */
+    border-color: #2c2a2a;
+    color: white;
+    font-weight: 200;
+}
+.inputField:focus {
+    background-color: #141414;
+    color: white; /* Changing text color to white for better visibility */
+  }
+
+  .inputField::-ms-input-placeholder { /* Microsoft Edge */
+    color: #5a5a5a;
+  }
+  
+  .inputField::-webkit-input-placeholder { /* WebKit browsers */
+    color: #5a5a5a;
+  }
+
+  .propContainer{
+    background-color: #181818 ;
+  }
