@@ -53,7 +53,6 @@ const initialAssistantState = {
   category: "",
   static_questions: [],
 };
-
 const initialFunctionCallingAssistantState = {
   name: "",
   instructions: "",
@@ -74,7 +73,6 @@ const initialFunctionCallingAssistantState = {
 };
 
 const { Title } = Typography;
-
 //----components-----//
 const AssistantsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -245,7 +243,11 @@ function FunctionName(param1, param2) {
     }(${functionsParameterNames}) {
     try {
         //Write your Function Logic
+<<<<<<< HEAD
       
+=======
+      }
+>>>>>>> 41ceba0a1c9d9cab7dcaaf16dcc6df67380d98a9
     } catch (error) {
       console.log(error);
     }
@@ -257,7 +259,11 @@ function FunctionName(param1, param2) {
     }(${functionsParameterNames}) {
     try {
         //Write your Function Logic
+<<<<<<< HEAD
       
+=======
+      }
+>>>>>>> 41ceba0a1c9d9cab7dcaaf16dcc6df67380d98a9
     } catch (error) {
       console.log(error);
     }
