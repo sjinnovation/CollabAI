@@ -29,6 +29,7 @@
     "googleapis": "^118.0.0",
     "handlebars": "^4.7.7",
     "http-status-codes": "^2.2.0",
+    "index.js": "^0.0.3",
     "joi": "^17.12.1",
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^3.1.2",

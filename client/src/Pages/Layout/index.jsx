@@ -5,11 +5,13 @@ import AssistantContextProvider from "../../contexts/AssistantContext";
 import { Footer, Header} from "../../component";
 import { isLoggedIn } from "../../Utility/service";
 import NewSidebar from "../../component/layout/NewSidebar/NewSidebar";
+import { AssistantFetchContextProvider } from "../../contexts/AssistantsFetchContext";
 
 const Layout = () => {
   const location = useLocation();
   return isLoggedIn() ? (
     <SidebarContextProvider>
+      <AssistantFetchContextProvider>
       <AssistantContextProvider>
         <PromptTemplateContextProvider>
           <main className="d-flex flex-nowrap">
@@ -25,6 +27,7 @@ const Layout = () => {
           </main>
         </PromptTemplateContextProvider>
       </AssistantContextProvider>
+      </AssistantFetchContextProvider>
     </SidebarContextProvider>
   ) : (
     <Navigate to="/login" state={{ from: location }} replace />

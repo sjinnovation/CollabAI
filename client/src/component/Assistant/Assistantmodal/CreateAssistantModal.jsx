@@ -12,24 +12,29 @@ import useAssistantFileUpload from "../../../Hooks/useAssistantFileUpload";
 import AssistantForm from "./AssistantForm";
 import { getUserID } from "../../../Utility/service";
 import { AssistantContext } from "../../../contexts/AssistantContext";
+import FunctionCallingAssistantForm from "./FunctionCallingAssistantForm";
 const { TabPane } = Tabs;
 
 const CreateAssistantModal = ({ data }) => {
   const {
     assistantData,
     setAssistantData,
+    assistantFunctionCallData,
+    setAssistantFunctionCallData,
     showModal,
     handleClose,
     editMode,
     isAdmin,
     handleFetchUserCreatedAssistants,
-    handleFetchAllAssistants
+    handleFetchAllAssistants,
+    handleFetchFunctionCallingAssistants,
+    isFunctionCallingAssistant,
+    activeKey,
+    setActiveKey,
   } = data;
   const [form] = Form.useForm();
   const [deleteFileIds, setDeleteFileIds] = useState([]);
   const [selectedTools ,setSelectedTools] =  useState([]);
-  const [activeKey, setActiveKey] = useState("unoptimized-data");
-
   const { triggerRefetchAssistants } = useContext(AssistantContext);
 
   //----Callback----//
@@ -74,10 +79,13 @@ const CreateAssistantModal = ({ data }) => {
   //------Api calls --------//
   const handleUploadFileAndCreateAssistant = async () => {
     try {
-      await form.validateFields();
-
+      
       const formData = new FormData();
       const formValues = form.getFieldsValue();
+      
+      if(!formValues.assistantId && !editMode) {
+        await form.validateFields();
+      }
 
       fileList.forEach((file) => {
         formData.append("files", file);
@@ -131,6 +139,15 @@ const CreateAssistantModal = ({ data }) => {
       ...changedValues,
     }));
   };
+
+  const handleFunctionCallingFormChange =(changedValues, allValues)=>{
+    setAssistantFunctionCallData((prevData)=> ({
+      ...prevData,
+      ...changedValues,
+    }));
+  };
+
+
   
   const handleSwitchChange = (tool, checked) => {
     const tools = form.getFieldValue("tools") || [];
@@ -140,6 +157,11 @@ const CreateAssistantModal = ({ data }) => {
       : tools.filter((existingTool) => existingTool !== tool);
     form.setFieldsValue({ tools: updatedTools });
     setSelectedTools([updatedTools])
+
+    setAssistantData((prevData) => ({
+      ...prevData,
+      tools: updatedTools
+    }));
   };
 
 
@@ -171,7 +193,7 @@ const CreateAssistantModal = ({ data }) => {
           tabBarStyle={{ justifyContent: "space-around" }}
           centered
         >
-          <TabPane
+            {(editMode && isFunctionCallingAssistant ===false) || !editMode?(<TabPane
             key="unoptimized-data"
             tab={
               <div
@@ -203,7 +225,47 @@ const CreateAssistantModal = ({ data }) => {
                 editMode,
               }}
             />
-          </TabPane>
+             </TabPane>): null}
+
+             {(editMode && isFunctionCallingAssistant === true) || !editMode? (<TabPane
+                key="create-assistant-by-functionCalling"
+                tab={
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: ".6rem",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                     {editMode ? "" : <BsRobot />}
+                <span>{editMode ? "Update Function Calling Assistant" : "New Function Calling Assistant"}</span>
+              </div>
+            }
+              >
+            <FunctionCallingAssistantForm
+              data={{
+                form,
+                handleFunctionCallingFormChange,
+                handleSwitchChange,
+                isAdmin,
+                fileList,
+                isUploading,
+                handleRemoveFile,
+                handleAddFile,
+                handleFetchFunctionCallingAssistants,
+                assistantData,
+                setAssistantData,
+                editMode,
+                assistantFunctionCallData,
+                setAssistantFunctionCallData,
+                
+                handleClose,
+              }}
+            /> 
+          </TabPane>): null}
+
+
           {editMode ? null : (
             <TabPane
               key={"optimized-data"}
