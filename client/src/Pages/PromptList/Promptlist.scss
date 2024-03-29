@@ -1,0 +1,87 @@
+.user-prompt-list-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+
+  .user-prompt-list-heading {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  .user-prompt-list-filter {
+    margin-bottom: 16px;
+  }
+
+  .user-prompt-list-filtered-text {
+    margin-right: 8px;
+  }
+
+  .user-prompt-list-clear-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .user-prompt-list-date-input {
+    padding: 8px 16px;
+    border: none;
+    background-color: #f2f2f2;
+    margin-bottom: 16px;
+  }
+
+  .user-prompt-list {
+    list-style-type: none;
+    padding: 0;
+
+    .user-prompt-list-item {
+      margin-bottom: 8px;
+      padding: 16px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .user-prompt-list-date {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .user-prompt-list-text {
+      color: #666;
+    }
+  }
+}
+
+
+.CustomInput{
+  width: 200px;
+  padding: 10px;
+    border: none;
+    outline: none;
+    background-color: #f2f2f2;
+    border-radius: 10px;
+}
+
+.CustomBackButton{
+  width: 142px;
+}
+
+.btn-close:hover {
+  background: transparent url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23000%27%3e%3cpath d=%27M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z%27/%3e%3c/svg%3e") center/1em auto no-repeat;
+}
+
+.custom-textarea {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: none;
+  padding-top: 0;
+  color: #ffffff;
+  padding-bottom: 0;
+  background-color: transparent;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: all 0.2s ease-in-out;
+}

@@ -1,0 +1,16 @@
+@import "./base/color.scss";
+@import "./base/typography.scss";
+@import "./base/global.scss";
+@import "./base/include-media.scss";
+@import "./component/layout/mainContent/mainContent.scss";
+@import "./Pages/LoginPage/login.scss";
+@import "./Pages/ResetPassword/ResetPassword.scss";
+@import "./component/layout/Sidebar/Sidebar.scss";
+@import "./component/layout/Header/Header.scss";
+@import "./component/layout/footer/footer.scss";
+@import "./Pages/Users/Users.scss";
+@import "./component/Prompt/Prompt.scss";
+@import "./Pages/PromptList/Promptlist.scss";
+@import "./Pages/SuperAdmin/SuperAdmin.scss";
+@import "./Pages/ChatPage/chat-page.scss";
+@import "./Pages/ChatPage/chat-page-media.scss";

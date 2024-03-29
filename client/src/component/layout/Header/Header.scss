@@ -1,0 +1,19 @@
+.burger-menu {
+  color: $color-white;
+  cursor: pointer;
+  font-size: 25px;
+  width: 40px;
+}
+
+.CustomFlex{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.capital{
+  color: #ffffff;
+    font-size: 14px;
+  text-transform: capitalize;
+  margin-right: 12px;
+  width: 244px;
+}

@@ -1,101 +1,92 @@
 # Contributing Guidelines
 
+
 ## Introduction
 
-This document outlines the process and guidelines for contributing. As this is a private project, contributions are limited to members within the organization, and no external contributions will be accepted.
+
+This document outlines the process and guidelines for contributing.
+
 
 ## Table of Contents
 
+
 1. [Code of Conduct](#code-of-conduct)
-2. [Branching Strategy](#branching-strategy)
-3. [Pull Request Process](#pull-request-process)
-4. [Code Review Guidelines](#code-review-guidelines)
-5. [Commit Message Conventions](#commit-message-conventions)
-6. [Issue Tracking](#issue-tracking)
-7. [License](#license)
+2. [Pull Request Process](#pull-request-process)
+3. [Code Review Guidelines](#code-review-guidelines)
+4. [Commit Message Conventions](#commit-message-conventions)
+5. [License](#license)
+
 
 ## Code of Conduct
 
+
 All contributors are expected to adhere to the [Code of Conduct](CODE_OF_CONDUCT.md). Make sure to read and follow these guidelines during your interactions within the project.
 
-## Branching Strategy
 
-We follow a branching strategy with the following branch naming conventions:
 
-- Feature branches: `feature#<task-id> - <task-name>`
-- Bugfix branches: `bugfix#<task-id> - <task-name>`
-- Hotfix branches: `hotfix#<task-id> - <task-name>`
 
-## Pull Request Process
+## Guidelines for open source contribution
 
-### Raising a Pull Request
 
-1. **Clone the Repository**
-   - Clone the repository to your local machine.
+### Pull Request Process
+1. **Fork the repository**
+   - This to be used for adding new features or bug fixes
+
+
+
+
+2. **Clone the Repository**
+   - Clone the repository to your local machine from the forked Repo.
      ```bash
-     git clone https://github.com/organization-name/your-repo.git
+     git clone https://github.com/account-name/your-repo.git
      ```
 
-2. **Create a New Branch**
-   - Create a new branch for your feature, bugfix, or hotfix.
-     ```bash
-     git checkout -b feature#<task-id> - <task-name>
-     ```
 
-3. **Make Changes and Commit**
-   - Make your changes and commit them with a descriptive commit message.
-     ```bash
-     git commit -m "feature#<task-id>: Your descriptive commit message"
-     ```
+3.  **Create a New Branch**
+   - Create a new branch for your feature, bugfix.
+   - Branching Strategy:
+      - Feature branches: `feature#<feature-name>`
+      - Bugfix branches: `bugfix#<bug-name>`
+   - Once your feature is ready and tested thoroughly, prepare it to create a Pull request
 
-4. **Push Changes to the Repository**
-   - Push your changes to the repository.
-     ```bash
-     git push origin feature#<task-id> - <task-name>
-     ```
 
-5. **Open a Pull Request to `develop`**
-   - Navigate to the repository on GitHub.
-   - Switch to the branch you just created.
-   - Click on "New Pull Request."
-   - Select the `develop` branch as the base branch.
-   - Provide a clear title and description for your pull request.
 
-6. **Code Review**
-   - Await code review from team members.
-   - Address any feedback or comments from reviewers promptly.
 
-7. **Merge into `develop`**
-   - After approval, the pull request will be merged into the `develop` branch.
+4. **IMPORTANT :- Before creating a Pull Request**
+   - Create a local build for React.js code using the build command in the Frontend directory using the proper env variables. Refer sample env for same
+      ```
+       npm run build
+      ```
+   - script is configured by default in the package.json file.  
+   - This step is only for Frontend changes.  
 
-### Merging into `main` (Release Process)
 
-1. **Create a Pull Request to `main` from a Feature Branch**
-   - Create a pull request from the feature branch to the `main` branch.
-   - Ensure that the feature branch has been thoroughly reviewed and tested successfully.
+5. **Push the changes / New features to the forked repository**
+   - Once your Build is generated, create a pull request.
+   - Push your local feature/Bugfix branch to your repo.
 
-2. **Code Review for `main`**
-   - Await code review for the pull request against the `main` branch.
-   - Address any feedback or comments from reviewers promptly.
 
-3. **Merge into `main`**
-   - After approval, the pull request will be merged into the `main` branch, marking a new release.
+6. **Create a pull request and add details about the features in PR**
+   - On your github account create a Pull request with the main branch.
+   - In the PR message add all the required information about the feature/bugfix and raise a PR with parent repo.
+
 
 ## Code Review Guidelines
 
-- All changes must pass code review before being merged.
+- All changes must pass code review before being merged for contribution.
 - Ensure your code is well-documented and follows coding standards.
 - Address any feedback or comments from reviewers promptly.
 
+
 ## Commit Message Conventions
+
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages.
 
-## Issue Tracking
-
-- Create issues for new features, bug fixes, or any enhancements.
-- Reference the issue number in your branch name, commit messages, and pull request.
 
 ## License
 
+
 By contributing to this project, you agree that your contributions will be licensed under the [LICENSE](LICENSE) of the project.
+
+

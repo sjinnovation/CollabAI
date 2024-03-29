@@ -1,0 +1,45 @@
+.chat-box {
+    background-color: #353540;
+    position: relative;
+    line-height: 24px;
+    width: 50vw;
+    height: 100%;
+    width: 100%;
+    color: #d1d5db;
+    font-size: 16px;
+  }
+
+  // chatLogWrapper
+  .chat-list-container {
+    // height: 74vh;
+    height: 80vh;
+    overflow-y: auto;
+  }
+
+  /* Apply to all selectable text elements within the markdown container */
+// .bot-response-markdown-container ::selection {
+//   background: black;
+// }
+
+.copy-icon {
+  border: none;
+  margin: 0;
+  background: transparent;
+  display: none; /* Hide the copy icon button by default */
+  color: #9b9b9b;
+}
+
+.copy-icon:hover {
+  color: white;
+  background: transparent;
+}
+
+.bot-response-markdown-container:hover .copy-icon {
+  display: block; /* Show the copy icon button when the markdown-container is hovered */
+}
+
+.bot-response-copy-btn {
+  display: flex;
+  height: 28px;
+  margin-top: 4px;
+}

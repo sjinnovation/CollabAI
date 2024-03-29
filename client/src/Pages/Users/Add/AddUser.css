@@ -1,0 +1,21 @@
+.add-user-form {
+    position: relative; /* set the position of the container to relative */
+    
+  }
+  
+  .close {
+    /* position: absolute; 
+    top: 29%; 
+    left: 95%; 
+    
+    cursor: pointer; 
+    z-index: 1; */
+    position: absolute;
+    top: 0;
+    right: 6px;
+    cursor: pointer;
+    padding: 5px; 
+  }
+  .hidden {
+    display: none;
+  }

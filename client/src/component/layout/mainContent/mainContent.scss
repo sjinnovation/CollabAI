@@ -1,0 +1,12 @@
+main {
+  height: 100vh;
+  height: -webkit-fill-available;
+  max-height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.sidebar {
+  width: 280px;
+  transition: all .3s ease-in;
+}

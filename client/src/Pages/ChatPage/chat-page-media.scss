@@ -1,0 +1,59 @@
+// ----- [ TAB RESPONSIVE ] MEDIA QUERIES ----- //
+@media screen and (max-width: 1024px) {
+    .chat-box {
+      position: static;
+    }
+    .chatPromptWrapper {
+      padding: 12px;
+    }
+    .botMessageWrapper {
+      padding: 12px;
+    }
+    .stop-messgage {
+      right: 5px;
+      font-size: 13px;
+      padding: 8px 15px;
+    }
+    .userSVG {
+      transform: scale(0.5);
+    }
+    .openaiSVG {
+      transform: scale(0.4);
+    }
+    #avatar {
+      width: 30px;
+      height: 30px;
+    }
+    #introsection {
+      padding: 20px 20px 40px 20px;
+      font-size: 14px;
+    }
+    #introsection h1,
+    pre {
+      font-size: 16px;
+      white-space: pre-wrap;
+    }
+    #introsection h2 {
+      font-size: 14px;
+    }
+  }
+
+  @media screen and (max-width: 1366px) {
+    .chatLogWrapper {
+      height: 70vh;
+    }
+  }
+
+  @media (hover: hover) {
+    button:hover {
+      cursor: pointer;
+      background: #212023;
+      // border-radius: 20%;
+    }
+  }
+  
+  @media screen and (min-width: 768px) {
+    .inputPromptWrapper {
+      position: absolute;
+    }
+  }

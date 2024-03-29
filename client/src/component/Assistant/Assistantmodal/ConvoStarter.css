@@ -1,0 +1,62 @@
+.listItem {
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+  }
+  
+  .spaceContainer {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .crossButtonContainer {
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .crossLine {
+    border-right: 1px solid #ff4d4f;
+    height: 10px;
+    margin-right: 8px;
+  }
+  
+  .crossButton {
+    color: #ff4d4f;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  .question-container {
+    border-radius: 8px; 
+    width: 100%;
+  }
+
+  .question-input-button {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+    align-items: start;
+  }
+  
+  .textarea-container {
+    flex-grow: 1;
+    width: 100%;
+  }
+  
+  .primary-button {
+    margin-right: 16px;
+  }
+  .spaceContainer{
+    flex: 1;
+  }
+
+  .list-container {
+    max-height: 100px; 
+    overflow-y: auto; 
+  }
+  .spanContainer {
+    margin-left: 8px;
+  }

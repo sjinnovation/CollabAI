@@ -1,0 +1,2698 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Collab API"
+  description: "Collab AI API"
+servers:
+  - url: "http://localhost:8011/api"
+  - url: "https://collaborativeaiapi-dev.managedcoder.com/api"
+  - url: "https://collaborativeaiapi-staging.managedcoder.com/api"
+
+
+paths:
+  /auth/admin:
+    post:
+      summary: "Register a new user"
+      description: "Endpoint to register a new user."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                fname:
+                  type: "string"
+                lname:
+                  type: "string"
+                password:
+                  type: "string"
+                email:
+                  type: "string"
+                username:
+                  type: "string"
+                companyId:
+                  type: "string"
+                teamId:
+                  type: "string"
+                status:
+                  type: "string"
+      responses:
+        '201':
+          description: "User registered successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  msg:
+                    type: "string"
+                    description: "Message indicating successful registration"
+        '400':
+          description: "Bad request"
+        '500':
+          description: "Internal server error"
+
+  /auth/login:
+    post:
+      summary: 'Logs in a user'
+      description: 'Endpoint to log in a user.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              properties:
+                email:
+                  type: 'string'
+                password:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'User logged in successfully'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  token:
+                    type: 'string'
+                  userName:
+                    type: 'string'
+                  userid:
+                    type: 'string'
+                  compId:
+                    type: 'string'
+                  role:
+                    type: 'string'
+                  user_email:
+                    type: 'string'
+                  teamId:
+                    type: 'string'
+                  hasAccess:
+                    type: 'boolean'
+        '400':
+          description: 'Bad request, missing parameters'
+        '401':
+          description: 'Unauthorized, invalid email or password'
+        '500':
+          description: 'Internal server error'
+
+  /user/forgotpassword: 
+    post:
+      summary: 'Updates a user password'
+      description: 'Endpoint to update a user password.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              properties:
+                email:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'Password update successfully initiated, password reset link sent to user email'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  msg:
+                    type: 'string'
+                    description: 'Password reset link'
+        '401':
+          description: 'Unauthorized, email does not exist'
+        '500':
+          description: 'Internal server error, failed to update password'
+
+  /user/resetPassword: 
+    patch:
+      summary: 'Resets a user password'
+      description: 'Endpoint to reset a user password.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              properties:
+                userId:
+                  type: 'string'
+                token:
+                  type: 'string'
+                password:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'Password reset successfully'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  msg:
+                    type: 'string'
+                    description: 'Success message'
+        '500':
+          description: 'Internal server error, failed to reset password'
+
+  /user/get-all-users: 
+    get:
+      tags: 
+        - Users
+      security:
+        - bearerAuth: []
+      summary: 'Get all users'
+      description: 'Endpoint to get all users based on the provided role, company id, page number, limit and optionally a search string.'
+      responses:  
+        '200':
+          description: 'Successfully fetched users'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  user:
+                    type: 'array'
+                    items:
+                      type: 'object'
+                      properties:
+                        _id:
+                          type: 'string'
+                        maxusertokens: 
+                          type: 'integer'
+                        currentusertokens: 
+                          type: 'integer'
+                        fname: 
+                          type: 'string'
+                        lname: 
+                          type: 'string'
+                        username: 
+                          type: 'string'
+                        email: 
+                          type: 'string'
+                        status:
+                          type: 'string'
+                        role: 
+                          type: 'string'
+                        companyId:
+                          type: 'string'
+                        teamId: 
+                          type: 'string'
+                          nullable: true
+                        createdAt:
+                          type: 'string'
+                          format: 'date-time'
+                        updatedAt:
+                          type: 'string'
+                          format: 'date-time'
+                        __v: 
+                          type: 'integer'
+                  nbhits:
+                    type: 'integer'
+                  page:
+                    type: 'integer'
+        '500':
+          description: 'Internal server error, failed to fetch users'
+
+  /user/get-user-prompts:
+    get:
+      tags: 
+        - Users
+      security:
+        - bearerAuth: []
+      summary: 'Get all users with their prompts'
+      description: 'Endpoint to fetch all users and their prompts based on the provided role, page number, limit and optionally a search string.'
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of users per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search string to match against the user's email.
+      responses:
+        '200':
+          description: 'Successfully fetched users with their prompts.'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  user:
+                    type: 'array'
+                    items:
+                      type: 'object'
+                      properties:
+                        _id:
+                          type: 'string'
+                          description: 'User ID'
+                        companyId:
+                          type: 'string'
+                          description: 'User''s company ID.'
+                        currentusertokens:
+                          type: 'number'
+                          description: 'Current number of tokens used by the user.'
+                        email:
+                          type: 'string'
+                          description: 'User''s email.'
+                        fname:
+                          type: 'string'
+                          description: 'User''s first name.'
+                        lname:
+                          type: 'string'
+                          description: 'User''s last name.'
+                        maxusertokens:
+                          type: 'number'
+                          description: 'Maximum tokens allowed for the user.'
+                        prompts:
+                          type: 'array'
+                          description: 'Prompts authored by the user.'
+                        role:
+                          type: 'string'
+                          description: 'Role of the user - can be "superadmin", "admin" or "user".'
+                        status:
+                          type: 'string'
+                          description: 'Status of user - active or inactive.'
+                        username:
+                          type: 'string'
+                          description: 'Username of the user.'
+                  nbhits:
+                    type: 'integer'
+                    description: 'Total user count.'
+                  page:
+                    type: 'integer'
+                    description: 'Page number of the response.'
+        '500':
+          description: 'Internal server error, failed to fetch users with their prompts.'
+
+  /user/get-single-user:
+    post:
+      tags: 
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+              required: 
+                - userId
+      responses:
+        200:
+          description: Fetched specific user successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        description: User's ID
+                      maxusertokens:
+                        type: integer
+                        description: Maximum tokens allowed for the user
+                      currentusertokens:
+                        type: integer
+                        description: Current number of tokens used by the user
+                      fname:
+                        type: string
+                        description: User's first name  
+                      lname:
+                        type: string
+                        description: User's last name 
+                      username:
+                        type: string
+                        description: Username of the user
+                      email:
+                        type: string
+                        description: User's email address
+                      status:
+                        type: string
+                        description: Status of the user - can be "active" or "inactive"
+                      role:
+                        type: string
+                        description: Role of the user - can be "superadmin", "admin" or "user"
+                      companyId:
+                        type: string
+                        description: User's company ID
+                      teamId:
+                        type: string
+                        description: ID of the team user belongs to
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: Creation date of user
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: Latest date user detail was updated
+        400:
+          description: Bad Request
+        500:
+          description: Internal server error
+
+  /user/update-user/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Users
+      summary: Update a user
+      description: Update user information
+      operationId: updateUser
+      parameters:
+      - name: id
+        in: path
+        description: User identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: User information to update
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fname:
+                  type: string
+                  description: User's first name
+                lname:
+                  type: string
+                  description: User's last name
+                email:
+                  type: string
+                  description: User's email
+                teamId:
+                  type: string
+                  description: ID of the team user belongs to
+                status:
+                  type: string
+                  description: Status of user, can be "active" or "inactive"
+        required: true
+      responses:
+        '200':
+          description: User information successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    description: Success message
+                  user:
+                    type: object
+                    description: User information
+                  token:
+                    type: string
+                    description: JWT token
+        '400':
+          description: Invalid input, object invalid
+        '500':
+          description: Internal server error
+
+  /user/update-status/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      tags: 
+      - Users
+      summary: Update a user's status
+      description: Update user status
+      operationId: updateStatus
+      parameters:
+      - name: id
+        in: path
+        description: User identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Admin identifier and new user status
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Admin's ID
+                status:
+                  type: string
+                  description: New user status
+        required: true
+      responses:
+        200:
+          description: Successfully updated user status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+        400:
+          description: Invalid request (missing parameters or unauthorized admin)
+        500:
+          description: Internal server error
+
+  /user/softdelete/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Users
+      summary: Soft delete a user
+      description: Soft delete a user and its corresponding company by renaming email and username to the current time.
+      operationId: softUserDelete
+      parameters:
+      - name: id
+        in: path
+        description: User's ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successfully soft deleted user and its corresponding company (if any)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  softDeletedUser:
+                    type: object
+                    description: User data after being soft deleted
+                  softDeletedCompany:
+                    type: object
+                    description: Company data after being soft deleted (if any)
+        '400':
+          description: Bad Request (User Not Found)
+        '500':
+          description: Internal server error
+
+  /user/get-user-tokens/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Users
+      summary: Get a user's tokens
+      description: Fetch a specific user's tokens by ID
+      operationId: getUserTokens
+      parameters:
+      - name: id
+        in: path
+        description: User identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successfully fetched user's tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: integer
+                    description: User's token count
+        '400':
+          description: Bad Request. User Not Found
+        '500':
+          description: Internal server error
+
+  /user/get-all-user-prompts/{id}:
+    post:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Users
+      summary: Get all prompts of a user
+      description: Fetch all the prompts of a user with pagination
+      operationId: getAllUserPrompts
+      parameters:
+      - name: id
+        in: path
+        description: User identifier
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number for pagination
+        required: false
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        description: Number of prompts per page
+        required: false
+        schema:
+          type: integer
+      requestBody:
+        description: initFetch flag and date for filtering prompts
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                initFetch:
+                  type: boolean
+                  description: Flag to indicate the initial fetch
+                date:
+                  type: string
+                  format: date-time
+                  description: Date to filter prompts
+        required: true
+      responses:
+        '200':
+          description: Successfully fetched user prompts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prompts:
+                    type: array
+                    items:
+                      type: object
+                    description: Array of user's prompts
+                  nbhits:
+                    type: integer
+                    description: Total count of user's prompts
+                  page:
+                    type: integer
+                    description: Current page number
+        '400':
+          description: Bad Request. Prompts not found
+        '500':
+          description: Internal server error
+
+  /user/team-assign:
+    patch:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Users
+      summary: Assign team to multiple users
+      description: Bulk assign specified team to multiple users.
+      operationId: bulkTeamAssignToUsers
+      requestBody:
+        description: Selected user IDs and assigned team ID
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selectedUsersIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of selected user IDs
+                assignedTeamId:
+                  type: string
+                  description: Assigned team ID
+        required: true
+      responses:
+        '200':
+          description: Successfully assigned team to selected users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedUser:
+                    type: object
+                    description: Update result for users
+        '500':
+          description: Internal server error
+
+  /category/getall:
+    get:
+      tags: 
+        - Category
+      summary: Get all active categories
+      responses:
+        '200':
+          description: All categories that are not deleted are fetched successfully
+
+  /category/create/{userid}:
+    post:
+      tags: 
+        - Category
+      summary: Create a new category
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_name:
+                  type: string
+      responses:
+        '200':
+          description: Category created successfully
+
+  /category/delete/{category_id}:
+    delete:
+      tags: 
+        - Category
+      summary: Soft delete a category
+      parameters:
+        - in: path
+          name: category_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category deleted successfully
+
+  /category/get/{category_id}:
+    get:
+      tags: 
+        - Category
+      summary: Get a specific category by its id
+      parameters:
+        - in: path
+          name: category_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category fetched successfully
+
+  /category/update/{category_id}:
+    put:
+      tags: 
+        - Category
+      summary: Update an existing category's name
+      parameters:
+        - in: path
+          name: category_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_name:
+                  type: string
+      responses:
+        '200':
+          description: Category updated successfully
+
+  /teams/:
+    post:
+      tags:
+        - Team
+      summary: Create a new team
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                teamTitle:
+                  type: string
+                hasAssistantCreationAccess:
+                  type: boolean
+      responses:
+        '201':
+          description: Team created
+    get:
+      tags:
+        - Team
+      summary: Get all teams
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returned all teams
+  /teams/{id}:
+    get:
+      tags:
+        - Team
+      summary: Get team by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returned a specific team
+    patch:
+      tags:
+        - Team
+      summary: Update a team
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                teamTitle:
+                  type: string
+                hasAssistantCreationAccess:
+                  type: boolean
+      responses:
+        '200':
+          description: Team updated
+    delete:
+      tags:
+        - Team
+      summary: Delete a team
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team deleted
+  /teams/add-new-field:
+    post:
+      tags:
+        - Team
+      summary: Create a new team
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                teamTitle:
+                  type: string
+                hasAssistantCreationAccess:
+                  type: boolean
+      responses:
+        '201':
+          description: Team created
+
+  /meetingTypes/create:
+    post:
+      tags:
+        - Meeting Types
+      summary: Create a new meeting type
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meetingTitle:
+                  type: string
+                isDeleted:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Meeting type created successfully
+
+  /meetingTypes/get-all:
+    get:
+      security:
+          - bearerAuth: []
+      tags:
+        - Meeting Types
+      summary: Get all active meeting types
+      responses:
+        '200':
+          description: Meeting types fetched successfully
+
+  /meetingTypes/update/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      tags:
+        - Meeting Types
+      summary: Update a meeting type by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meetingTitle:
+                  type: string
+      responses:
+        '200':
+          description: Meeting type updated successfully
+
+  /meetingTypes/delete/{id}:
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Meeting Types
+      summary: Delete a meeting type by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Meeting type deleted successfully
+
+  /meetingTypes/get/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Meeting Types
+      summary: Get a meeting type by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Meeting type fetched successfully
+  
+  /meetingTypes/addNewField:
+    put: 
+      security:
+        - bearerAuth: []
+      tags:
+        - Meeting Types
+      summary: Adds 'isDeleted' field to all existing meeting types
+      responses:
+        '200':
+          description: New field added successfully
+
+  /template/create-template:
+    post:
+      tags:
+        - Template    
+      summary: Create a new template
+      description: Endpoint for creating a new template.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateBody'
+      responses:
+        '201':
+          description: Template created
+
+  /template/get-templates:
+    get:
+      tags:
+        - Template
+      summary: Get all templates
+      description: Endpoint for retrieving all templates.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returned all templates
+
+  /template/get-templates-admin:
+    post:
+      tags:
+        - Template
+      summary: Get all templates (Admin)
+      description: Endpoint for admin to retrieve all templates.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All templates retrieved for admin
+
+  /template/update-template/{id}:
+    put:
+      tags:
+        - Template
+      summary: Update a template
+      description: Endpoint for updating a template.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateBody'
+      responses:
+        '200':
+          description: Template updated
+
+  /template/get-template/{id}:
+    get:
+      tags:
+        - Template
+      summary: Get a specific template
+      description: Endpoint for retrieving a specific template by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returned a specific template
+
+  /template/delete-template/{id}:
+    delete:
+      tags:
+        - Template
+      summary: Delete a template
+      description: Endpoint to delete a template.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Template deleted
+
+  /organizations:
+    post:
+      tags:
+        - Organization
+      summary: Create a new organization
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '201':
+          description: Organization created successfully
+    get:
+      tags:
+        - Organization
+      summary: Retrieve a list of organizations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Organizations retrieved successfully
+
+  /organizations/{id}:
+    patch:
+      tags:
+        - Organization
+      summary: Update an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '200':
+          description: Organization updated successfully
+    delete:
+      tags:
+        - Organization
+      summary: Delete an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Organization deleted successfully
+
+  /assistants/threads:
+    get:
+      summary: Get all assistant threads for a specific user
+      tags:
+        - Assistant Threads
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: assistant_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threads retrieved successfully
+        '500':
+          description: Internal server error
+          
+  /assistants/threads/{id}:
+    patch:
+      tags:
+        - Assistant Threads
+      summary: Update an assistant thread
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string        
+      responses:
+        '200':
+          description: Assistant updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Delete an existing assistant
+      description: Deletes an existing assistant based on the provided `assistant_id`.
+      parameters:
+        - in: path
+          name: assistant_id
+          schema:
+            type: string
+          required: true
+          description: The ID of the assistant to be deleted.
+      responses:
+        '200':
+          description: Success. Returns a success message.
+        '400':
+          description: Bad Request. When the specified assistant is not found.
+        '500':
+          description: Internal Server Error. If there's an issue during the deletion process.
+  
+  /assistants/{assistant_id}:
+    patch:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Update an assistant's details
+      description: This API is to update an assistant’s details
+      parameters:
+        - in: path
+          name: assistant_id
+          required: true
+          schema:
+            type: string
+          description: The ID of the assistant to update
+      requestBody:
+        description: Assistant's new details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:                
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Thread updated successfully
+        '404':
+          description: Thread not found
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Assistant Threads
+      summary: Delete an assistant thread
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thread deleted successfully
+        '404':
+          description: Thread not found
+        '500':
+          description: Internal server error               
+  
+  /assistants/{assistant_id}/teams:
+    patch:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Assign a team to an assistant
+      description: This API is to assign a team to a specific assistant
+      parameters:
+        - in: path
+          name: assistant_id
+          required: true
+          schema:
+            type: string
+          description: The assistant's unique identifier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                teamIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Team assigned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/{assistant_id}/files:
+    post:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Update the file associations of a specific assistant
+      description: Update the files associated with specific assistant
+      parameters:
+        - in: path
+          name: assistant_id
+          required: true
+          schema:
+            type: string
+          description: The assistant's unique identifier
+      requestBody:
+          description: Files to update
+          required: true
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  param1:
+                    type: string
+                    description: Description of param1
+      responses:
+        '200':
+          description: Files updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/{assistant_id}/chats:
+    post:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Create a new chat for an assistant
+      description: Create a new chat for an assistant identified by assistant_id. 
+      parameters:
+        - in: path
+          name: assistant_id
+          required: true
+          schema:
+            type: string
+          description: The id of the assistant.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string 
+                thread_id:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Chat created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                  msg_id:
+                    type: string
+                  thread_id:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage:
+                    type: string
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get all chats for a specific assistant by the user
+      description: Get a list of chat messages from a specific assistant that are associated with the user
+      parameters:
+        - in: path
+          name: assistant_id
+          required: true
+          schema:
+            type: string
+          description: The assistant's unique identifier
+        - in: query
+          name: thread_id
+          required: true
+          schema:
+            type: string
+          description: The thread identifier
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The limit for number of chat messages
+        - in: query
+          name: after
+          schema:
+            type: string
+          description: ID after which messages needs to be returned
+        - in: query
+          name: before
+          schema:
+            type: string
+          description: ID before which messages needs to be returned
+      responses:
+        '200':
+          description: Chats fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        botMessage:
+                          type: string
+                        chatPrompt:
+                          type: string
+                        msg_id:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date
+                  metadata:
+                    type: object
+                    properties:
+                      first_id:
+                        type: string
+                      last_id:
+                        type: string
+                      has_more:
+                        type: boolean
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/all:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get list of assistants that are assigned to the user with pagination
+      description: Returns a list of assistants assigned to the user with pagination
+      parameters:
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 10
+          description: Number of records per page for pagination
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+      responses:
+        '200':
+          description: Assistants fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allAssistants:
+                    type: array
+                    items:
+                      type: string
+                  currentPage:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/users:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get list of assistants that are assigned to the user
+      description: Returns a list of assistants assigned to the user  
+      parameters:
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 10
+          description: Number of records per page for pagination
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+      responses:
+        '200':
+          description: Assistants fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assistants:
+                    type: array
+                    items:
+                      type: string
+                  totalPages:
+                    type: integer
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    
+  /assistants/users/created/{userId}:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get assistants created by a specific user with a given category, considering pagination
+      description: Returns a list of assistants created by a specific user with a given category
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: The user's unique identifier
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 10
+          description: Number of records per page for pagination
+      responses:
+        '200':
+          description: Assistants fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assistants:
+                    type: array
+                    items:
+                      type: string
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/users/stats:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get statistics of assistants for all users with pagination
+      description: Get statistics of assistants for all users using pagination. The response includes the total and active assistants for each user 
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of records per page for pagination
+      responses:
+        '200':
+          description: Statistics fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userStats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        username:
+                          type: string
+                        totalAssistants:
+                          type: integer
+                        activeAssistants:
+                          type: integer
+                        status:
+                          type: string
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/{id}/info:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get assistant by id
+      description: Get an assistant by its unique identifier
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the assistant
+      responses:
+        '200':
+          description: Assistant fetched successfully
+        '404':
+          description: Assistant not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants:
+    get:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Get list of assistants with optional category filter and pagination
+      description: Get a list of assistants
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of records per page for pagination
+      responses:
+        '200':
+          description: Fetch successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assistants:
+                    type: array
+                    items:
+                      type: string
+                  totalAssistantCount:
+                    type: integer
+                  message:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /assistants/createassistant:
+    post:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Create a new assistant
+      description: Create a new assistant by attributes or retrieval from openai through assistantId
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                instructions:
+                  type: string
+                description:
+                  type: string
+                assistantId:
+                  type: string
+                tools:
+                  type: array
+                  items:
+                    type: string
+                model:
+                  type: string
+                userId:
+                  type: string
+                category:
+                  type: string
+                imageGeneratePrompt:
+                  type: string
+                staticQuestions:
+                  type: array
+      responses:
+        '201':
+          description: Assistant created successfully
+      
+        '500':
+          description: Internal Server Error
+
+  /assistants/updatedatawithfile/{assistant_id}:
+    post:
+      tags:
+        - Assistant
+      security:
+        - bearerAuth: []
+      summary: Update assistant data and associated files
+      description: Updates an existing assistant's data and associated files based on the provided `assistant_id`. Accepts assistant properties and files in the request body.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                param1:
+                  type: string
+                  description: Description of param1.
+      responses:
+        '201':
+          description: Created. Returns success message and updated assistant.
+        '400':
+          description: Bad Request. When the file limit is reached or there are other validation issues.
+        '404':
+          description: Not Found. When the specified assistant is not found.
+        '500':
+          description: Internal Server Error. If there's an issue during the update process.
+  /prompt/getprompt/{userid}:
+    post:
+      summary: Get GPT prompt
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []      
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                temp:
+                  type: string
+                threadId:
+                  type: string
+                chatLog:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      botMessage:
+                        type: boolean
+                      chatPrompt:
+                        type: string
+                compId:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - temp
+                - threadId
+                - chatLog
+                - compId
+                - tags
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      promptResponse:
+                        type: string
+                      promptTime:
+                        type: string
+                      tags:
+                        type: array
+                        items:
+                          type: string
+
+  /prompt/userprompts/{userid}:
+    get:
+      summary: Get user prompts
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        tokenused:
+                          type: number
+                        threadid:
+                          type: string
+                        userid:
+                          type: string
+                        description:
+                          type: string
+                        promptresponse:
+                          type: string
+                        promptdate:
+                          type: string
+                        createdAt:
+                          type: string
+                        modelused:
+                          type: string
+                        tags:
+                          type: array
+                          items:
+                            type: string
+
+  /prompt/fetchprompts/{threadid}:
+    get:
+      summary: Fetch prompts for a specific thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: threadid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        tokenused:
+                          type: number
+                        threadid:
+                          type: string
+                        userid:
+                          type: string
+                        description:
+                          type: string
+                        promptresponse:
+                          type: string
+                        promptdate:
+                          type: string
+                        createdAt:
+                          type: string
+                        modelused:
+                          type: string
+                        tags:
+                          type: array
+                          items:
+                            type: string
+
+  /prompt/fetchchatthreads/{userid}:
+    get:
+      summary: Fetch chat threads for a specific user
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      prompts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                            tokenused:
+                              type: number
+                            threadid:
+                              type: string
+                            userid:
+                              type: string
+                            description:
+                              type: string
+                            promptresponse:
+                              type: string
+                            promptdate:
+                              type: string
+                            createdAt:
+                              type: string
+                            modelused:
+                              type: string
+                            tags:
+                              type: array
+                              items:
+                                type: string
+
+  /prompt/getstatistics/{date}:
+    get:
+      summary: Get statistics based on prompt usage for a specified date
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      monthly:
+                        type: number
+                      weekly:
+                        type: number
+                      daily:
+                        type: number
+                      gpt3monthly:
+                        type: number
+                      gpt3weekly:
+                        type: number
+                      gpt3daily:
+                        type: number
+
+  /prompt/clearconversations:
+    put:
+      summary: Clear saved prompts for a specific user
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userid:
+                  type: string
+              required:
+                - userid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /prompt/updateprompts:
+    put:
+      summary: Update edited prompts for a specific user and thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userid:
+                  type: string
+                threadId:
+                  type: string
+                lastPrompt:
+                  type: string
+              required:
+                - userid
+                - threadId
+                - lastPrompt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /prompt/getprompttitle:
+    post:
+      summary: Get prompt title for a specific thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threadId:
+                  type: string
+              required:
+                - threadId
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      prompttitle:
+                        type: string
+
+  /prompt/clearsingleconversation:
+    put:
+      summary: Clear saved prompts for a specific thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threadid:
+                  type: string
+              required:
+                - threadid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /prompt/fetchdeletedthreads:
+    get:
+      summary: Fetch deleted threads for a specific user
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      prompts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                            threadid:
+                              type: string
+                            createdAt:
+                              type: string
+                            updatedAt:
+                              type: string
+
+  /prompt/threadrecover/{id}:
+    put:
+      summary: Recover a deleted thread by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the deleted thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                      message:
+                        type: string
+
+  /prompt/multithreadrecover:
+    patch:
+      summary: Recover multiple deleted threads based on selected thread IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selectedThreadIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - selectedThreadIds
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      RecoveredThreads:
+                        type: object
+
+  /prompt/thread:
+    delete:
+      summary: Delete threads based on provided thread IDs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threadIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - threadIds
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /prompt/getsingleprompt/{id}:
+    get:
+      summary: Get a prompt by its ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the prompt
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      threadid:
+                        type: string
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+
+  /prompt/getrangestatistics/{startdate}/{enddate}:
+    get:
+      summary: Retrieve statistics based on prompt usage for a specified date range
+      tags:
+        - Prompt
+      parameters:
+        - in: path
+          name: startdate
+          required: true
+          schema:
+            type: string
+          description: Start date for the date range (YYYY-MM-DD)
+        - in: path
+          name: enddate
+          required: true
+          schema:
+            type: string
+          description: End date for the date range (YYYY-MM-DD)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      gpt3total:
+                        type: number
+  /config/getValue:
+    get:
+      tags:
+        - Config
+      summary: Get Threshold Value
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                threshold:
+                  key: "threshold"
+                  value: "some_value"
+                message: "Threshold value fetched successfully"
+  /config/addthreshold:
+    post:
+      summary: Set Threshold Value
+      tags:
+        - Config
+      requestBody:
+        content:
+          application/json:
+            example:
+              value: "some_value"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "Threshold value updated/saved successfully"
+  /config/addkey/{userid}:
+    post:
+      tags:
+        - Config
+      summary: Set API Key
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              key: "api_key_here"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "API key updated/saved successfully"
+  /config/getkey:
+    get:
+      summary: Get API Key
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                key:
+                  key: "openaikey"
+                  value: "api_key_here"
+                message: "API key fetched successfully"
+  /config/settemperature/{userid}:
+    post:
+      summary: Set Temperature
+      tags:
+        - Config
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              temperature: "0.2"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "Temperature updated/saved successfully"
+  /config/gettemperature:
+    get:
+      summary: Get Temperature
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                temperature:
+                  key: "temperature"
+                  value: "0.2"
+                message: "Temperature fetched successfully"
+  /config/setmaxtokens/{userid}:
+    post:
+      summary: Set Max Tokens
+      tags:
+        - Config
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              tokens: "100"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "Max tokens updated/saved successfully"
+  /config/getmaxtokens:
+    get:
+      summary: Get Max Tokens
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                tokens:
+                  key: "tokens"
+                  value: "100"
+                message: "Max tokens fetched successfully"
+  /config/setopenaimodel/{userid}:
+    post:
+      summary: Set OpenAI Model
+      tags:
+        - Config
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              model: "gpt-4"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "OpenAI model updated/saved successfully"
+  /config/getopenaimodel:
+    get:
+      summary: Get OpenAI Model
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                model:
+                  key: "model"
+                  value: "gpt-4"
+                message: "OpenAI model fetched successfully"
+  /config/settings:
+    get:
+      summary: Get All Configurations
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                configValues:
+                  threshold:
+                    key: "threshold"
+                    value: "some_value"
+                  openaikey:
+                    key: "openaikey"
+                    value: "api_key_here"
+                  temperature:
+                    key: "temperature"
+                    value: "0.2"
+                  tokens:
+                    key: "tokens"
+                    value: "100"
+                  model:
+                    key: "model"
+                    value: "gpt-4"
+                message: "Configurations fetched successfully"
+    patch:
+      summary: Update Configurations
+      tags:
+        - Config
+      requestBody:
+        content:
+          application/json:
+            example:
+              aiModel: "gpt-4"
+              secretKey: "api_key_here"
+              temperature: "0.2"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                message: "Configurations updated successfully"
+                
+components:
+  schemas:
+    Categories:
+      type: object
+      properties:
+        category_name:
+          type: string
+        is_deleted:
+          type: boolean
+        timestamp:
+          type: string
+    
+    TemplateBody:
+      type: object
+      properties:
+        title:
+          type: string
+          example: TemplateOne
+        description:
+          type: string
+          example: This is TemplateOne
+        category:
+          type: string
+          example: CategoryOne
+
+    Organization:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        employeeCount:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
