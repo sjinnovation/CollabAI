@@ -1,11 +1,8 @@
 import toast from "react-hot-toast";
 import { message } from "antd";
 import { axiosOpen, axiosSecureInstance } from "../../../api/axios";
-<<<<<<< HEAD
 import {Form, Input } from 'antd';
 
-=======
->>>>>>> 41ceba0a1c9d9cab7dcaaf16dcc6df67380d98a9
 
 //Validates Function defintion
 export const handleValidateFunction = async (setValidateConsole, functionDefinition, functionName, parameterValues ) => {
@@ -62,10 +59,6 @@ export const renderParameterInputs = (functionsParameterNames, parameterValues, 
   ));
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 41ceba0a1c9d9cab7dcaaf16dcc6df67380d98a9
 export const handleSaveFunctionToDB = async (functionName, functionDefinition, setFunctionName, setFunctionDefinition, setShowDefineFunctionsModal, showDefineFunctionsModal ) => {
   try {
     const response = await axiosSecureInstance.post(
