@@ -7,11 +7,13 @@ import { Footer, Header, Sidebar } from "../../component";
 import { isLoggedIn } from "../../Utility/service";
 import AssistantSidebar from "../../component/layout/AssistantSidebar/AssistantSidebar";
 import AssistantContextProvider from "../../contexts/AssistantContext";
+import { AssistantFetchContextProvider } from "../../contexts/AssistantsFetchContext";
 
 const AssistantLayout = () => {
     const location = useLocation();
 
     return isLoggedIn() ? (
+        <AssistantFetchContextProvider>
             <SidebarContextProvider>
                 <AssistantContextProvider>
                     <PromptTemplateContextProvider>
@@ -31,6 +33,7 @@ const AssistantLayout = () => {
                     </PromptTemplateContextProvider>
                 </AssistantContextProvider>
             </SidebarContextProvider>
+            </AssistantFetchContextProvider>
     ) : (
         <Navigate to="/login" state={{ from: location }} replace />
     );

@@ -31,18 +31,6 @@ export const actionLimitter = (action) =>
       res.status(options.statusCode).send({ errorMessage: options.message }),
   });
 
-export const  authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  console.log("authHeader",authHeader);
-  const token = authHeader && authHeader.split(" ")[1];
-  console.log("token",token);
-  if (token == null) return res.sendStatus(403);
-  jwt.verify(token, process.env.SALT_HASH, (err, user) => {
-    if (err) return res.sendStatus(401);
-    req.user = user;
-    next();
-  });
-}
 function validateToken(token) {
   return typeof token === 'string' && token.trim() !== '';
 }
@@ -89,10 +77,38 @@ async function authenticateUser(req, res, next) {
   }
 }
 
-export default authenticateUser;
+export async function authenticateSocket(socket, next) {
+  try {
+    // Get the token from the query parameter or socket handshake headers
+    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    if (!token) {
+      return next(new Error('Authentication error: Token not provided'));
+    }
 
-// module.exports = {
-//   actionLimitter,
-//   userActions,
-//   authenticateToken,
-// };
+    // Your existing token validation logic
+    if (!validateToken(token)) {
+      return next(new Error('Authentication error: Invalid token'));
+    }
+
+    const decodedToken = jwt.verify(token, config.JWT_SECRET, { ignoreExpiration: true });
+    const curTime = new Date().getTime() / 1000;
+    if (decodedToken.exp < curTime) {
+      // Token has expired
+      return next(new Error('Authentication error: Token expired'));
+    }
+
+    // Fetch user by ID from the decoded token and attach the user to the socket for future use
+    const user = await User.findOne({ _id: decodedToken.userId });
+    if (user && user._id) {
+      socket.user = decodedToken;
+      next();
+    } else {
+      return next(new Error('Authentication error: User not found'));
+    }
+  } catch (e) {
+    console.log("🚀 ~ authenticateSocket ~ e:", e)
+    return next(new Error('Authentication error: ' + e.message));
+  }
+}
+
+export default authenticateUser;

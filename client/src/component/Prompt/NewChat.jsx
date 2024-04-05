@@ -10,11 +10,7 @@ const NewChat = ({ setChatLog, setShowMenu }) => {
     return (
         <div
             onClick={() => {
-                // setChatLog([]);
-                // setShowMenu(false);
-                // navigate("/prompt", { replace: true });
-                navigate("/chat", { replace: true });
-                // window.location.reload(); //[TODO]
+                navigate("/chat", { replace: true  });
             }}
             className={`thread mb-2 d-flex justify-content-between align-items-center`}
         >

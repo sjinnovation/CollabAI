@@ -137,7 +137,6 @@ export const setTemperature = async (req, res) => {
 				newvalues,
 				function (err, res1) {
 					if (err) throw err;
-
 					deleteKeyFromOpenAiConfigCache('temperature');
 
 					res.status(StatusCodes.OK).json({
@@ -255,9 +254,9 @@ export const setOpenaiModel = async (req, res) => {
 				if (err) throw err;
 
 				deleteKeyFromOpenAiConfigCache('model');
-				
+
 				res.status(StatusCodes.OK).json({
-					message: ConfigMessages.MODEL_UPDATED,
+					message: ConfigMessages.OPEN_AI_MODEL_UPDATED,
 				});
 			});
 		} else {
@@ -267,7 +266,7 @@ export const setOpenaiModel = async (req, res) => {
 				value: model,
 			});
 			res.status(StatusCodes.OK).json({
-				message: ConfigMessages.MODEL_SAVED,
+				message: ConfigMessages.OPEN_AI_MODEL_SAVED,
 			});
 			return;
 		}
@@ -288,6 +287,110 @@ export const getOpenaiModel = async (req, res, next) => {
 	}
 };
 
+// add dallEModel, Quality and Resolution to config
+export const setDallEConfig = async (req, res) => {
+	const { dallEModel, dallEQuality, dallEResolution } = req.body;
+	// check if dallEModel or dallEQuality is empty
+	if (dallEModel == '' || dallEResolution == '') {
+		res.status(StatusCodes.BAD_REQUEST).json({
+			message: ConfigMessages.DALLECONFIG_CANNOT_BE_EMPTY,
+		});
+		return;
+	}
+
+	try {
+		const keyModel = await config.findOne({ key: 'dallEModel' });
+		const keyQuality = await config.findOne({ key: 'dallEQuality' });
+		const keyResolution = await config.findOne({ key: 'dallEResolution' });
+		if (keyModel && keyQuality && keyResolution) {
+			//update key
+			var newModelValues = { $set: { value: dallEModel } };
+			var newQualityValues = { $set: { value: dallEQuality } };
+			var newResolutionValues = { $set: { value: dallEResolution } };
+			config.updateOne(
+				{ key: 'dallEModel' },
+				newModelValues,
+				function (err, res1) {
+					if (err) throw err;
+
+					deleteKeyFromOpenAiConfigCache('dallEModel');
+
+					res.status(StatusCodes.OK).json({
+						message: ConfigMessages.DALLECONFIG_UPDATED,
+					});
+				}
+			);
+
+			config.updateOne(
+				{ key: 'dallEQuality' },
+				newQualityValues,
+				function (err, res1) {
+					if (err) throw err;
+
+					deleteKeyFromOpenAiConfigCache('dallEQuality');
+
+					res.status(StatusCodes.OK).json({
+						message: ConfigMessages.DALLECONFIG_UPDATED,
+					});
+				}
+			);
+
+			config.updateOne(
+				{ key: 'dallEResolution' },
+				newResolutionValues,
+				function (err, res1) {
+					if (err) throw err;
+
+					deleteKeyFromOpenAiConfigCache('dallEResolution');
+
+					res.status(StatusCodes.OK).json({
+						message: ConfigMessages.DALLECONFIG_UPDATED,
+					});
+				}
+			);
+		} else {
+			// insert key
+			await config.create({
+				key: 'dallEModel',
+				value: dallEModel,
+			});
+			await config.create({
+				key: 'dallEQuality',
+				value: dallEQuality,
+			});
+			await config.create({
+				key: 'dallEResolution',
+				value: dallEResolution,
+			});
+			res.status(StatusCodes.OK).json({
+				message: ConfigMessages.DALLECONFIG_SAVED,
+			});
+			return;
+		}
+	} catch (error) {
+		next(InternalServer());
+	}
+};
+
+// get Dall-E-Model, Quality and Resolution
+export const getDallEConfig = async (req, res, next) => {
+	try {
+		const dallEModel = await config.findOne({ key: 'dallEModel' });
+		const dallEQuality = await config.findOne({ key: 'dallEQuality' });
+		const dallEResolution = await config.findOne({
+			key: 'dallEResolution',
+		});
+		res.status(StatusCodes.OK).json({
+			dallEModel,
+			dallEQuality,
+			dallEResolution,
+			message: ConfigMessages.DALLECONFIG_FETCHED,
+		});
+	} catch (error) {
+		next(InternalServer(error.message));
+	}
+};
+
 export const getConfigurations = async (req, res, next) => {
 	try {
 		const keysToFetch = [
@@ -296,6 +399,15 @@ export const getConfigurations = async (req, res, next) => {
 			'temperature',
 			'tokens',
 			'model',
+			'geminiModel',
+			'geminiTemperature',
+			'geminiApiKey',
+			'dallEModel',
+			'dallEQuality',
+			'dallEResolution',
+			'claudeModel',
+			'claudeTemperature',
+			'claudeApiKey',
 		];
 		const configValues = await config.find({ key: { $in: keysToFetch } });
 
@@ -306,7 +418,7 @@ export const getConfigurations = async (req, res, next) => {
 		}
 
 		const formattedValues = configValues.reduce((acc, configValue) => {
-			acc[configValue.key] = configValue;
+			acc[configValue.key] = configValue.value;
 			return acc;
 		}, {});
 
@@ -320,44 +432,47 @@ export const getConfigurations = async (req, res, next) => {
 };
 
 export const updateConfigurations = async (req, res, next) => {
+	const { _id: userId } = req.user;
 	const {
-		params: { userid: userId },
-		body: { aiModel, secretKey, temperature },
+		body: {
+			model,
+			openaikey,
+			temperature,
+			geminiModel,
+			geminiApiKey,
+			geminiTemperature,
+			dallEModel,
+			dallEQuality,
+			dallEResolution,
+			claudeModel,
+			claudeTemperature,
+			claudeApiKey,
+		},
 	} = req;
 
 	try {
-		// check if user is admin or superadmin
-		const user = await User.findOne({ _id: userId });
-
-		if (!user || !(user.role == 'admin' || user.role == 'superadmin')) {
-			res.status(StatusCodes.UNAUTHORIZED).json({
-				message: ConfigMessages.UNAUTHORIZED_TO_MODIFY_CONFIGURATIONS,
-			});
-			return;
-		}
-
 		// Update AI model
-		if (aiModel !== '') {
+		if (model !== undefined) {
 			await updateConfiguration(
 				'model',
-				aiModel,
-				ConfigMessages.MODEL_UPDATED,
-				ConfigMessages.MODEL_SAVED
+				model,
+				ConfigMessages.OPEN_AI_MODEL_UPDATED,
+				ConfigMessages.OPEN_AI_MODEL_SAVED
 			);
 		}
 
 		// Update Secret Key
-		if (secretKey !== '') {
+		if (openaikey !== undefined) {
 			await updateConfiguration(
 				'openaikey',
-				secretKey,
+				openaikey,
 				ConfigMessages.OPENAI_KEY_UPDATED,
 				ConfigMessages.OPENAI_KEY_SAVED
 			);
 		}
 
 		// Update Temperature
-		if (temperature !== '') {
+		if (temperature !== undefined) {
 			await updateConfiguration(
 				'temperature',
 				temperature,
@@ -366,10 +481,103 @@ export const updateConfigurations = async (req, res, next) => {
 			);
 		}
 
+		// Update Temperature
+		if (geminiTemperature !== undefined) {
+			await updateConfiguration(
+				'geminiTemperature',
+				geminiTemperature,
+				ConfigMessages.TEMPERATURE_UPDATED,
+				ConfigMessages.TEMPERATURE_SAVED
+			);
+		}
+
+		// Update Gemini AI Model
+		if (geminiModel !== undefined) {
+			await updateConfiguration(
+				'geminiModel',
+				geminiModel,
+				ConfigMessages.GEMINI_MODEL_UPDATED,
+				ConfigMessages.GEMINI_MODEL_SAVED
+			);
+			deleteKeyFromOpenAiConfigCache('geminiModel');
+		}
+
+		// Update Gemini API Key
+		if (geminiApiKey !== undefined) {
+			await updateConfiguration(
+				'geminiApiKey',
+				geminiApiKey,
+				ConfigMessages.GEMINI_API_KEY_UPDATED,
+				ConfigMessages.GEMINI_API_KEY_SAVED
+			);
+			deleteKeyFromOpenAiConfigCache('geminiApiKey');
+		}
+
+		// Update Claude AI Model
+		if (claudeModel !== undefined) {
+			await updateConfiguration(
+				'claudeModel',
+				claudeModel,
+				ConfigMessages.CLAUDE_MODEL_UPDATED,
+				ConfigMessages.CLAUDE_MODEL_SAVED
+			);
+		}
+
+		// Update Claude API Key
+		if (claudeApiKey !== undefined) {
+			await updateConfiguration(
+				'claudeApiKey',
+				claudeApiKey,
+				ConfigMessages.CLAUDE_API_KEY_UPDATED,
+				ConfigMessages.CLAUDE_API_KEY_SAVED
+			);
+		}
+
+		// Update Claude Temperature
+		if (claudeTemperature !== undefined) {
+			await updateConfiguration(
+				'claudeTemperature',
+				claudeTemperature,
+				ConfigMessages.CLAUDE_TEMPERATURE_UPDATED,
+				ConfigMessages.CLAUDE_TEMPERATURE_SAVED
+			);
+		}
+
+		// Update Dall-E-Model
+		if (dallEModel !== '') {
+			await updateConfiguration(
+				'dallEModel',
+				dallEModel,
+				ConfigMessages.DALLEMODEL_UPDATED,
+				ConfigMessages.DALLEMODEL_SAVED
+			);
+		}
+
+		// Update Dall-E-Quality
+		if (dallEQuality !== '') {
+			await updateConfiguration(
+				'dallEQuality',
+				dallEQuality,
+				ConfigMessages.DALLEQUALITY_UPDATED,
+				ConfigMessages.DALLEQUALITY_SAVED
+			);
+		}
+
+		// Update Dall-E-Resolution
+		if (dallEResolution !== '') {
+			await updateConfiguration(
+				'dallEResolution',
+				dallEResolution,
+				ConfigMessages.DALLERESOLUTION_UPDATED,
+				ConfigMessages.DALLERESOLUTION_SAVED
+			);
+		}
+
 		res.status(StatusCodes.OK).json({
 			message: ConfigMessages.CONFIGURATIONS_UPDATED,
 		});
 	} catch (error) {
+		console.log(error);
 		next(InternalServer(error.message));
 	}
 };
@@ -378,10 +586,14 @@ async function updateConfiguration(key, value, updateMessage, saveMessage) {
 	const keyRec = await config.findOne({ key });
 
 	if (keyRec) {
+		// const valueToUpdate = typeof value === 'number' ? value.toString() : value;
 		const newvalues = { $set: { value } };
 		await config.updateOne({ key }, newvalues);
+
 		console.log(`${key} updated`);
+		deleteKeyFromOpenAiConfigCache(key);
 	} else {
+		// const valueToUpdate = typeof value === 'number' ? value.toString() : value;
 		await config.create({ key, value });
 		console.log(`${key} saved`);
 	}

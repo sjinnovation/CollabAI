@@ -29,7 +29,7 @@ const NavContentDuplicate = ({
       const { success, data, error } = await getChatThread(userid, setChatThread);
       if (success) {
         setChatThread(data);
-        
+        console.log(data,"ghjkghjjhb")
       } else {
         setChatThread([]);
         console.error("Error fetching chat thread:", error);
@@ -49,7 +49,7 @@ const NavContentDuplicate = ({
   };
 
   useEffect(() => {
-    handleGetChatThread()
+    handleGetChatThread();
   }, [triggerUpdate]);
 
   

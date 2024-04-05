@@ -1,9 +1,8 @@
-import connectDb from "./config/db.js";
 import express from "express";
+import http from 'http';
 import cors from "cors";
 import cron from "node-cron";
 import bodyParser from "body-parser";
-import multer from "multer"; 
 import morgan from "morgan";
 import router from "./routers/authRoute.js";
 import userRouter from "./routers/userRoute.js";
@@ -22,13 +21,14 @@ import teamRouter from "./routers/teamRoutes.js";
 import organizationRouter from "./routers/organizationRoutes.js";
 import { errorLogger } from "./middlewares/errorMiddleware.js";
 import { initSetup } from './controllers/initController.js'
+import trackUsageRouter from "./routers/trackUsageRoute.js";
 
 const app = express();
+const server = http.createServer(app);
+
 app.use(cors({
   exposedHeaders: ["x-token-expiry"],
 }));
-
-connectDb();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("tiny"));
@@ -36,8 +36,6 @@ app.use(morgan("tiny"));
 app.get("/", (req, res) => {
   res.send(" API is running ....");
 });
-var upload = multer();
-
 
 app.post("/api/init", initSetup);
 app.use("/api/auth", router);
@@ -53,12 +51,12 @@ app.use("/api/assistants", assistantRouter);
 app.use('/api/assistants/threads', assistantThreadRouter);
 app.use("/api/teams", teamRouter);
 app.use("/api/organizations", organizationRouter);
+app.use("/api/usage", trackUsageRouter);
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(upload.array()); 
-// app.use(express.static('public'));
 app.use("/api/image", imageRouter);
+
 cron.schedule("0 0 5 * * *", () => {
   registeredCompanies();
   console.log("running a task every 15 seconds");
@@ -66,4 +64,4 @@ cron.schedule("0 0 5 * * *", () => {
 
 app.use(errorLogger);
 
-export default app;
+export default server;

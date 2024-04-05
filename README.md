@@ -45,7 +45,7 @@ The `server` folder contains all the backend-related code for the application, f
 Follow the steps below to get the project up and running.
 
 ### Prerequisites
-- Node.js (Version: >=16.x)
+- Node.js (Version: >=20.x)
 - [MongoDB](https://www.mongodb.com/?ref=collaborativeai.software)
 - NPM
 
@@ -130,6 +130,8 @@ To initialize the application data and create a superadmin user, you can use eit
    - **Send Request**: Click the 'Send' button to make the request.
 
    This will send a POST request to `http://localhost:8011/api/init` with the provided JSON  payload, creating a superadmin user with the specified details.
+
+   - **Site Setup**: Login with the superadmin credentials and set up your site by adding configs from your settings page, for ex. API keys, etc.
 
 
 ## Reference

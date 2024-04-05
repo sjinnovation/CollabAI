@@ -1,6 +1,6 @@
 {
   "name": "OpenAIframework",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -11,6 +11,7 @@
     "bootstrap": "^5.2.2",
     "bootstrap-icons": "^1.9.1",
     "dompurify": "^3.0.9",
+    "framer-motion": "^11.0.8",
     "highlight.js": "^11.9.0",
     "js-cookie": "^3.0.5",
     "marked": "^9.1.6",
@@ -27,6 +28,7 @@
     "react-scripts": "5.0.1",
     "react-spinners": "^0.13.8",
     "sass": "^1.50.0",
+    "socket.io-client": "^4.7.4",
     "uuid": "^9.0.1",
     "web-vitals": "^2.1.4"
   },

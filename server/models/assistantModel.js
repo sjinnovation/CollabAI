@@ -79,6 +79,11 @@ const AssistantSchema = mongoose.Schema(
             type: String,
             required: false,
         },
+        functionCalling: {
+            type: Boolean,
+            required: false,
+            default: false,
+          },
 
     },
     {

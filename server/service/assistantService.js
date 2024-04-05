@@ -5,6 +5,15 @@ import promptModel from '../models/promptModel.js';
 // ----- CONSTANTS -----
 import { getOpenAIInstance } from '../config/openAI.js';
 
+export const getAssistantByAssistantId = async (assistant_id) => {
+	const assistant = await Assistant.findOne({
+		assistant_id,
+		is_deleted: false
+	});
+
+	return assistant;
+}
+
 
 export const updateAssistantFromPlayground = async (
 	assistantId,
@@ -51,6 +60,7 @@ export const updateAssistantFromPlayground = async (
 		);
 	}
 };
+
 
 // this function is for assistant function calling, responsible for getting prompts based on query
 export async function meeting_summary(sDate, eDate, meetingType) {

@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { NewAuthProvider } from './contexts/NewAuthProvider';
 import { ConfigProvider } from 'antd';
 import { config } from './contexts/themeConfig';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
@@ -16,9 +17,9 @@ root.render(
     <ConfigProvider mode="dark" theme={config}>
       <BrowserRouter>
         <NewAuthProvider>
-          <Routes>
-            <Route path="/*" element={<App />} />
-          </Routes>
+            <Routes>
+              <Route path="/*" element={<App />} />
+            </Routes>
         </NewAuthProvider>
       </BrowserRouter>
     </ConfigProvider>

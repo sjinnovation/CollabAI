@@ -13,6 +13,8 @@ import {
 	getOpenaiModel,
 	updateConfigurations,
 	getConfigurations,
+	setDallEConfig,
+	getDallEConfig,
 } from '../controllers/configController.js';
 import { authenticateSuperAdmin } from '../middlewares/superadminAuth.js';
 
@@ -34,6 +36,12 @@ configRouter.post('/set-temperature/:userid', authenticateSuperAdmin, setTempera
 //configRouter.route('/gettemperature').get(getTemperature);
 configRouter.get('/temperature', authenticateSuperAdmin, getTemperature);
 
+//set the user selected dall-e-config
+configRouter.post('/dall-e/:userid', authenticateSuperAdmin, setDallEConfig);
+
+//get the user selected dall-e-config
+configRouter.get('/dall-e', authenticateSuperAdmin, getDallEConfig);
+
 //configRouter.route('/setmaxtokens/:userid').post(setMaxTokens);
 configRouter.post('/set-max-tokens/:userid', authenticateSuperAdmin, setMaxTokens);
 
@@ -45,6 +53,7 @@ configRouter.post('/set-openai-model/:userid', authenticateSuperAdmin, setOpenai
 
 //configRouter.route('/getopenaimodel').get(getOpenaiModel);
 configRouter.get('/openai-model', authenticateSuperAdmin, getOpenaiModel);
-//configRouter.get('/settings', authenticateUser, getConfigurations).patch(authenticateUser, updateConfigurations);
+
+configRouter.get('/settings', authenticateSuperAdmin, getConfigurations).patch('/settings',authenticateSuperAdmin, updateConfigurations);
 
 export default configRouter;

@@ -3,12 +3,13 @@ import NavLinks from '../../Prompt/NavLink';
 import { BsRobot } from "react-icons/bs";
 import { FaTags } from "react-icons/fa6";
 import { AiOutlineTeam } from "react-icons/ai";
+import { FaMoneyBillTrendUp } from "react-icons/fa6";
 
 const SuperAdminNavLinks = () => {
     return (
         <div>
             <NavLinks
-                svg={<CgProfile size={22} color="white"/>}
+                svg={<CgProfile size={22} color="white" />}
                 text="My Profile"
                 link="/profile"
             />
@@ -41,6 +42,12 @@ const SuperAdminNavLinks = () => {
                 }
                 text="Settings"
                 link="/config"
+            />
+
+            <NavLinks
+                svg={<FaMoneyBillTrendUp size={22} color="white" />}
+                text="Usage"
+                link="/trackUsage"
             />
 
             {/*
@@ -113,14 +120,14 @@ const SuperAdminNavLinks = () => {
             />
             <NavLinks
                 svg={
-                   <FaTags size={22} color="white" />
+                    <FaTags size={22} color="white" />
                 }
                 text="Tags"
                 link="/tags"
             />
             <NavLinks
                 svg={
-                   <AiOutlineTeam size={22} color="white" />
+                    <AiOutlineTeam size={22} color="white" />
                 }
                 text="Teams"
                 link="/teams"
@@ -138,12 +145,12 @@ const SuperAdminNavLinks = () => {
                     //       <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
                     //       <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" />
                     //   </svg>
-                    <BsRobot size={22} color="white"/>
+                    <BsRobot size={22} color="white" />
                 }
                 text="Assistants"
                 link="/assistantsList"
             />
-             {/* [TODO : commenting for now, will be added later when organization functionality will be enabled ] */}
+            {/* [TODO : commenting for now, will be added later when organization functionality will be enabled ] */}
             {/* <NavLinks
                 svg={<VscOrganization size={25} color="white"/>}
                 text="Organizations"

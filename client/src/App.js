@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import {
   LoginForm,
   PageNotFound,
@@ -23,11 +23,22 @@ import {
 
 import Layout from "./Pages/Layout";
 import AssistantLayout from "./Pages/Layout/AssistantLayout";
-import Configration from "./Pages/configration/promtcomfig";
+import ConfigurationTabs from "./Pages/configration/index";
+import Configration from "./Pages/configration";
 import SuperAdminRoutes from "./component/RoutesData/SuperAdminRoutes";
 import Templates from "./component/Prompt/Templates";
+import TrackUsage from "./Pages/SuperAdmin/TrackUsage/TrackUsage";
+import TrackUsageComponent from "./Pages/SuperAdmin/TrackUsage/TrackUsageComponent";
 
 function App() {
+  // Hook to get the current location
+  const location = useLocation();
+
+  // Redirect to chat page if the user is on the root path
+  if (location.pathname === "/") {
+    return <Navigate to="/chat" />;
+  }
+
   return (
     <Routes>
       <Route path="login" element={<LoginForm />} />
@@ -35,7 +46,7 @@ function App() {
       <Route path="*" element={<PageNotFound />} />
 
       <Route path="/" element={<Layout />}>
-        <Route path="config/" element={<Configration />} />
+        <Route path="config/" element={<ConfigurationTabs />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="usersassistantlist" element={<UsersAssistant />} />
 
@@ -63,6 +74,7 @@ function App() {
           <Route path="/teams" element={<TeamList />} />
 
           <Route path="/assistantsList" element={<AssistantsList />} />
+          <Route path="/trackUsage" element={<TrackUsageComponent/>} />
         </Route>
       </Route>
       <Route path="/assistants" element={<AssistantLayout />}>

@@ -44,6 +44,9 @@ const UserAssistants = () => {
   //-----States ------//
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [activeKey, setActiveKey] = useState("unoptimized-data");
+  const [isFunctionCallingAssistant, setIsFunctionCallingAssistant] =
+    useState(false);
   const [assistantData, setAssistantData] = useState({
     ...initialAssistantState,
   });
@@ -176,7 +179,10 @@ const UserAssistants = () => {
               setAssistantData,
               isAdmin: false,
               handleFetchUserCreatedAssistants,
-              handleFetchAllAssistants
+              handleFetchAllAssistants,
+              isFunctionCallingAssistant,
+              activeKey,
+              setActiveKey,
             }}
           />
           <div className="mb-4">

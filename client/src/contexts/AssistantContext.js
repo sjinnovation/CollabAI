@@ -16,7 +16,6 @@ function AssistantContextProvider(props) {
 
     useEffect(() => {
         handleFetchAssistants()
-        console.log(setSearchQuery, 'setSearchQuery')
     }, [page, searchQuery]);
 
     const handleFetchAssistants = async () => {

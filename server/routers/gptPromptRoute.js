@@ -17,6 +17,7 @@ import {
   bulkThreadRecover,
   threadDelete,
   getGptStreamResponse,
+  regeneratePrompt,
 } from "../controllers/promptController.js";
 import authenticateUser from "../middlewares/login.js";
 
@@ -49,6 +50,8 @@ promptRouter.get("/getsingleprompt/:id", authenticateUser, getPromptById);
 promptRouter.put("/clearconversations/", authenticateUser, clearSavedPrompts);
 
 promptRouter.put("/updateprompts/", authenticateUser, updateEditedPrompt);
+
+promptRouter.put("/regenerate/:id", authenticateUser, regeneratePrompt);
 
 promptRouter.get("/getstatistics/:date", authenticateUser, getStatistics);
 

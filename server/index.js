@@ -1,4 +1,19 @@
 import config from "./config.js";
-import app from "./app.js";
+import server from "./app.js";
+import connectDb from "./config/db.js";
+import setupSocketServer from "./sockets/index.js";
 
-app.listen(config.PORT, console.log("Listening buddy to port ", config.PORT));
+const start = async () => {
+	try {
+		await connectDb();
+		setupSocketServer(server);
+
+		server.listen(config.PORT, () =>
+			console.log(`Server is listening on port ${config.PORT}...`)
+		);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+start();

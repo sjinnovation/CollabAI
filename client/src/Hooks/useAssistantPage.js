@@ -21,6 +21,9 @@ const useAssistantPage = () => {
   const [adminUserAssistants, setAdminUserAssistants] = useState([]);
   const [userAssistants, setUserAssistants] = useState([]);
   const [assistants, setAssistants] = useState([]);
+  const [functionCallingAssistants, setFunctionCallingAssistants] = useState(
+    []
+  );
   const [teamList, setTeamList] = useState([]);
   const [loader, setLoader] = useState({
     ...initialLoaderState,
@@ -35,6 +38,7 @@ const useAssistantPage = () => {
     handleFetchUserCreatedAssistants(1);
     handleFetchUserAssistantStats();
     handleFetchAllAssistants(1);
+    handleFetchFunctionCallingAssistants(1);
     handleFetchTeams();
   }, []);
 
@@ -71,6 +75,7 @@ const useAssistantPage = () => {
       if (response) {
         handleShowMessage(response.message);
         handleFetchUserCreatedAssistants();
+        handleFetchFunctionCallingAssistants();
         handleFetchAllAssistants(1);
         successCb();
       }
@@ -89,6 +94,7 @@ const useAssistantPage = () => {
       if(response) {
         handleFetchUserCreatedAssistants();
         handleFetchAllAssistants(1);
+        handleFetchFunctionCallingAssistants();
         handleShowMessage(response.message);
         triggerRefetchAssistants();
       }
@@ -140,6 +146,21 @@ const useAssistantPage = () => {
     }
   };
 
+   //fetching all functionCalling assistants
+   const handleFetchFunctionCallingAssistants = async () => {
+    try {
+      const response = await axiosSecureInstance.get(
+        `/api/assistants/users/createdFunctionCalling`
+      );
+
+      const result = response.data.assistants;
+
+      setFunctionCallingAssistants(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleDeleteAssistant = async (assistantId) => {
     updateLoader({ ASSISTANT_DELETING: assistantId });
     try {
@@ -148,7 +169,8 @@ const useAssistantPage = () => {
       if(response) {
         handleFetchUserCreatedAssistants();
         handleFetchUserAssistantStats();
-        handleFetchAllAssistants(1)
+        handleFetchFunctionCallingAssistants();
+        handleFetchAllAssistants(1);
         handleShowMessage(response.message);
         triggerRefetchAssistants();
       }
@@ -222,6 +244,8 @@ const useAssistantPage = () => {
   return {
     setAdminUserAssistants,
     adminUserAssistants,
+    setFunctionCallingAssistants,
+    functionCallingAssistants,
     totalCount,
     userAssistants,
     assistants,
@@ -234,6 +258,7 @@ const useAssistantPage = () => {
     handleFetchUserAssistantStats,
     handleDeleteAssistant,
     handleFetchAllAssistants,
+    handleFetchFunctionCallingAssistants,
     handleFetchTeams,
     updateLoader,
     searchOrganizationalAssistants,

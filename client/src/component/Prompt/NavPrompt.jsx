@@ -200,6 +200,7 @@ const NavPrompt = ({ chatPrompt, setShowMenu, threadId, threadIndex }) => {
                     onConfirm={handleClearConversation}
                     onCancel={handleCancel}
                     content="Are you sure! you want to delete this thread?"
+                    loading={isThreadDeleting}
                 />
             </>
         </div>

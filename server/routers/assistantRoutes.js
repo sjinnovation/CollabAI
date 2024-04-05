@@ -1,6 +1,30 @@
 import express from 'express'
-import  { getAssistantById, getAssistantsCreatedByUser ,getAllUserAssistantStats,createAssistant, createChatPerAssistant, getAllAssistants, getChatPerAssistant, updateAssistantFiles, assignTeamToAssistant, getAllUserAssignedAssistants, deleteAssistant, updateAssistant,updateAssistantDataWithFile, getAllAssistantsByPagination, downloadAssistantFile} from '../controllers/assistantController.js';
-
+import {
+  getAssistantById,
+  getAssistantInfo,
+  createAssistantWithFunctionCalling,
+  updateFunctionCallingAssistantdata,
+  validateFunctionDefinition,
+  getFunctionCallingAssistantsByPagination,
+  fetchFunctionNamesPerAssistant,
+  addFunctionDefinition,
+  functionsParametersPerFunctionName,
+  getAllFunctionCallingAssistants,
+  getAssistantsCreatedByUser,
+  getAllUserAssistantStats,
+  createAssistant,
+  createChatPerAssistant,
+  getAllAssistants,
+  getChatPerAssistant,
+  updateAssistantFiles,
+  assignTeamToAssistant,
+  getAllUserAssignedAssistants,
+  deleteAssistant,
+  updateAssistant,
+  updateAssistantDataWithFile,
+  getAllAssistantsByPagination,
+  downloadAssistantFile,
+} from "../controllers/assistantController.js";
 import multer from 'multer';
 import authenticateUser from '../middlewares/login.js';
 
@@ -35,5 +59,30 @@ router.route("/:assistant_id").patch(authenticateUser, updateAssistant).delete(a
 ///user/stats/
 router.get("/users/created/:userId",getAssistantsCreatedByUser);
 router.get("/:id/info", getAssistantById);
+
+//Function calling routes
+router.post("/addFunctionDefinition", addFunctionDefinition);
+router.post("/fetchFunctionNamesPerAssistant", fetchFunctionNamesPerAssistant);
+router.post(
+  "/fetchfunctionsParametersPerFunctionName",
+  functionsParametersPerFunctionName
+);
+router.get("/getAllFunctionCallingAssistants", getAllFunctionCallingAssistants);
+router.post("/validateFunctionDefinition", validateFunctionDefinition);
+router.get(
+  "/users/createdFunctionCalling",
+  getFunctionCallingAssistantsByPagination
+);
+
+router.post(
+  "/createassistantFunctionCalling",
+  createAssistantWithFunctionCalling
+);
+
+router
+  .route("/updateFunctionCallingAssistantdata/:assistant_id")
+  .patch(updateFunctionCallingAssistantdata);
+router.route("/getAssistantInfo/:assistant_id").get(getAssistantInfo);
+
 
 export default router;

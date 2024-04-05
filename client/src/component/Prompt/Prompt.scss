@@ -489,7 +489,15 @@ nav svg {
   position: relative;
   max-width: 48rem;
   margin: 0 auto;
-  top: 95px;
+  top: 120px;
+  }
+  
+  .note-text-for-chat {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    font-size: 14px;
 }
 .inputPrompttTextarea {
   padding: 10px 20px;
@@ -505,9 +513,9 @@ nav svg {
   border-radius: 10px;
   height: 49px;
   max-height: 200px;
-  width: 92%;
+  width: 100%;
   position: absolute;
-  bottom: 0px;
+  bottom: 70px;
   right: 0px;
 }
 .inputPrompttTextarea::-webkit-scrollbar {
@@ -532,7 +540,7 @@ nav svg {
   background: rgb(65, 65, 78);
   border: none;
   position: absolute;
-  bottom: 15px;
+  bottom: 82px;
   right: 15px;
   width: 35px;
   height: 45px;
@@ -614,9 +622,8 @@ nav svg {
   border-radius: 100%;
   font-size: 12px;
   position: absolute;
-  bottom: 14vh;
+  bottom: 24vh;
   right: 50%;
-
   padding: 0.7rem;
   display: flex;
   justify-content: center;
@@ -887,9 +894,6 @@ nav svg {
 .btn.btn-secondary.plus-btn {
   background-color: #41404d !important;
   border: none;
-  height: 49px;
-  bottom: 0 !important;
-  width: 48px;
   border-radius: 10px;
   color: #777;
 }
@@ -1148,4 +1152,26 @@ nav svg {
 .assistant-creator {
   color: gray;
   margin-bottom: .7rem;
+}
+@media screen and (max-width: 1440px) {
+  .inputPrompttTextarea-container {
+    top: 80px;
+  }
+
+  .note-text-for-chat {
+    bottom: 0px;
+  }
+}
+
+.model-token-container{
+  display: flex;
+  gap: 1rem;
+}
+
+.model-token-container p{
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: #9b9898;
 }

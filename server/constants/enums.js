@@ -7,9 +7,11 @@ export const CommonMessages = {
 };
 
 export const InitSetupMessages = {
-	INIT_REQ_BODY_MISSING_ERROR: 'fname, lname, email, password are required fields to initialize the request.',
+	INIT_REQ_BODY_MISSING_ERROR:
+		'fname, lname, email, password are required fields to initialize the request.',
 	DB_NOT_EMPTY_ERROR: "Data in DB already exists, can't do initial setup.",
-	INIT_SETUP_SUCCESS_MESSAGE: "Successfully completed initial setup, created user and company.",
+	INIT_SETUP_SUCCESS_MESSAGE:
+		'Successfully completed initial setup, created user and company.',
 };
 
 export const PromptMessages = {
@@ -28,6 +30,8 @@ export const PromptMessages = {
 	NOT_FOUND_ERROR: 'Prompt Not found',
 	INTERNAL_SERVER_ERROR: 'Internal server error',
 	BAD_REQUEST_OPEN_API: 'Invalid request was made to OpenAI',
+	CHAT_CREATION_SUCCESS: 'Chat created successfully.',
+	CHAT_CREATION_ERROR: 'Failed to create chat, please try again later.',
 };
 
 export const ImageMessages = {
@@ -72,7 +76,7 @@ export const AuthMessages = {
 	PASSWORD_UPDATED_SUCCESSFULLY: 'Password updated successfully',
 	FAILED_TO_RESET_PASSWORD: 'Failed to update password',
 	SAME_PASSWORD: 'New password cannot be same as old password',
-	FAILED_TO_LOGIN: 'Failed to log in'
+	FAILED_TO_LOGIN: 'Failed to log in',
 };
 
 export const UserMessages = {
@@ -144,10 +148,20 @@ export const TeamMessages = {
 	TEAM_NOT_FOUND: 'Team not found',
 	TEAMS_CREATION_FAILED: 'Failed to create team',
 	NEW_FIELD_ADDED: 'New field added successfully',
-	TEAM_ALREADY_ASSIGNED: 'Team already assigned to selected users.'
+	TEAM_ALREADY_ASSIGNED: 'Team already assigned to selected users.',
 };
 
 export const ConfigMessages = {
+	GEMINI_MODEL_UPDATED: 'Gemini AI Model updated successfully',
+	GEMINI_MODEL_SAVED: 'Gemini AI Model saved successfully',
+	GEMINI_API_KEY_UPDATED: 'Gemini key updated successfully',
+	GEMINI_API_KEY_SAVED: 'Gemini key saved successfully',
+
+	CLAUDE_MODEL_UPDATED: 'Claude AI Model updated successfully',
+	CLAUDE_MODEL_SAVED: 'Claude AI Model saved successfully',
+	CLAUDE_API_KEY_UPDATED: 'Claude key updated successfully',
+	CLAUDE_API_KEY_SAVED: 'Claude key saved successfully',
+
 	THRESHOLD_VALUE_FETCHED: 'Threshold value fetched successfully',
 	THRESHOLD_VALUE_UPDATED: 'Threshold value updated successfully',
 	THRESHOLD_VALUE_SAVED: 'Threshold value saved successfully',
@@ -163,14 +177,37 @@ export const ConfigMessages = {
 	TEMPERATURE_SAVED: 'Temperature saved successfully',
 	UNAUTHORIZED_TO_MODIFY_TEMPERATURE:
 		'You are not authorized to modify temperature',
+	DALLEMODEL_CANNOT_BE_EMPTY: 'Dall-E Model cannot be empty',
+	DALLEMODEL_UPDATED: 'Dall-E Modelel updated successfully',
+	DALLEMODEL_FETCHED: 'Dall-E Model fetched successfully',
+	DALLEMODEL_SAVED: 'Dall-E Model saved successfully',
+	UNAUTHORIZED_TO_MODIFY_DALLEMODEL:
+		'You are not authorized to modify Dall-E Model',
+	DALLEQUALITY_CANNOT_BE_EMPTY: 'Dall-E Quality cannot be empty',
+	DALLEQUALITY_UPDATED: 'Dall-E Quality updated successfully',
+	DALLEQUALITY_FETCHED: 'Dall-E Quality fetched successfully',
+	DALLEQUALITY_SAVED: 'Dall-E Quality saved successfully',
+	UNAUTHORIZED_TO_MODIFY_DALLEQUALITY:
+		'You are not authorized to modify Dall-E Quality',
+	DALLERESOLUTION_CANNOT_BE_EMPTY: 'Dall-E Resolution cannot be empty',
+	DALLERESOLUTION_UPDATED: 'Dall-E Resolution updated successfully',
+	DALLERESOLUTION_FETCHED: 'Dall-E Resolution fetched successfully',
+	DALLERESOLUTION_SAVED: 'Dall-E Resolution saved successfully',
+	UNAUTHORIZED_TO_MODIFY_DALLERESOLUTION:
+		'You are not authorized to modify Dall-E Resolution',
+	DALLECONFIG_CANNOT_BE_EMPTY:
+		'Dall-E Model and Dall-E Resolutiuon cannot be empty',
+	DALLECONFIG_FETCHED: 'Dall-E Config fetched successfully',
+	DALLECONFIG_SAVED: 'Dall-E Config saved successfully',
+	DALLECONFIG_UPDATED: 'Dall-E Config updated successfully',
 	TOKEN_VALUE_EMPTY: 'Token value cannot be empty',
 	TOKEN_NOT_NUMBER: 'Token value should be a number',
 	TOKENS_UPDATED: 'Tokens updated successfully',
 	TOKENS_SAVED: 'Tokens saved successfully',
 	UNAUTHORIZED_TO_MODIFY_TOKENS: 'You are not authorized to modify tokens',
 	MODEL_ID_CANNOT_BE_EMPTY: 'Model Id cannot be empty',
-	MODEL_UPDATED: 'Model updated successfully',
-	MODEL_SAVED: 'Model saved successfully',
+	OPEN_AI_MODEL_UPDATED: 'Open AI Model updated successfully',
+	OPEN_AI_MODEL_SAVED: 'Open AI Model saved successfully',
 	UNAUTHORIZED_TO_MODIFY_MODEL: 'You are not authorized to modify model',
 	CONFIG_VALUES_NOT_FOUND:
 		'No configuration values found for the specified keys.',
@@ -198,9 +235,11 @@ export const AssistantMessages = {
 	ASSISTANT_THREAD_ID_REQUIRED: 'Thread id is required.',
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
 	USER_DOES_NOT_EXIST: 'User does not exist.',
-	ASSISTANT_NOT_FOUND_ON_OPENAI: 'This assistant is not available on the OpenAI platform. Please delete this assistant and create a new one if necessary.',
+	ASSISTANT_NOT_FOUND_ON_OPENAI:
+		'This assistant is not available on the OpenAI platform. Please delete this assistant and create a new one if necessary.',
 	ASSISTANT_FILE_NOT_FOUND_MESSAGE: 'File not found in openai.',
-	ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE: 'Error downloading file, please try again later.'
+	ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE:
+		'Error downloading file, please try again later.',
 };
 export const AssistantThreadMessages = {
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
@@ -210,4 +249,30 @@ export const AssistantThreadMessages = {
 	THREAD_UPDATED_SUCCESSFULLY: 'Thread updated successfully',
 	DELETED_SUCCESSFULLY: 'Deleted successfully',
 	SOMETHING_WENT_WRONG: 'Something went wrong',
+};
+
+export const PostGreSqlDbMessages = {
+	COMPANY_CREATED_SUCCESS: 'Data created successfully',
+	COMPANY_UPDATED_SUCCESS: 'Data updated successfully',
+	COMPANY_DELETED_SUCCESS: 'Data deleted successfully',
+	INVALID_SQL_MESSAGE: 'Invalid SQL query format',
+};
+export const TrackUsageMessage = {
+	TRACK_USAGE_DATA_NOT_FOUND: 'No usage data found.',
+	TRACK_USAGE_FETCHED_SUCCESSFULLY:
+		'All track usage data fetched successfully.',
+};
+
+export const GeminiConfig = {
+	DEFAULT_MAX_TOKEN: 200,
+	DEFAULT_TEMPERATURE: 0.7,
+	DEFAULT_TOP_P: 0.1,
+	DEFAULT_TOP_K: 16,
+};
+
+export const ClaudeConfig = {
+	DEFAULT_MAX_TOKEN: 704,
+	DEFAULT_TEMPERATURE: 0.7,
+	DEFAULT_TOP_P: 0.1,
+	DEFAULT_TOP_K: 16,
 };

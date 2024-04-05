@@ -1,0 +1,13 @@
+.usage-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.usage-report-container{
+    color: aliceblue;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 10px;
+}

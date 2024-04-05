@@ -1051,6 +1051,120 @@ paths:
         '200':
           description: Template deleted
 
+  /track-usage/monthly:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Track Usage
+      summary: Get monthly track usage data
+      description: Retrieve monthly track usage data with pagination
+      operationId: getAllTrackUsageMonthly
+      parameters:
+        - in: query
+          name: userid
+          description: User ID (optional)
+          schema:
+            type: string
+        - in: query
+          name: dateString
+          description: Date string in YYYY-MM format (optional)
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Number of records per page (optional)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully fetched monthly track usage data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  trackUsage:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrackUsage'
+                  aggregatedData:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AggregatedData'
+                  aggregatedDataTotal:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AggregatedDataTotal'
+        '404':
+          description: Track usage data not found
+        '500':
+          description: Internal server error
+
+  /track-usage/daily:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Track Usage
+      summary: Get daily track usage data
+      description: Retrieve daily track usage data with pagination
+      operationId: getAllTrackUsageDaily
+      parameters:
+        - in: query
+          name: userid
+          description: User ID (optional)
+          schema:
+            type: string
+        - in: query
+          name: dateString
+          description: Date string in YYYY-MM-DD format (optional)
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: Page number for pagination (optional)
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          description: Number of records per page (optional)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully fetched daily track usage data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  trackUsage:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrackUsage'
+                  aggregatedData:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AggregatedData'
+                  aggregatedDataTotal:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AggregatedDataTotal'
+        '404':
+          description: Track usage data not found
+        '500':
+          description: Internal server error
+
   /organizations:
     post:
       tags:
@@ -2149,6 +2263,38 @@ paths:
                   message:
                     type: string
 
+  /prompt/regenerate:
+    put:
+      summary: Regenerate edited prompts for a specific user and thread
+      tags:
+        - Prompt
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userPrompt:
+                  type: string
+              required:
+                - userPrompt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  response:
+                    type: string
+                  totalToken:
+                    type: string
+
   /prompt/getprompttitle:
     post:
       summary: Get prompt title for a specific thread
@@ -2629,7 +2775,16 @@ paths:
                   model:
                     key: "model"
                     value: "gpt-4"
-                message: "Configurations fetched successfully"
+                  dallEModel:
+                    key: "dallEModel"
+                    value: "dall-e-3"
+                  dallEQuality:
+                    key: "dallEQuality"
+                    value: "Standard"
+                  dallEResolution:
+                    key: "dallEResolution"
+                    value: "1024×1024"
+                message: "Configuration values fetched successfully"
     patch:
       summary: Update Configurations
       tags:
@@ -2647,7 +2802,7 @@ paths:
           content:
             application/json:
               example:
-                message: "Configurations updated successfully"
+                message: "Configuration values updated successfully"
                 
 components:
   schemas:
@@ -2690,6 +2845,51 @@ components:
         lastName:
           type: string
 
+    TrackUsage:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        total_tokens:
+          type: integer
+        total_token_cost:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    AggregatedData:
+      type: object
+      properties:
+        _id:
+          type: object
+          properties:
+            year:
+              type: integer
+            month:
+              type: integer
+            day:
+              type: integer
+            user_id:
+              type: string
+        total_tokens:
+          type: integer
+        total_token_cost:
+          type: number
+        count:
+          type: integer
+
+    AggregatedDataTotal:
+      type: object
+      properties:
+        _id:
+          type: string
+        total_cost:
+          type: number
+        total_tokens:
+          type: integer
 
   securitySchemes:
     bearerAuth:

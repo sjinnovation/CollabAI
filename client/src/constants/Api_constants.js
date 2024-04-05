@@ -68,3 +68,6 @@ export const ALL_USER_GET_PROMPT_TEMPLATES_SLUG = ()=> `api/template/get-templat
 export const GET_ALL_PROMPT_TEMPLATES_CATEGORY_SLUG = () => `api/category/getAll`;
 export const GET_SINGLE_PROMPT_TEMPLATES_CATEGORY_SLUG = (categoryId) => `api/category/get/${categoryId}`;
 export const CREATE_A_PROMPT_TEMPLATE_CATEGORY_SLUG = (userid)=> `/api/category/create/${userid}`;
+
+//---------- SETTINGS_API_SLUG -----------
+export const API_SETTINGS_SLUG = `/api/config/settings`;

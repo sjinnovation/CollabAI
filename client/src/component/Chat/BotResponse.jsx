@@ -88,7 +88,7 @@ const BotResponse = ({ response }) => {
     const isCopied = copyToClipboard(textToCopy);
     if(isCopied) onShowTick();
   }
-  
+ 
   return (
     <div className="bot-response-markdown-container">
       <div className="bot-response-main-content">
@@ -115,6 +115,7 @@ const BotResponse = ({ response }) => {
             )}
           </button>
         </div>
+      
     </div>
   );
 };

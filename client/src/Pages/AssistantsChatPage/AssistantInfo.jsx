@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { getSingleAssistant } from '../../api/assistant-chat-page-api';
 import { useState } from 'react';
 import AssistantIcon from '../../component/common/AssistantIcon';
+import { Avatar } from 'antd';
 
 const { Title } = Typography;
 
@@ -23,7 +24,15 @@ const AssistantInfo = ({dataProps}) => {
         <div style={{ height: "100vh", }}>
             <div className="assistant-info-container-on-chat-page">
                 <div className="assistant-img">
-                   <AssistantIcon/>
+                    <div>
+                    {
+                     assistantData.image_url 
+                     ? 
+                     <Avatar size={56} src={assistantData.image_url} className='mb-2'/>
+                     :
+                     <AssistantIcon/>
+                    }
+                    </div>
                 </div>
                 <Title level={3}>{assistantData?.name}</Title>
 

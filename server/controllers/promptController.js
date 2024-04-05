@@ -1,92 +1,100 @@
-import { CommonMessages, GPTModels, PromptMessages } from "../constants/enums.js";
-import getOpenAiConfig from "../utils/openAiConfigHelper.js";
+import {
+	CommonMessages,
+	GPTModels,
+	PromptMessages,
+} from '../constants/enums.js';
+import getOpenAiConfig from '../utils/openAiConfigHelper.js';
 import StatusCodes from 'http-status-codes';
 import OpenAI from 'openai';
 import moment from 'moment';
 import promptModel from '../models/promptModel.js';
 import User from '../models/user.js';
-import config from '../models/configurationModel.js';
-import Subscriber from '../models/subscriberModel.js';
-import Subscription from '../models/subscriptionModel.js';
+import { getGeminiAIPromptService } from '../service/geminiAiPromptService.js';
+import { getOpenAIPrompt } from '../service/openaiService.js';
 import {
 	BadRequest,
 	InternalServer,
 	NotFound,
 } from '../middlewares/customError.js';
 import { handleOpenAIError } from '../utils/openAIErrors.js';
-
+import { calculateTokenAndCost } from '../service/trackUsageService.js';
+import TrackUsage from '../models/trackUsageModel.js';
+import {
+	generateOpenAIResponse,
+	updatePrompt,
+} from '../service/gptPromptService.js';
 
 export const getGptStreamResponse = async (req, res) => {
-  try {
-      const { _id: userid } = req.user;
-      const {
-          userPrompt,
-          threadId: threadid,
-          chatLog,
-          compId,
-          tags,
-      } = req.body;
-      let temperature, gptModel, openAiKey;
+	try {
+		const { _id: userid } = req.user;
+		const {
+			userPrompt,
+			threadId: threadid,
+			chatLog,
+			compId,
+			tags,
+		} = req.body;
+		let temperature, gptModel, openAiKey;
 
-      // getting configs
-      temperature =
-          parseFloat(await getOpenAiConfig("temperature"));
-      gptModel = await getOpenAiConfig("model");
-      openAiKey = await getOpenAiConfig("openaikey");
+		// getting configs
+		temperature = parseFloat(await getOpenAiConfig('temperature'));
+		gptModel = await getOpenAiConfig('model');
+		openAiKey = await getOpenAiConfig('openaikey');
 
-      if (!gptModel || !openAiKey) {
-          return res.status(StatusCodes.BAD_REQUEST).json({
-              success: false,
-              message: messages.OPENAI_MODEL_KEY_NOT_FOUND,
-          });
-      }
+		if (!gptModel || !openAiKey) {
+			return res.status(StatusCodes.BAD_REQUEST).json({
+				success: false,
+				message: messages.OPENAI_MODEL_KEY_NOT_FOUND,
+			});
+		}
 
-      const contextArray = promptServices.generatePrevChatHistoryContext(chatLog);
-      
-      const openai = new OpenAI({
-          apiKey: openAiKey,
-      });
+		const contextArray =
+			promptServices.generatePrevChatHistoryContext(chatLog);
 
-      let gptResponse = "",
-          tokenCount = 0;
-      const stream = await openai.chat.completions.create(
-          {
-              model: gptModel,
-              messages: [
-                  ...contextArray,
-                  { content: userPrompt, role: "user" },
-              ],
-              stream: true,
-          },
-          { responseType: "stream" }
-      );
+		const openai = new OpenAI({
+			apiKey: openAiKey,
+		});
 
-      // eslint-disable-next-line no-restricted-syntax
-      for await (const part of stream) {
-          tokenCount++;
-          if (part.choices[0].finish_reason === "stop") {
-              await promptModel.create({
-                  tokenused: tokenCount,
-                  threadid,
-                  userid,
-                  description: userPrompt,
-                  promptresponse: gptResponse,
-                  promptdate: moment(new Date()).format("YYYY-MM-DD"),
-                  createdAt: new Date(),
-                  modelused: gptModel,
-                  tags,
-              });
-              res.end();
-              return;
-          }
-          gptResponse += part.choices[0]?.delta?.content || "";
-          res.write(part.choices[0]?.delta?.content || "");
-      }
-  } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: CommonMessages.INTERNAL_SERVER_ERROR,
-      });
-  }
+		let gptResponse = '',
+			tokenCount = 0;
+		const stream = await openai.chat.completions.create(
+			{
+				model: gptModel,
+				messages: [
+					...contextArray,
+					{ content: userPrompt, role: 'user' },
+				],
+				stream: true,
+			},
+			{ responseType: 'stream' }
+		);
+
+		// eslint-disable-next-line no-restricted-syntax
+		for await (const part of stream) {
+			tokenCount++;
+			if (part.choices[0].finish_reason === 'stop') {
+				await promptModel.create({
+					tokenused: tokenCount,
+					threadid,
+					userid,
+					description: userPrompt,
+					promptresponse: gptResponse,
+					promptdate: moment(new Date()).format('YYYY-MM-DD'),
+					createdAt: new Date(),
+					modelused: gptModel,
+					tags,
+				});
+				res.end();
+				return;
+			}
+			gptResponse += part.choices[0]?.delta?.content || '';
+			res.write(part.choices[0]?.delta?.content || '');
+		}
+	} catch (error) {
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			message: CommonMessages.INTERNAL_SERVER_ERROR,
+		});
+	}
 };
 
 /**
@@ -96,72 +104,107 @@ export const getGptStreamResponse = async (req, res) => {
  * @param {Function} next - Next function for error handling.
  * @returns {JSON} Returns the GPT prompt response if successful, otherwise an error message.
  */
+
 export const getGptPrompt = async (req, res, next) => {
 	const userid = req.params.userid;
-	const { temp, threadId: threadid, chatLog, compId, tags } = req.body;
+	const {
+		botProvider,
+		temp,
+		threadId: threadid,
+		chatLog,
+		compId,
+		tags,
+	} = req.body;
 
-	let temperature, gptModel, openAiKey;
+	let temperature, gptModel, apiKey;
+	let serviceFunction, contextArray;
 
 	try {
-    const user = await User.findById(userid);
-    if (!user) {
-      return next(BadRequest(PromptMessages.USER_NOT_FOUND));
+		const user = await User.findById(userid);
+		if (!user) {
+			return next(BadRequest(PromptMessages.USER_NOT_FOUND));
 		}
 
-    const contextArray = chatLog
-      .slice(-6)
-      .reverse()
-      .map((item) => ({
-        role: item.botMessage ? "assistant" : "user",
-        content: item.botMessage ? item.botMessage : item.chatPrompt,
-      }));
+		if (botProvider === 'openai') {
+			temperature = parseFloat(await getOpenAiConfig('temperature'));
+			gptModel = await getOpenAiConfig('model');
+			apiKey = await getOpenAiConfig('openaikey');
+			contextArray = chatLog
+				.slice(-6)
+				.reverse()
+				.map((item) => ({
+					role: item.botMessage ? 'assistant' : 'user',
+					content: item.botMessage
+						? item.botMessage
+						: item.chatPrompt,
+				}));
 
-    // const temperature = parseFloat(
-    //   (await config.findOne({ key: "temperature" }))?.value || "0.7"
-    // );
+			serviceFunction = getOpenAIPrompt;
+		} else if (botProvider === 'gemini') {
+			temperature = parseFloat(await getOpenAiConfig('temperature'));
+			gptModel = await getOpenAiConfig('geminiModel');
+			apiKey = await getOpenAiConfig('geminiApiKey');
 
-    // const configModel = await config.findOne({ key: "model" });
-    // if (!configModel) {
-    //   return next(BadRequest(PromptMessages.MODEL_NOT_FOUND));
-		// }
+			serviceFunction = getGeminiAIPromptService;
+		}
 
-    // const configOpenAI = await config.findOne({ key: "openaikey" });
-    // if (!configOpenAI) {
-    //   return next(BadRequest(PromptMessages.OPENAI_KEY_NOT_FOUND));
-		// }
+		const promptResponse = await serviceFunction(
+			temp,
+			chatLog,
+			gptModel,
+			temperature
+		);
 
-		temperature = parseFloat(await getOpenAiConfig("temperature"));
-    gptModel = await getOpenAiConfig("model");
-    openAiKey = await getOpenAiConfig("openaikey");
+		// console.log("TOKENS:", completion.usage)
 
-    const openai = new OpenAI({ apiKey:  openAiKey });
-    const completion = await openai.chat.completions.create({
-      messages: [...contextArray, { role: "user", content: temp }],
-      model: gptModel,
-      temperature,
-		});
-
-    const promptDate = new Date().toISOString().slice(0, 10);
+		const promptDate = new Date().toISOString().slice(0, 10);
 		const newPrompt = await promptModel.create({
-			tokenused: completion.usage.total_tokens,
+			tokenused: 0,
 			threadid,
 			userid,
 			description: temp,
-      promptresponse: completion.choices[0].message.content,
-      promptdate: promptDate,
+			promptresponse: promptResponse,
+			promptdate: promptDate,
 			createdAt: new Date(),
-      modelused: gptModel,
+			modelused: gptModel,
 			tags,
 		});
 
-    await newPrompt.populate("tags");
+		const {
+			inputTokenPrice,
+			outputTokenPrice,
+			inputTokenCount,
+			outputTokenCount,
+			totalCost,
+			totalTokens,
+		} = await calculateTokenAndCost(
+			newPrompt.description,
+			newPrompt.promptresponse,
+			newPrompt.modelused
+		);
+
+		const trackUsage = await TrackUsage.create({
+			user_id: newPrompt.userid,
+			input_token: inputTokenCount,
+			output_token: outputTokenCount,
+			model_used: newPrompt.modelused,
+			input_token_price: inputTokenPrice,
+			output_token_price: outputTokenPrice,
+			total_tokens: totalTokens,
+			total_token_cost: totalCost,
+		});
+
+		await newPrompt.populate('tags');
 		res.status(StatusCodes.OK).json({
-      message: PromptMessages.RETRIEVED_SUCCESSFULLY,
-      data: {
-        promptResponse: newPrompt.promptresponse,
-			promptTime: newPrompt.createdAt,
-			tags: newPrompt.tags,
-      },
+			message: PromptMessages.RETRIEVED_SUCCESSFULLY,
+			data: {
+				promptResponse: newPrompt.promptresponse,
+				promptTime: newPrompt.createdAt,
+				tags: newPrompt.tags,
+				modelUsed: newPrompt.modelused,
+				tokenUsed: newPrompt.tokenused,
+				promptId: newPrompt._id,
+			},
 		});
 	} catch (error) {
 		console.log(error);
@@ -208,7 +251,7 @@ export const fetchprompts = async (req, res, next) => {
 			.find({ threadid, isDeleted: false })
 			.populate('tags');
 
-		res.status(StatusCodes.OK).json({
+		return res.status(StatusCodes.OK).json({
 			message: PromptMessages.RETRIEVED_SUCCESSFULLY,
 			data: prompts,
 		});
@@ -337,6 +380,42 @@ export const updateEditedPrompt = async (req, res, next) => {
 			message: PromptMessages.UPDATED_SUCCESSFULLY,
 		});
 	} catch (error) {
+		next(InternalServer(PromptMessages.INTERNAL_SERVER_ERROR));
+	}
+};
+
+/**
+ * Asynchronous function to update edited prompts for a specific user and thread.
+ * @param {Object} req - Request object, expected to contain 'id' from params and 'userPrompt' from the body.
+ * @param {Object} res - Response object.
+ * @param {Function} next - Next function for error handling.
+ * @returns {JSON} Returns a success message if prompts are updated successfully, otherwise an error message.
+ */
+export const regeneratePrompt = async (req, res, next) => {
+	const { id } = req.params;
+	const { userPrompt } = req.body;
+
+	try {
+		const existingPrompt = await promptModel.findById(id);
+
+		if (!existingPrompt) {
+			return next(BadRequest(PromptMessages.PROMPT_NOT_FOUND));
+		}
+		const openAIResponse = await generateOpenAIResponse({ userPrompt });
+		const payload = {
+			description: userPrompt,
+			promptresponse: openAIResponse.response,
+			tokenused: openAIResponse.totalToken,
+			promptdate: new Date(),
+		};
+		await updatePrompt(id, payload);
+		res.status(StatusCodes.OK).json({
+			success: true,
+			response: openAIResponse.response,
+			totalToken: openAIResponse.totalToken,
+		});
+	} catch (error) {
+		console.log(error);
 		next(InternalServer(PromptMessages.INTERNAL_SERVER_ERROR));
 	}
 };

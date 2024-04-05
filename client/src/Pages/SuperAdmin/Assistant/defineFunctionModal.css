@@ -1,0 +1,47 @@
+.modal-content {
+    background-color: #1f1f1f; /* Replace with your preferred shade of grey, e.g., #f0f0f0 */
+    color: white;
+  }
+  .modal .form-control {
+    background-color: #1f1f1f;
+    color: white;
+  }
+
+  #myForm { /* Assuming you added id="myForm" to your form */
+    background-color: #1f1f1f;
+    color: white;
+  }
+
+  .my-form-class { /* Assuming you added class="my-form-class" to your form */
+    background-color: #1f1f1f;
+    color: white;
+  }
+
+  .inputField{
+    background: #141414;
+    /* border-width: 1px; */
+    /* border-style: solid; */
+    border-color: #2c2a2a;
+    color: white;
+    font-weight: 200;
+}
+.inputField:focus {
+    background-color: #141414;
+    color: white; /* Changing text color to white for better visibility */
+  }
+
+  .inputField::-ms-input-placeholder { /* Microsoft Edge */
+    color: #5a5a5a;
+  }
+  
+  .inputField::-webkit-input-placeholder { /* WebKit browsers */
+    color: #5a5a5a;
+  }
+
+  .definitionButton{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  

@@ -16,10 +16,12 @@ const useChatPage = () => {
 
 
   // ----- HANDLE API CALLS ----- //
-  const fetchChatLogPerThread = async (thread_id) => {
+
+const fetchChatLogPerThread = async (thread_id) => {
     try {
       setIsFetchingChatLog(true);
       const { success, message, chats } = await getChatsPerThread(thread_id);
+      console.log("UseChatPage: CHATS:", chats)
       
       if (success) {
         let formattedChatLog = chats?.map((chat, index) => {
@@ -27,7 +29,9 @@ const useChatPage = () => {
             chatPrompt: chat.description,
             botMessage: chat.promptresponse,
             tags: chat.tags,
-            msgId: chat._id
+            msgId: chat._id,
+            tokenused: chat.tokenused,
+            modelused: chat.modelused
           };
         });
         //   setChatLogTimings(chatTimings);
@@ -41,6 +45,9 @@ const useChatPage = () => {
       setIsFetchingChatLog(false);
     }
   };
+  
+
+  
 
   const fetchTagList = async () => {
     try {

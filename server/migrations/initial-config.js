@@ -19,6 +19,18 @@ const configs = [
     {
       "key": "threshold",
       "value": "23"
+    },
+    {
+      "key": "dallEModel",
+      "value": "dall-e-3"
+    },
+    {
+      "key": "dallEQuality",
+      "value": "Standard"
+    },
+    {
+      "key": "dallEResolution",
+      "value": "1024×1024"
     }
   ];
 

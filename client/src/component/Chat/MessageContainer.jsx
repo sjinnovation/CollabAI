@@ -1,19 +1,19 @@
-import React from "react";
+import React from 'react';
 
 // libraries
-import { MdEditNote } from "react-icons/md";
+import { MdEditNote } from 'react-icons/md';
 // components
-import UserIcon from "./UserIcon";
-import BotIcon from "./BotIcon";
-import Loading from "../common/Loading";
-import Error from "../common/Error";
-import BotResponse from "./BotResponse";
+import UserIcon from './UserIcon';
+import BotIcon from './BotIcon';
+import Loading from '../common/Loading';
+import Error from '../common/Error';
+import BotResponse from './BotResponse';
 
 const MessageContainer = ({ states }) => {
-  const { chat, idx, loading, error} = states;
-
+  const { chat, idx, loading, error } = states;
+  
   return (
-    <div className="chatLog" key={idx}>
+    <div className="chatLog" key={chat.msg_id || idx}>
       {/* ----- USER PROMPT ----- */}
       <div className="chatPromptMainContainer">
         <div
@@ -23,14 +23,14 @@ const MessageContainer = ({ states }) => {
           }}
         >
           <UserIcon />
-         
-            <div id="chatPrompt" className="text-wrap">
-              <pre>{chat.chatPrompt}</pre>
-            </div>
-       
-        
+
+          <div id="chatPrompt" className="text-wrap">
+            <pre>{chat.chatPrompt}</pre>
+          </div>
+
+
         </div>
-        
+
       </div>
 
       {/* ----- BOT RESPONSE ----- */}
@@ -44,17 +44,27 @@ const MessageContainer = ({ states }) => {
           <BotIcon />
           {chat.botMessage ? (
             <div id="botMessage">
+              
               <div className="tagSection">
+
                 {chat?.tags?.length > 0 &&
-                  chat?.tags?.map((tag) => <p className="tag">{tag.title}</p>)}
+                  chat?.tags?.map((tag, tagIdx) => <p key={tagIdx} className="tag">{tag.title}</p>)}
               </div>
               <BotResponse response={chat.botMessage} />
+              <div className="model-token-container">
+                {
+                  chat.modelUsed ? <p>Model : {chat?.modelUsed}</p> : null
+                }
+                {
+                  chat.tokenUsed ? <p>Token : {chat?.tokenUsed}</p> : null
+                }
+              </div>
             </div>
           ) : loading ? (
             <Loading />
           ) : error ? (
             <Error message={error} />
-          ) : null} 
+          ) : null}
         </div>
       </div>
     </div>

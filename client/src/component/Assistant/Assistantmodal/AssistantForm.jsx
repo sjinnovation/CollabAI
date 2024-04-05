@@ -104,14 +104,14 @@ const AssistantForm = ({ data }) => {
         ]}
       >
         <TextArea
-          style={{ resize: "vertical" }}
+          style={{ resize: "vertical", scrollbarWidth: 'thin', scrollbarColor: '#888 #41414e' }}
           rows={3}
           placeholder="You are a helpful assistant."
         />
       </Form.Item>
       <Form.Item label="Description" name="description">
         <TextArea
-          style={{ resize: "vertical" }}
+          style={{ resize: "vertical", scrollbarWidth: 'thin', scrollbarColor: '#888 #41414e' }}
           rows={2}
           placeholder="Enter Description"
         />

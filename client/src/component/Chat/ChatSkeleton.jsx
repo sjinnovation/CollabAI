@@ -25,7 +25,7 @@ const ChatSkeleton = () => {
                             className="text-wrap placeholder-glow row align-items-center w-100 gap-2"
                         >
                             {
-                                [5, 2].map((size) => <ParagraphPlaceholder size={size} />)
+                                [5, 2].map((size, paraIdx) => <ParagraphPlaceholder key={paraIdx} size={size} />)
                             }
                         </div>
                     </div>
@@ -47,7 +47,7 @@ const ChatSkeleton = () => {
                             className="text-wrap placeholder-glow row align-items-center w-100 gap-2"
                         >
                             {
-                                [7, 4, 4, 6, 8].map((size) => <ParagraphPlaceholder size={size} />)
+                                [7, 4, 4, 6, 8].map((size, paraIdx) => <ParagraphPlaceholder key={paraIdx} size={size} />)
                             }
                         </div>
                     </div>
