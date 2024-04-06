@@ -1,20 +1,53 @@
 # Collaborative AI
 
 ## About
-Dive into the future of AI with CollaborativeAi.Software, your solution for using OpenAI's API to power ChatGPT on your server. Our platform simplifies running your ChatGPT, managing access for unlimited employees, creating custom AI assistants with your API, organizing employee groups, and using custom templates for a tailored experience. With complete control over customization and data privacy, elevate your projects and transform how your team leverages AI. Join CollaborativeAi.Software and revolutionize your AI capabilities today. With over 50 deployments, our support structure includes both our dedicated team and an open-source community, ensuring you have all the help you need.
+Welcome to CollaborativeAi.Software, where we've taken the world of AI to new heights. We've been working tirelessly to bring you the most advanced, user-friendly platform that seamlessly integrates with the powerful OpenAI API, Gemini, and Claude. 
+
+Imagine running your own ChatGPT on your server, with the ability to manage access for your entire team. Picture creating custom AI assistants that cater to your unique needs, and organizing your employees into groups for streamlined collaboration. With CollaborativeAi.Software, this is not just a dream, but a reality.
 
 ## CollaborativeAi.Software Features:
-- **Self-Hosting on Your Cloud:** Gain full control by hosting the platform on your private cloud. Ensure data privacy by using your API codes, allowing for secure data handling.
-- **Team Management:** Manage teams with private accounts, and customizable access levels (Departments).
-- **Prompt Templates:** Utilize generic templates to streamline team usage.
-- **Departmental Access & Assistant Assignment:** Assign AI assistants to specific departments for shared team access.
-- **Customizable AI Assistants:** Create personalized AI assistants for users or organizations.
-- **Tagging Feature in Chats:** Organize and retrieve chat data efficiently with custom tags.
-- **Chat Storage and Retrieval:** Save all chats and replies for future analysis, with an option to restore accidentally deleted chats from Trash.
-- **Optimized Performance:** Experience our high-speed, efficient platform. Our clients have been using it for over a year, with some spending $1500-$2000 per month on the API.
-- **File Upload & GPT-4 Vision Integration:** Enhance interactions by uploading files for analysis and sending pictures for AI description.
-- **Future Enhancements:** Anticipate new functionalities like API-based function calls, Python code execution, and integration with Gemini and other APIs.
-- **Upcoming Free Mobile App:** Access CollaborativeAi.Software on the go with a soon-to-be-released app.
+
+**Self-Hosting on Your Cloud:** Gain full control by hosting the platform on your private cloud. Ensure data privacy by using your API codes, allowing for secure data handling.
+
+**Enhanced Team Management:** Manage teams with private accounts and customizable access levels (Departments).
+
+**Prompt Templates:** Utilize generic templates to streamline team usage.
+
+**Departmental Access & Assistant Assignment:** Assign AI assistants to specific departments for shared team access.
+
+**Customizable AI Assistants:** Create personalized AI assistants for users or organizations.
+
+**Tagging Feature in Chats:** Organize and retrieve chat data efficiently with custom tags.
+
+**Chat Storage and Retrieval:** Save all chats and replies for future analysis, with an option to restore accidentally deleted chats from Trash.
+
+**Optimized Performance:** Experience our high-speed, efficient platform. Our clients have been using it for over a year, with some spending $1500-$2000 per month on the API.
+
+**File Upload & GPT-4 Vision Integration:** Enhance interactions by uploading files for analysis and sending pictures for AI description.
+
+**OpenAI API, Gemini, and Claude Integration:** Seamlessly integrate with the powerful OpenAI API, Gemini, and Claude for a comprehensive suite of AI capabilities.
+
+**API-Based Function Calls:** Execute custom functions and automate tasks directly through the API.
+
+**Usage Monitoring:** Track your daily and monthly API usage costs to optimize spending.
+
+**Day and Night Mode:** Switch between light and dark themes to enhance visual comfort.
+
+
+
+****Additional Features:****
+
+**Private Accounts:** Ensure the security and privacy of your team members' data.
+
+**Customizable Access Levels:** Tailor access permissions to meet the specific needs of your organization.
+
+**Shared Team Access:** Foster collaboration by assigning AI assistants to specific departments or teams.
+
+**AI-Powered File Analysis:** Gain insights and automate tasks by uploading files for AI analysis.
+
+**AI-Generated Image Descriptions:** Enhance communication and understanding by sending pictures for AI-powered descriptions.
+
+
 
 ![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/a14ca235-a3c9-45b3-9e91-85f0240af5f5) 
 ![image](https://github.com/sjinnovation/CollaborativeAI/assets/45666802/6b33f541-cb65-4383-83ef-136c9b51a4b0)
