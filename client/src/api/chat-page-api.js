@@ -8,6 +8,7 @@ export const getGptResponse = async (body) => {
       `api/prompt/getprompt/${getUserID()}`,
       body
     );
+    console.log("Total response:", response.data)
 
     return {
       success: true,

@@ -46,7 +46,7 @@ const ValidationModel = ({ data }) => {
       <Form.Item label="Console:">
         <TextArea
           id="validateConsole"
-          style={{ backgroundColor: "#141414" }}
+          // style={{ backgroundColor: "#141414" }}
           value={validateConsole}
           readOnly
           rows={6}

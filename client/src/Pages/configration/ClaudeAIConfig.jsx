@@ -16,6 +16,7 @@ const ClaudeAIConfig = () => {;
 					claudeApiKey: response.claudeApiKey,
 					claudeTemperature: response.claudeTemperature,
 					claudeModel: response.claudeModel,
+                    claudeMaxToken: response.claudeMaxToken
 				}));
 			}
 		} catch (error) {
@@ -52,7 +53,7 @@ const ClaudeAIConfig = () => {;
 		}
 	};
 
-	const geminiAiData = [
+	const claudeAiData = [
 		{
 			title: 'ClaudeAI API key',
 			description: formState?.claudeApiKey || '',
@@ -62,15 +63,17 @@ const ClaudeAIConfig = () => {;
 			description: formState?.claudeTemperature || '',
 		},
 		{ title: 'ClaudeModel', description: formState?.claudeModel || '' },
+        { title: 'Max Token (up to 4096 tokens)', description: formState?.claudeMaxToken || '' },
 	];
+   
 
 	return (
 		<>
 			<List
 				header={<div>Change Settings</div>}
-				size="small"
+				size="medium"
 				bordered
-				dataSource={geminiAiData}
+				dataSource={claudeAiData}
 				renderItem={(item) => (
 					<List.Item>
 						<List.Item.Meta
@@ -95,6 +98,7 @@ const ClaudeAIConfig = () => {;
 											placeholder="Set Temperature"
 											type="number"
 											name="claudeTemperature"
+											className="editConfigInputField"
 											value={
 												formState.claudeTemperature ||
 												''
@@ -112,7 +116,7 @@ const ClaudeAIConfig = () => {;
 										/>
 									) : item.title == 'ClaudeModel' ? (
 										<Select
-											style={{ width: '290px' }}
+											className="editConfigSelectField"
 											name="claudeModel"
 											value={formState?.claudeModel || ''}
 											onChange={(e) =>
@@ -133,6 +137,28 @@ const ClaudeAIConfig = () => {;
 												claude-3-haiku-20240307
 											</Option>
 										</Select>
+                                        ) : item.title ==
+                                        'Max Token (up to 4096 tokens)' ? (
+                                          <Input
+                                              placeholder="Set MaxToken"
+                                              type="number"
+                                              name="claudeMaxToken"
+											  className="editConfigInputField"
+                                              value={
+                                                  formState.claudeMaxToken ||
+                                                  ''
+                                              }
+                                              min={0}
+                                              max={4096}
+                                              step={10}
+                                              onChange={(e) =>
+                                                  setFormState({
+                                                      ...formState,
+                                                      claudeMaxToken:
+                                                          e.target.value,
+                                                  })
+                                              }
+                                          />
 									) : null
 								) : item.title == 'ClaudeAI API key' ? (
 									renderSecretKey()

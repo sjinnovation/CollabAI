@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
+import { ThemeContext } from "../../contexts/themeConfig";
 
 const Loading = () => {
+  const { theme } = useContext(ThemeContext);
   const override = {
-    color: "#fff",
+    color: theme === "light" ? "#000" : "#fff",
     loading: true,
   };
 

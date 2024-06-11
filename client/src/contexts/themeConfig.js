@@ -1,31 +1,56 @@
-import { theme } from 'antd';
+import React from "react";
+import { theme } from "antd";
 
-export const config = {
+export const darkConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
-    colorPrimary: '#1890ff',
+    colorPrimary: "#1890ff",
   },
   components: {
     Button: {
-      // colorPrimary: '#00b96b',
-      algorithm: true, // Enable algorithm
+      algorithm: true, 
     },
     Input: {
-      colorPrimary: '#2c2a2a',
-      // algorithm: true, // Enable algorithm
-
-      colorBorder: '#2c2a2a',
+      colorPrimary: "#2c2a2a",
+      colorBorder: "#2c2a2a",
     },
     Form: {
-      colorPrimary: '#eb2f96',
-      backgroundColor: '#ff0000',
-      // algorithm: true, // Enable algorithm
-      border: '1px solid rgb(44, 48, 53)',
+      colorPrimary: "#eb2f96",
+      backgroundColor: "#ff0000",
+      border: "1px solid rgb(44, 48, 53)",
     },
     message: {
-      top: '20px',
-      right: '20px',
-      position: 'fixed',
+      top: "20px",
+      right: "20px",
+      position: "fixed",
     },
   },
 };
+
+export const lightConfig = {
+  algorithm: theme.lightAlgorithm,
+  token: {
+    colorPrimary: "#000000", 
+  },
+  components: {
+    Button: {
+      algorithm: true,
+    },
+    Input: {
+      colorPrimary: "#000000",
+      colorBorder: "#000000", 
+    },
+    Form: {
+      colorPrimary: "#000000", 
+      backgroundColor: "#ffffff", 
+      border: "1px solid #000000", 
+    },
+    message: {
+      top: "20px",
+      right: "20px",
+      position: "fixed",
+    },
+  },
+};
+
+export const ThemeContext = React.createContext("light");

@@ -3,6 +3,7 @@ import {
   getConfig,
   updateConfig,
 } from "../../api/settings";
+import "./style.css"
 import { Input, Select, message, List } from "antd";
 const { Option } = Select;
 
@@ -19,6 +20,10 @@ const OpenAIConfig = () => {
           openaikey: response.openaikey,
           temperature: response.temperature,
           model: response.model,
+          openaiMaxToken: response.openaiMaxToken,
+          openaiTopP :response.openaiTopP,
+          openaiFrequency: response.openaiFrequency,
+          openaiPresence :response.openaiPresence
         }));
       }
     } catch (error) {
@@ -60,13 +65,18 @@ const OpenAIConfig = () => {
       description: formState.temperature || "",
     },
     { title: "Model", description: formState?.model || "" },
+    { title: "Max Token (up to 4096 tokens)", description: formState?.openaiMaxToken || "" },
+    { title: "Top P (between 0 and 1)", description: formState?.openaiTopP || "" },
+    { title: "Frequency Penalty (between 0 and 2)", description: formState?.openaiFrequency || "" },
+    { title: "Presence Penalty (between 0 and 2)", description: formState?.openaiPresence || "" },
   ];
 
   return (
     <>
+    <div className="scrollable-list">
       <List
         header={<div>Change Settings</div>}
-        size="small"
+        size="medium"
         bordered
         dataSource={data}
         renderItem={(item) => (
@@ -91,6 +101,7 @@ const OpenAIConfig = () => {
                       placeholder="Set Temperature"
                       type="number"
                       name="temperature"
+                      className="editConfigInputField"
                       value={formState.temperature || ""}
                       min={0}
                       max={1}
@@ -104,7 +115,7 @@ const OpenAIConfig = () => {
                     />
                   ) : item.title == "Model" ? (
                     <Select
-                      style={{ width: "290px" }}
+                      className="editConfigSelectField"
                       name="model"
                       value={formState?.model || ""}
                       onChange={(e) =>
@@ -114,9 +125,79 @@ const OpenAIConfig = () => {
                         })
                       }
                     >
+                      {/* [TODO]: need to improve to have these options being imported from constants */}
                       <Option value="gpt-3.5-turbo">GPT-3.5 Turbo</Option>
                       <Option value="gpt-4">GPT-4</Option>
+                      <Option value="gpt-4o">GPT-4o</Option>
                     </Select>
+                     ) : item.title == "Top P (between 0 and 1)" ? (
+                        <Input
+                          placeholder="Set openaiTop P"
+                          type="number"
+                          name="openaiTopP"
+                          className="editConfigInputField"
+                          value={formState.openaiTopP || ""}
+                          min={0}
+                          max={1}
+                          step={0.1}
+                          onChange={(e) =>
+                            setFormState({
+                              ...formState,
+                              openaiTopP: e.target.value,
+                            })
+                          }
+                        />
+                    ) : item.title == "Frequency Penalty (between 0 and 2)" ? (
+                        <Input
+                          placeholder="Set openaiFrequency"
+                          type="number"
+                          name="temperature"
+                          className="editConfigInputField"
+                          value={formState.openaiFrequency || ""}
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          onChange={(e) =>
+                            setFormState({
+                              ...formState,
+                              openaiFrequency: e.target.value,
+                            })
+                          }
+                        />
+                    ) : item.title == "Presence Penalty (between 0 and 2)" ? (
+                        <Input
+                          placeholder="Set openai Presence"
+                          type="number"
+                          name="openaiPresence"
+                          className="editConfigInputField"
+                          value={formState.openaiPresence || ""}
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          onChange={(e) =>
+                            setFormState({
+                              ...formState,
+                              openaiPresence: e.target.value,
+                            })
+                          }
+                        />
+                    ) : item.title == "Max Token (up to 4096 tokens)" ? (
+                        <Input
+                          placeholder="Set MaxToken"
+                          type="number"
+                          name="openaiMaxToken"
+                          className="editConfigInputField"
+                          value={formState.openaiMaxToken || ""}
+                          min={0}
+                          max={4096}
+                          step={10}
+                          onChange={(e) =>
+                            setFormState({
+                              ...formState,
+                              openaiMaxToken: e.target.value,
+                            })
+                          }
+                        />
                   ) : null
                 ) : item.title == "OpenAI API key" ? (
                   renderSecretKey()
@@ -146,6 +227,7 @@ const OpenAIConfig = () => {
           </a>
         )}
       </div>
+    </div>
     </>
   );
 };

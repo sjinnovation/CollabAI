@@ -5,11 +5,14 @@ const PromptTemplatesIntro = ({ setInputPrompt, templateCategories }) => {
   const TemplateCategory = ({ templateCategory }) => {
     return (
       <div key={templateCategory._id}>
-        <h2 className="mb-3 text-center">
+        {/* <h2 className="mb-3 text-center">
           <b>{templateCategory._id}</b>
-        </h2>
+        </h2> */}
         <div>
           <ul className="" style={{ listStyle: "none" }}>
+            <li>
+              <b>{templateCategory._id}</b>
+            </li>
             {templateCategory.templates &&
               templateCategory.templates.map((template) => (
                 <Template key={template._id} template={template} />
@@ -25,7 +28,7 @@ const PromptTemplatesIntro = ({ setInputPrompt, templateCategories }) => {
     return (
       <li
         key={template._id}
-        className="btn btn-dark p-3 rounded my-1 px-4 w-100"
+        className="btn p-3 rounded my-1 px-4 w-100 left"
         style={{ height: "90px", position: "relative" }}
         onClick={() => setInputPrompt(template.description)}
       >
@@ -36,6 +39,7 @@ const PromptTemplatesIntro = ({ setInputPrompt, templateCategories }) => {
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            textAlign: "left"
           }}
         >
           {template.description}

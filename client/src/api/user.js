@@ -43,6 +43,17 @@ export const editUser = async (id, userData) => {
     }
 };
 
+export const updateUserPreference = async (id, userData) => {
+    try {
+        let response = await axiosSecureInstance.patch(`/api/user/update-preference/${id}`, {...userData});
+        return response;
+    } catch (err) {
+        if(err && err.response.status === 400 ){
+            return err;
+        }
+    }
+};
+
 export const getUser = async (id) => {
     try {
         const response = await axiosSecureInstance.post(`/api/user/get-single-user`,

@@ -104,6 +104,7 @@ export const FormFields = [
         name: "agreement",
         label: "Remember me",
         type: "checkbox",
+        labelClassName: "text-white",
     },
     {
         name: "submit",

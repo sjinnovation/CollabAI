@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Select } from 'antd';
+import { Select, Typography } from 'antd';
 
 // libraries
 import { useNavigate, useParams } from 'react-router-dom';
@@ -40,6 +40,7 @@ const ChatPage = () => {
 	const [selectedChatModel, setSelectedChatModel] = useState('openai');
 	const [showScrollToBottomButton, setShowScrollToBottomButton] =
 		useState(true);
+	const [showPromptDropdown, setShowPromptDropdown] = useState(false);
 
 	// ----- REFS ----- //
 	const chatLogWrapperRef = useRef(null);
@@ -64,6 +65,7 @@ const ChatPage = () => {
 		fetchChatLogPerThread,
 		fetchTagList,
 		fetchTemplates,
+		updateLastPrompt
 	} = useChatPage();
 
 	const { thread_id } = useParams();
@@ -71,6 +73,70 @@ const ChatPage = () => {
 	const { setTriggerNavContent } = useContext(SidebarContext);
 	// Get a ref to the socket instance
 	const chatSocketRef = useSocket(CHAT_EVENTS.CHAT_NAMESPACE);
+
+
+	//----- Edit last Prompt --------// 
+	const emitUpdateLastPrompt = async (payload, promptId, newPrompt) => {
+		const payloadData = {
+			...payload,
+			chatLog
+		}
+        
+        const chatSocket = chatSocketRef.current;
+		
+        if (chatSocket) {
+			chatSocket.emit(CHAT_EVENTS.EDIT_LAST_CHAT, payloadData);
+		} else {
+			const { success, data } = await updateLastPrompt(promptId, newPrompt)
+
+			if (success) {
+				onChatEditedEvent({
+					...payload,
+					success,
+					promptResponse: data?.promptResponse,
+					isCompleted: true,
+					promptId: data.promptId
+				});
+
+			} else {
+				// console.log("An unexpected error occurred. Please reload the page.")
+				setErrorMessage("An unexpected error occurred. Please reload the page.");
+			}
+
+		}
+	};
+
+	const onChatEditedEvent = (response) => {
+		const {
+			success,
+			message,
+			userPrompt,
+			promptResponse,
+			botProvider,
+			promptId,
+			threadId,
+			isCompleted,
+			chatLog
+		} = response;
+		
+
+		if (success) {
+			setChatLog(prevChatLog => {
+				const index = prevChatLog.findIndex(chat => chat.promptId === promptId);
+				if (index !== -1) {
+					const newChatLog = [...prevChatLog];
+					newChatLog[index] = {
+						...newChatLog[index],
+						chatPrompt: userPrompt,
+						botMessage: promptResponse
+					};
+					return newChatLog;
+				}
+				// If the message is not found, just return the previous chat log
+				return prevChatLog;
+			})
+		}
+	};
 
 	// ----- SIDE EFFECTS ----- //
 
@@ -152,16 +218,21 @@ const ChatPage = () => {
 		const bindSocketEvents = () => {
 			const chatSocket = chatSocketRef.current;
 			chatSocket?.on(CHAT_EVENTS.CREATED_CHAT, onChatCreatedEvent);
+			chatSocket?.on(CHAT_EVENTS.EDITED_PROMPT, onChatEditedEvent)
 		};
 
 		const unbindSocketEvents = () => {
 			const chatSocket = chatSocketRef.current;
 			chatSocket?.off(CHAT_EVENTS.CREATED_CHAT, onChatCreatedEvent);
+			chatSocket?.off(CHAT_EVENTS.EDITED_PROMPT, onChatEditedEvent);
 		};
 
 		bindSocketEvents();
 		return unbindSocketEvents;
 	}, [chatSocketRef.current]);
+
+
+
 
 	const onChatCreatedEvent = (response) => {
 		const {
@@ -172,11 +243,13 @@ const ChatPage = () => {
 			promptResponse,
 			msg_id,
 			threadId,
+			botProvider,
 			chatLog,
 			isFistThreadMessage,
 			isCompleted,
+			promptId
 		} = response;
-
+		
 		if (success) {
 			let tagsList = [];
 			if (tags.length) {
@@ -190,11 +263,14 @@ const ChatPage = () => {
 					botMessage: promptResponse,
 					tags: tagsList,
 					msg_id,
+					botProvider,
+					promptId
 				},
 			]);
 			// scroll to bottom
 			scrollToBottomForRefElement(chatLogWrapperRef);
 		} else {
+            setIsGeneratingResponse(false)
 			return setErrorMessage(message);
 		}
 		// if user is making the first message in the thread -> trigger update threads in the sidebar
@@ -224,9 +300,15 @@ const ChatPage = () => {
 	};
 
 	// ----- HANDLE API CALLS ----- //
-	// [TODO] - change the way tags are getting sent to the backend
-	const handlePromptSubmit = async (e) => {
-		e.preventDefault();
+	/**
+	 * Handles the submission of a prompt in the chat page.
+	 *
+	 * @param {Event} e - The event object.
+	 * @param {boolean} [prompt=null] - If `true`, the `prompt` parameter is used as the main user prompt. Otherwise, the `inputPrompt` state is considered.
+	 * @returns {Promise<void>} - A promise that resolves when the submission is handled.
+	 */
+	const handlePromptSubmit = async (e, prompt=null) => {
+		e?.preventDefault();
 		if (isGeneratingResponse) return;
 
 		try {
@@ -236,15 +318,15 @@ const ChatPage = () => {
 
 			const tagIds = getIdsFromItems(selectedTags);
 			setSelectedTags([]);
-
 			const threadId = thread_id ? thread_id : generateThreadId();
 			let isFistThreadMessage = thread_id ? false : true;
 
 			if (inputPrompt.trim() !== '') {
-				const msg_id = new Date().toISOString();
-				setChatLog([...chatLog, { chatPrompt: inputPrompt, msg_id }]);
+				const msgId = new Date().toISOString();
+				let userInputtedPrompt = prompt ?? inputPrompt;
+				
+				setChatLog([...chatLog, { chatPrompt: userInputtedPrompt, msgId, 	botProvider: selectedChatModel }]);
 
-				const temp = inputPrompt;
 				setInputPrompt('');
 				promptInputRef.current.style.height = '51px';
 
@@ -253,33 +335,34 @@ const ChatPage = () => {
 					threadId,
 					// userPrompt: temp,
 					botProvider: selectedChatModel,
-					userPrompt: temp,
-					temp,
+					userPrompt: userInputtedPrompt,
+					temp: userInputtedPrompt,
 					chatLog,
 					compId: compid,
 					tags: tagIds,
-					msg_id,
+					msg_id: msgId,
 					isFistThreadMessage,
 				};
-		
+
 
 				// Access the chat namespace socket if needed
 				const chatSocket = chatSocketRef.current;
 				if (chatSocket) {
 					chatSocket.emit(CHAT_EVENTS.CREATE_CHAT, body);
 				} else {
-					const { success, promptResponse, message } =
+					const { success, promptResponse, message, promptId } =
 						await getGptResponse(
 							body,
 							cancelTokenSourceRef.current
 						);
-
+ 
 					if (success) {
 						onChatCreatedEvent({
 							...body,
 							success,
 							promptResponse,
 							isCompleted: true,
+							promptId
 						});
 					} else {
 						setIsGeneratingResponse(false);
@@ -291,29 +374,13 @@ const ChatPage = () => {
 			setIsGeneratingResponse(false);
 			setErrorMessage(
 				error?.response?.data?.message ||
-					error?.response?.message ||
-					'Something went wrong, please reload!'
+				error?.response?.message ||
+				'Something went wrong, please reload!'
 			);
 		}
 	};
 
 	// ----- LOCAL HANDLERS ----- //
-	const handleInputPromptChange = (event) => {
-		setInputPrompt(event.target.value);
-	};
-
-	const handleKeyDown = (event) => {
-		if (isGeneratingResponse) return;
-
-		if (event.key === 'Enter' && event.shiftKey) {
-			setInputPrompt((prevValue) => prevValue);
-		} else if (event.key === 'Enter') {
-			event.preventDefault();
-			event.target.style.height = '51px';
-			handlePromptSubmit(event);
-		}
-	};
-
 	const handleStopGeneratingButton = async () => {
 		if (cancelTokenSourceRef.current) {
 			cancelTokenSourceRef.current.cancel(
@@ -342,6 +409,9 @@ const ChatPage = () => {
 
 	return (
 		<section className="chat-box">
+			<Typography.Title level={5} className="floating-title py-2 px-3 rounded">
+				Multi-provider AI Chat
+			</Typography.Title>
 			{/* chatLogWrapper */}
 			<div className="chat-list-container" ref={chatLogWrapperRef}>
 				{/* if chats loading, show skeleton */}
@@ -368,15 +438,17 @@ const ChatPage = () => {
 											idx,
 											loading: isGeneratingResponse,
 											error: errorMessage,
+											editProps: {
+												emitUpdateLastPrompt,
+												isLastItem: idx === chatLog.length - 1,
+											}
 										}}
 									/>
 								))}
 								{showScrollToBottomButton && (
 									<button
 										onClick={() =>
-											scrollToBottomForRefElement(
-												chatLogWrapperRef
-											)
+											scrollToBottomForRefElement(chatLogWrapperRef)
 										}
 										className="GptScrollUpButton"
 									>
@@ -389,27 +461,28 @@ const ChatPage = () => {
 				)}
 			</div>
 
-			{/* ----- CHAT INPUT -----  */}
-			<ChatPromptInputForm
-				states={{
-					selectedTags,
-					tags: tagList,
-					loading: isGeneratingResponse,
-					inputPrompt,
-				}}
-				refs={{ promptInputRef }}
-				actions={{
-					onSubmit: handlePromptSubmit,
-					handleKeyDown,
-					onInputPromptChange: handleInputPromptChange,
-					handleStopGeneratingButton,
-					handleSelectTags,
-					setSelectedTags,
-					setSelectedChatModel,
-				}}
-			/>
-		</section>
-	);
+      {/* ----- CHAT INPUT -----  */}
+      <ChatPromptInputForm
+        states={{
+          selectedTags,
+          tags: tagList,
+          loading: isGeneratingResponse,
+          inputPrompt,
+					showPromptDropdown
+        }}
+        refs={{ promptInputRef }}
+        actions={{
+          onSubmit: handlePromptSubmit,
+          handleStopGeneratingButton,
+          handleSelectTags,
+          setSelectedTags,
+          setSelectedChatModel,
+					setInputPrompt,
+					setShowPromptDropdown
+        }}
+      />
+    </section>
+  );
 };
 
 export default ChatPage;

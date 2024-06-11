@@ -402,7 +402,7 @@ const FunctionCallingAssistantForm = ({ data }) => {
     return (
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {assistantFunctionCallData.tools.map((tool, index) => (
-          <Card key={index} className="mb-4 p-3 border rounded functionContainer">
+          <Card key={index} className="mb-4 p-3 border rounded">
             {/*Remove button functionality */}
             {/* <Button
               type="danger"
@@ -463,6 +463,7 @@ const FunctionCallingAssistantForm = ({ data }) => {
                   onChange={handleNewPropertyNameChange}
                 />
                 <Button
+                  className="my-2"
                   type="primary"
                   onClick={() => handleAddPropertyClick(index)}
                 >

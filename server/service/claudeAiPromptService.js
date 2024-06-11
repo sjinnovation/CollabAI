@@ -1,5 +1,7 @@
 import { getClaudeAIInstance } from '../config/claudeAI.js';
 import { ClaudeConfig } from '../constants/enums.js';
+import { getUserPreferencesById }  from '../utils/getUserPrefenceConfigHelper.js'
+import getOpenAiConfig from '../utils/openAiConfigHelper.js';
 
 /**
  * Generates a context array of previous chat history.
@@ -40,35 +42,80 @@ export const generatePreviousChatContentForClaude = (chatHistory) => {
  * Generates a streaming response from an Claude  model using a provided payload.
  *
  * @async
- * @function getClaudeAIResponsePromptService
+ * @function generateClaudeAIStreamResponse
  * @description Creates a stream of responses from claude based on dialogue context and a user prompt.
- * @param {Object} payload - An object containing the prompt, chatLog, temperature, gptModel
+ * @param {Object} payload - An object containing the prompt, chatLog, socket
  * @param {string} payload.prompt - The user's input to the model.
  * @param {Array} payload.chatLog - The chat history to provide context for the model's response.
- * @param {number} payload.temperature - Controls randomness in the response generation.
- * @param {string} payload.Model - The specific claude model to use for generating responses.
+ * @param {Object} payload.socket - will get user preference by using this.
  * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
  * @throws {Error} Will throw an error if the streaming response cannot be generated.
  */
 
-export const getClaudeAIResponsePromptService = async (payload) => {
-	const { prompt, chatLog, claudeModel, temperature } = payload;
+export const generateClaudeAIStreamResponse = async (payload) => {
+	const { prompt, chatLog ,userId } = payload;
 
 	try {
 		const anthropic = await getClaudeAIInstance();
 		const contextArray = generatePreviousChatContentForClaude(
 			chatLog || []
 		);
+		const temperature = parseFloat(await getOpenAiConfig('claudeTemperature'));
+		const claudeModel = await getOpenAiConfig('claudeModel');
+       
+        const userPreferences = await getUserPreferencesById(userId);
+
 		const stream = anthropic.messages.stream({
 			messages: [...contextArray, { content: prompt, role: 'user' }],
 			model: claudeModel,
 			stream: true,
-			max_tokens: ClaudeConfig.DEFAULT_MAX_TOKEN,
-			temperature: temperature,
+			max_tokens: userPreferences?.ClaudeAIMaxToken ? userPreferences?.ClaudeAIMaxToken : ClaudeConfig.DEFAULT_MAX_TOKEN,
+			temperature: userPreferences?.claudeAiTemperature ? userPreferences?.claudeAiTemperature : temperature,
 		});
 
-		return stream;
+		return { stream, model: claudeModel };
 	} catch (error) {
 		console.error(error);
 	}
 };
+
+/**
+ * Generates a streaming response from an Claude  model using a provided payload.
+ *
+ * @async
+ * @function generateClaudeHttpResponse
+ * @description Creates a stream of responses from claude based on dialogue context and a user prompt.
+ * @param {Object} payload - An object containing the userPrompt and userId
+ * @param {string} payload.userPrompt - The user's input to the model.
+ * @param {string} payload.userId - The userId to get user saved details
+ * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
+ * @throws {Error} Will throw an error if the streaming response cannot be generated.
+ */
+
+export const generateClaudeHttpResponse = async (payload) => {
+	const { userPrompt, userId } = payload;
+
+	try {
+		const anthropic = await getClaudeAIInstance();
+		const temperature = parseFloat(await getOpenAiConfig('claudeTemperature'));
+		const claudeModel = await getOpenAiConfig('claudeModel');
+        const userPreferences = await getUserPreferencesById(userId);
+
+		const message = await anthropic.messages.create({
+			model:claudeModel,
+            max_tokens: userPreferences?.ClaudeAIMaxToken ? userPreferences?.ClaudeAIMaxToken : ClaudeConfig.DEFAULT_MAX_TOKEN,
+			temperature: userPreferences?.claudeAiTemperature ? userPreferences?.claudeAiTemperature : temperature,
+			stream: false,
+			system:"Respond in short and clear sentences.",
+			messages: [{ content: userPrompt, role: 'user' }],
+		});
+		
+		return{
+             response : message.content[0].text,
+             modelUsed : claudeModel 
+            };
+	} catch (error) {
+		console.error(error);
+	}
+};
+

@@ -1,6 +1,6 @@
 import { Typography } from 'antd'
 import { useEffect } from 'react';
-import { getSingleAssistant } from '../../api/assistant-chat-page-api';
+import { getSingleAssistant } from '../../api/assistantChatPageApi';
 import { useState } from 'react';
 import AssistantIcon from '../../component/common/AssistantIcon';
 import { Avatar } from 'antd';
@@ -8,7 +8,7 @@ import { Avatar } from 'antd';
 const { Title } = Typography;
 
 const AssistantInfo = ({dataProps}) => {
-    const {assistantAllInfo, assistant_name, assistant_id} = dataProps;
+    const {assistantAllInfo, assistant_id} = dataProps;
     const [assistantData, setAssistantData] = useState({});
 
     const fetchAssistantData = async()=>{
@@ -26,7 +26,7 @@ const AssistantInfo = ({dataProps}) => {
                 <div className="assistant-img">
                     <div>
                     {
-                     assistantData.image_url 
+                     assistantData?.image_url 
                      ? 
                      <Avatar size={56} src={assistantData.image_url} className='mb-2'/>
                      :

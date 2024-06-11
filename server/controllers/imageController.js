@@ -6,6 +6,7 @@ import imageModel from "../models/imageModel.js"
 import { ImageMessages } from "../constants/enums.js";
 import config from "../config.js";
 
+
 AWS.config.update({
   accessKeyId: config.AWS_ACCESS_KEY_ID,
   secretAccessKey: config.AWS_SECRET_KEY_ID,
@@ -18,7 +19,7 @@ const bucketExpireTime = config.AWS_BUCKET_EXPIRE_TIME;
 const s3 = new AWS.S3();
 
 // Multer middleware to handle the file upload
-export const upload = multer({
+export const uploadS3 = multer({
   storage: multerS3({
     s3: s3,
     bucket: bucketName,
@@ -30,6 +31,7 @@ export const upload = multer({
   }),
   limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
 });
+
 // Function to handle image upload
 export const uploadImage = (req, res) => {   
   try {

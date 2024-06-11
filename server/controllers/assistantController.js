@@ -1,36 +1,28 @@
 import { StatusCodes } from "http-status-codes";
 import OpenAI from "openai";
-import fs from "fs";
 import mime from "mime-types";
 import Assistant from "../models/assistantModel.js";
 import AssistantThread from "../models/assistantThreadModel.js";
-import {
-  meeting_summary,
-  hardDeleteAssistant,
-  retrieveOpenAIFile,
-  processAssistantMessage,
-  retrieveOpenAIFileObject,
-	getAssistantByAssistantId,
-} from "../service/assistantService.js";
+import {hardDeleteAssistant,getAssistantByAssistantID,createAssistantThreadInDb, getAssistantByName, createAssistantInstance, getAssistantByObjectID} from "../service/assistantService.js";
 import User from "../models/user.js";
 import * as errorMessage from "../locale/index.js";
 import { AssistantMessages, CommonMessages } from "../constants/enums.js";
-import {
-  BadRequest,
-  Conflict,
-  InternalServer,
-  NotFound,
-} from "../middlewares/customError.js";
+import {BadRequest,Conflict,InternalServer, NotFound} from "../middlewares/customError.js";
 import { getOpenAIInstance } from "../config/openAI.js";
 import { createChatPerAssistantSchema } from "../utils/validations.js";
 import { handleOpenAIError } from "../utils/openAIErrors.js";
-import { assistantFuncMap } from "../utils/assistantFunctionMapper.js";
 import getOpenAiConfig from "../utils/openAiConfigHelper.js";
-import { calculateTokenAndCost } from "../service/trackUsageService.js";
+import { calculateCostFromTokenCounts, calculateTokenAndCost, createTrackUsage } from "../service/trackUsageService.js";
 import TrackUsage from "../models/trackUsageModel.js";
 import axios from "axios";
 import FunctionDefinition from "../models/functionDefinitionModel.js";
-
+import { createAssistantInOpenAI, createAssistantThread, createMessageInThread, createOpenAIFileObject, createRunInThread, dalleGeneratedImage, retrieveAssistantFromOpenAI, messageListFromThread, retrieveOpenAIFile, retrieveOpenAIFileObject, retrieveRunFromThread, submitToolOutputs, updateAssistantProperties } from "../lib/openai.js";
+import { uploadImageToS3 } from "../lib/s3.js";
+import { deleteAssistantFilesAndFilterIds, deleteLocalFile, onToolCalls, parseStaticQuestions, parseTools, processAssistantMessage, uploadFiles } from "../utils/assistant.js";
+import { getAssistantByIdOrAssistantIdService } from "../service/assistantService.js";
+import { deleteSinglePublicAssistant } from "./publicAssistantController.js";
+import { deletePublicAssistantService } from "../service/publicAssistantService.js";
+import { deleteFavouriteAssistantService,getSingleFavouriteAssistantService,deleteManyFavouriteAssistantService  } from "../service/favoriteAssistantService.js";
 /**
  * @function createAssistant
  * @async
@@ -43,135 +35,93 @@ import FunctionDefinition from "../models/functionDefinitionModel.js";
  * @throws {Error} Will throw an error if no assistant found or if assistant creation failed
  */
 export const createAssistant = async (req, res, next) => {
-  const {
-    name,
-    instructions,
-    description,
-    assistantId,
-    tools: toolsString,
-    model: userSelectedModel,
-    userId,
-    category,
-    imageGeneratePrompt,
-    staticQuestions,
-  } = req.body;
-  const files = req.files;
-  let newAssistantInstance = null;
-
-  const tools = JSON.parse(toolsString);
-  const parsedTools = tools.map((tool) => ({ type: tool }));
-  const dallEModel = await getOpenAiConfig("dallEModel");
-  const dallEQuality = await getOpenAiConfig("dallEQuality");
-  const dallEResolution = await getOpenAiConfig("dallEResolution");
-
   try {
-    const openai = await getOpenAIInstance();
+    const {
+      name,
+      instructions,
+      description,
+      assistantId,
+      tools: toolsString,
+      model: userSelectedModel,
+      userId,
+      category,
+      generateDalleImage,
+      imageGeneratePrompt,
+      staticQuestions,
+      functionsArray,
+      assistantTypes
+    } = req.body;
+  
+    const files = req.files['files'] ?? [];
+    const avatarFiles = req.files['avatar'] ?? [];
+    const avatar = avatarFiles.length > 0 ? avatarFiles[0] : null;
+    let newAssistantInstance = null;
+    let myAssistant = null;
+  
+    const tools = JSON.parse(toolsString);
+    const parsedTools = tools.map((tool) => (tool !== "functionCalling" ? { type: tool } : null)).filter(Boolean);
+    let parsedToolsWithFunctions = [...parsedTools];
+    if(functionsArray){
+      let parsedFunctions = JSON.parse(functionsArray);
 
-    const isNameExist = await Assistant.findOne({
-      is_deleted: false,
-      name: name,
-    });
-    if (isNameExist) {
-      return next(Conflict(AssistantMessages.NAME_EXISTS));
+     const parsedFunctionsList = parsedFunctions.map(func => {
+        return {
+          type: "function",
+          function: {
+            name: func.name,
+            description: func.description,
+            parameters: func.parameters
+          }
+        };
+      }).filter(Boolean);
+      parsedToolsWithFunctions = [...parsedFunctionsList, ...parsedTools];
     }
 
-    // Handle file uploads for the new assistant
-    const filePromises = files.map(async (file) => {
-      const uploadedFile = await openai.files.create({
-        file: fs.createReadStream(file.path),
-        purpose: "assistants",
-      });
 
-      return uploadedFile.id;
-    });
+    const dallEModel = await getOpenAiConfig("dallEModel");
+    const dallEQuality = (await getOpenAiConfig("dallEQuality")).toLowerCase();
+    const dallEResolution = await getOpenAiConfig("dallEResolution");
+    const openai = await getOpenAIInstance();
+    const isNameExist = await getAssistantByName(name);
+
+    if (isNameExist) return next(Conflict(AssistantMessages.NAME_EXISTS));
+
+    // Handle file uploads for the new assistant
+    const filePromises = files?.map(file => createOpenAIFileObject(openai, file,"assistants").then(uploadedFile => uploadedFile.id));
 
     // TODO: Handle promises here. If one promise is rejected then the entire promises will be rejected
     const newFileIds = await Promise.all(filePromises);
-
     let image_url = null;
 
-    //Under progress
-    // Based on the assistant name and model it will generate an image
-    // const imageResponse = await openai.images.generate({
-    // 	model: dallEModel,
-    // 	prompt: name,
-    // 	n: 1,
-    // 	quality : dallEModel == "dall-e-3" ? dallEQuality : undefined,
-    // 	size: dallEResolution,
-    // });
-
-    // image_url = imageResponse.data[0].url;
+    if (avatar) {
+      image_url = await uploadImageToS3(avatar.path,'image')
+    } else if (generateDalleImage && generateDalleImage?.toLowerCase() == 'true') {
+      const imageResponse = await dalleGeneratedImage(name,dallEModel,dallEQuality,dallEResolution) // Based on the assistant name and model it will generate an image
+      image_url= await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
+    }
+    
     // if assistantId is given, then we have to retrieve the assistant and create it in our database
     if (assistantId) {
       // check if already an assistant exists with the given assistantId
-      const existingAssistant = await Assistant.findOne({
-        assistant_id: assistantId,
-      });
-      if (existingAssistant)
-        return next(Conflict(AssistantMessages.ASSISTANT_ALREADY_EXISTS));
+      const existingAssistant = await getAssistantByAssistantID(assistantId);
 
-      const myAssistant = await openai.beta.assistants.retrieve(assistantId);
-      if (myAssistant) {
-        newAssistantInstance = new Assistant({
-          assistant_id: myAssistant.id,
-          name: myAssistant.name,
-          model: myAssistant.model,
-          instructions: myAssistant.instructions,
-          file_ids: myAssistant.file_ids,
-          tools: myAssistant.tools,
-          userId: userId,
-          category: category,
-          description: description,
-          image_url: image_url,
-          static_questions: staticQuestions
-            ? parseStaticQuestions(staticQuestions)
-            : [],
-        });
-      }
+      if (existingAssistant) return next(Conflict(AssistantMessages.ASSISTANT_ALREADY_EXISTS));
+      myAssistant = await retrieveAssistantFromOpenAI(openai, assistantId);
     } else {
-      // create new assistant and save it in our database
-      const assistant = await openai.beta.assistants.create({
-        name,
-        instructions,
-        tools: parsedTools,
-        model: userSelectedModel || "gpt-4-1106-preview",
-        file_ids: newFileIds,
-      });
+      myAssistant = await createAssistantInOpenAI(openai,name,instructions,parsedToolsWithFunctions,userSelectedModel,newFileIds); // create new assistant and save it in our database
+    }
 
-      if (assistant) {
-        newAssistantInstance = new Assistant({
-          assistant_id: assistant.id,
-          name: assistant.name,
-          model: assistant.model,
-          instructions: assistant.instructions,
-          tools: assistant.tools,
-          file_ids: assistant.file_ids,
-          userId: userId,
-          category: category,
-          description: description,
-          image_url: image_url,
-          static_questions: staticQuestions
-            ? parseStaticQuestions(staticQuestions)
-            : [],
-        });
-      }
+    if(myAssistant){
+      newAssistantInstance = await createAssistantInstance(myAssistant,userId,category,description,image_url,tools.includes("functionCalling"),staticQuestions,userSelectedModel,assistantTypes);
     }
 
     if (newAssistantInstance) {
       // Delete the uploaded files from the temporary directory
-      files.forEach((file) => {
-        fs.unlink(file.path, (err) => {
-          if (err) {
-            console.error(`Error deleting file: ${file.path}`, err);
-          }
-        });
-      });
+      avatar && files.push(avatar);
 
-      // Save the new assistant instance to the database
-      newAssistantInstance.model = userSelectedModel; // Save the user-selected model
-      const result = await newAssistantInstance.save();
+      Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
 
-      if (result) {
+      if (newAssistantInstance) {
         res.status(StatusCodes.CREATED).json({
           message: AssistantMessages.ASSISTANT_CREATED_SUCCESSFULLY,
           assistant: newAssistantInstance,
@@ -207,8 +157,7 @@ export const createChatPerAssistant = async (req, res, next) => {
   const { _id: userId } = req.user;
   const { assistant_id } = req.params;
   const { question, thread_id = false } = req.body;
-  let threadId = null,
-    finalMessage = [];
+  let threadId = null;
 
   const validationResult = createChatPerAssistantSchema.validate(req.body, {
     abortEarly: false,
@@ -226,46 +175,32 @@ export const createChatPerAssistant = async (req, res, next) => {
   try {
     const openai = await getOpenAIInstance();
 
-		// Step 1.2: check if assistant exists in database
-    const existingAssistant = await getAssistantByAssistantId(assistant_id);
+    // Step 1.1: check if assistant exists in database
+    const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
-		if(!existingAssistant) {
-			return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
-		}
+    if(!existingAssistant) {
+      return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+    }
     
-		
-		
-    // Step 1.1: create a thread if doesn't exist for the requested user
-		if (thread_id) {
+    // Step 1.2: create a thread if doesn't exist for the requested user
+    if (thread_id) {
       threadId = thread_id;
     } else {
-      const thread = await openai.beta.threads.create();
+      const thread = await createAssistantThread(openai);
 
-      if (thread) {
-        const newAssistantThread = new AssistantThread({
-          assistant_id,
-          user: userId,
-          thread_id: thread.id,
-          title: question.substring(0, 50),
-        });
-        await newAssistantThread.save();
-      }
+      thread && await createAssistantThreadInDb(assistant_id, userId, thread.id, question);
+
       threadId = thread.id;
     }
 
     // Step 2: now we have a threadId, create a message in the thread
-    await openai.beta.threads.messages.create(threadId, {
-      role: "user",
-      content: question,
-    });
+    await createMessageInThread(openai, threadId, question);
 
     // Step 3: now we have to create a run that will wait for the response from the assistant
-    const run = await openai.beta.threads.runs.create(threadId, {
-      assistant_id,
-    });
+    const run = await createRunInThread(openai, threadId, assistant_id);
     let runId = run.id;
-
-    let retrieveRun = await openai.beta.threads.runs.retrieve(threadId, runId);
+    console.log(runId);
+    let retrieveRun = await retrieveRunFromThread(openai, threadId, runId);
 
     // Step 4: now we have to create a polling mechanism to check if the assistant has responded
     // TODO: handle all the possible cases including errors that can happen
@@ -276,71 +211,18 @@ export const createChatPerAssistant = async (req, res, next) => {
         "Waiting for the Assistant to process..."
       );
       if (retrieveRun.status === "requires_action") {
-        let retrieveRuntwo = await openai.beta.threads.runs.retrieve(
-          threadId,
-          runId
-        );
-				const toolOutputs = [];
-
-        const requiredActions =
-          retrieveRuntwo.required_action.submit_tool_outputs.tool_calls;
-
-          for (const action of requiredActions) {
-            const funcName = action.function.name;
-            const argument = JSON.parse(action.function.arguments);
-            console.log(argument, "arg");
-            let currOutput = {
-              tool_call_id: action.id,
-              output: "This function doesn't exist.",
-            }
-  
-            const myAssistant = await openai.beta.assistants.retrieve(
-              assistant_id
-            );
-  
-            const propertiesKeysObject =  myAssistant?.tools[0]?.function?.parameters?.properties || {};
-            const propertiesKeys = Object.keys(propertiesKeysObject);
-            
-            // all conditions
-            const isCustomFunctionCallingAssistant = existingAssistant?.functionCalling === true && propertiesKeys;
-            const isLocalFunctionCallingAssistant = existingAssistant?.functionCalling === false && assistantFuncMap.hasOwnProperty(funcName);
-  
-            if (isCustomFunctionCallingAssistant) {
-              const argumentsList = propertiesKeys.map((key) => argument[key]);
-  
-              // Assuming argumentsList now is an array of values from the argument object based on propertiesKeys
-              const functionName = myAssistant.tools[0].function.name;
-              const functionVar = [functionName];
-  
-              const functionMap = await createFunctionMap();
-              // Create the function call dynamically using the spread operator
-              if (typeof functionMap[functionName] === "function") {
-                const output = await functionMap[functionName](...argumentsList);
-                currOutput.output = JSON.stringify(output);
-              }
-            } else if (isLocalFunctionCallingAssistant) {
-                const output = await assistantFuncMap[funcName](argument);
-                currOutput.output = JSON.stringify(output);
-            }
-            
-            toolOutputs.push(currOutput);
-          }
-
+        let retrieveRuntwo = await retrieveRunFromThread(openai, threadId, runId);
+        const toolOutputs = [];
+        const toolCalls = retrieveRuntwo.required_action.submit_tool_outputs.tool_calls;
+        toolOutputs = await onToolCalls(assistant_id, toolCalls, existingAssistant.functionCalling);
         console.log("Submitting outputs back to the Assistant...");
-        const run = await openai.beta.threads.runs.submitToolOutputs(
-          threadId,
-          runId,
-
-          {
-            tool_outputs: toolOutputs,
-          }
-        );
+        await submitToolOutputs(openai, threadId, runId, toolOutputs);
       }
       await new Promise((resolve) => {
         console.log("timeout....");
         return setTimeout(resolve, 1000);
       });
-      retrieveRun = await openai.beta.threads.runs.retrieve(threadId, runId);
+      retrieveRun = await retrieveRunFromThread(openai, threadId, runId);
 
       // Check for failed, cancelled, or expired status
       if (["failed", "cancelled", "expired"].includes(retrieveRun.status)) {
@@ -359,7 +241,33 @@ export const createChatPerAssistant = async (req, res, next) => {
         )
       );
     }
-    const threadMessages = await openai.beta.threads.messages.list(threadId);
+
+    // Step 5: now we have to store the token count and cost to keep track of the assistant usage
+    const {
+      inputTokenPrice,
+      outputTokenPrice,
+      inputTokenCount,
+      outputTokenCount,
+      totalCost,
+      totalTokens
+  } = calculateCostFromTokenCounts(
+      retrieveRun?.usage?.prompt_tokens,
+			retrieveRun?.usage?.completion_tokens,
+			retrieveRun?.model,
+			'openai'
+		);
+    await createTrackUsage({
+      userId,
+      inputTokenCount,
+      outputTokenCount,
+      modelUsed: retrieveRun.model,
+      inputTokenPrice,
+      outputTokenPrice,
+      totalTokens,
+      totalCost
+    });
+
+    const threadMessages = await messageListFromThread(openai, threadId);
 
     const mostRecentMessage = threadMessages.data.find(
       (message) => message.run_id === runId && message.role === "assistant"
@@ -380,13 +288,13 @@ export const createChatPerAssistant = async (req, res, next) => {
         msg_id: responsePayload.msg_id,
         thread_id: responsePayload.thread_id,
       });
-      return;
     } else {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: AssistantMessages.SOMETHING_WENT_WRONG,
       });
     }
   } catch (error) {
+    console.log("🚀 ~ createChatPerAssistant ~ error:", error)
     if (error instanceof OpenAI.APIError) {
       const customOpenAIError = handleOpenAIError(error);
       return next(customOpenAIError);
@@ -412,9 +320,6 @@ export const getAllAssistants = async (req, res) => {
 
     console.log("page:", page, "Limit:", limit);
 
-    //openai init
-    const openai = await getOpenAIInstance();
-
     // Define the query object with the is_deleted condition
     const query = { is_deleted: false, category: "ORGANIZATIONAL" };
 
@@ -426,13 +331,11 @@ export const getAllAssistants = async (req, res) => {
 
     // Find assistants based on the query
     const assistants = await Assistant.find(query)
-
       .populate({
         path: "userId",
         model: "User",
         select: "fname",
       })
-
       .populate("teamId")
       .sort({ createdAt: -1 })
       .skip((Number(page) - 1) * Number(limit))
@@ -442,10 +345,7 @@ export const getAllAssistants = async (req, res) => {
     // Iterate over each assistant and fetch filenames for file_ids
     for (const assistant of assistants) {
       const fileNames = await Promise.all(
-        assistant.file_ids.map(async (fileId) => {
-          const fileInfo = await openai.files.retrieve(fileId);
-          return fileInfo.filename;
-        })
+        assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
       );
       // Update the assistant object with fileNames
       assistant.fileNames = fileNames;
@@ -470,16 +370,13 @@ export const getAllAssistants = async (req, res) => {
  * @description Get assistant by id
  * @param {Object} req - The request object. The params should contain the assistant ID
  * @param {Object} res - The response object
+ * @param {Onject} next - next function 
  * @throws {Error} Will throw an error if it fails to fetch the assistant
  * @returns {Response} 200 - Returns fetched assistant
  */
-export const getAssistantById = async (req, res) => {
+export const getAssistantById = async (req, res,next) => {
   try {
     const { id: assistant_id } = req.params;
-
-    //openai init
-    const openai = await getOpenAIInstance();
-    // console.log(assistant_id, "assistant_id");
 
     // Find assistants based on the query
     const assistant = await Assistant.findOne({ assistant_id })
@@ -493,20 +390,14 @@ export const getAssistantById = async (req, res) => {
       return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
     }
 
-    // Check if the assistant has file_ids
+    // Check if the assistant has file_ids and if found update the assistant object with fileNames otherwise set an empty array
     if (assistant.file_ids && assistant.file_ids.length > 0) {
-      // Iterate over each assistant and fetch filenames for file_ids
       const fileNames = await Promise.all(
-        assistant.file_ids.map(async (fileId) => {
-          const fileInfo = await openai.files.retrieve(fileId);
-          return fileInfo.filename;
-        })
+        assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
       );
 
-      // Update the assistant object with fileNames
       assistant.fileNames = fileNames;
     } else {
-      // Set an empty array for fileNames if file_ids is not present
       assistant.fileNames = [];
     }
 
@@ -606,9 +497,6 @@ export const getAssistantsCreatedByUser = async (req, res) => {
     const { userId } = req.params;
     const { page = 1, pageSize = 10, searchQuery = "" } = req.query;
 
-    //openai init
-    const openai = await getOpenAIInstance();
-
     const skip = (Number(page) - 1) * Number(pageSize);
     const limit = parseInt(pageSize);
 
@@ -634,29 +522,11 @@ export const getAssistantsCreatedByUser = async (req, res) => {
 
     // Iterate over each assistant and fetch filenames for file_ids
     for (const assistant of assistants) {
-      try {
-        const fileNames = await Promise.all(
-          assistant.file_ids.map(async (fileId) => {
-            try {
-              const fileInfo = await openai.files.retrieve(fileId);
-              return fileInfo.filename;
-            } catch (fileError) {
-              console.error(
-                `Error retrieving file ${fileId}: ${fileError.message}`
-              );
-              return null; // Handle file retrieval error gracefully
-            }
-          })
-        );
+      const fileNames = await Promise.all(
+        assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
+      );
 
-        // Update the assistant object with fileNames
-        assistant.fileNames = fileNames;
-      } catch (error) {
-        console.error(
-          `Error processing assistant ${assistant._id}: ${error.message}`
-        );
-        // Handle assistant processing error gracefully
-      }
+      assistant.fileNames = fileNames;
     }
 
     res.status(StatusCodes.OK).json({
@@ -734,9 +604,12 @@ export const getAllUserAssignedAssistants = async (req, res) => {
 
     const [assistants, totalCount] = await Promise.all([
       Assistant.find(query)
+      .sort({
+        is_pinned: -1,  // Sort by 'is_pinned' in descending order (true first)
+        createdAt: -1   // Within each 'is_pinned' group, sort by 'createdAt' in descending order
+      })
         .skip((currentPage - 1) * pageSize)
-        .limit(pageSize)
-        .sort({ createdAt: -1 }),
+        .limit(pageSize),
       Assistant.countDocuments(query),
     ]);
 
@@ -838,13 +711,8 @@ export const getChatPerAssistant = async (req, res, next) => {
     limit: limit || 20,
   };
 
-  if (after) {
-    query.after = after;
-  }
-
-  if (before) {
-    query.before = before;
-  }
+  after && (query.after = after);
+  before && (query.before = before);
 
   try {
     const existingThread = await AssistantThread.findOne({
@@ -855,7 +723,6 @@ export const getChatPerAssistant = async (req, res, next) => {
 
     if (existingThread) {
       console.log(existingThread);
-      // initialize openai to retrieve messages
       const openai = await getOpenAIInstance();
 
       const threadMessages = await openai.beta.threads.messages.list(
@@ -921,13 +788,12 @@ export const getChatPerAssistant = async (req, res, next) => {
 export const downloadAssistantFile = async (req, res, next) => {
   try {
     const { file_id } = req.params;
-    const openai = await getOpenAIInstance();
 
     // Retrieve the file metadata to get the filename
-    const fileMetadata = await openai.files.retrieve(file_id);
+    const fileMetadata = await retrieveOpenAIFileObject(file_id);
 
     // Retrieve the file content
-    const fileContentResponse = await openai.files.content(file_id);
+    const fileContentResponse = await retrieveOpenAIFile(file_id);
 
     if (fileContentResponse) {
       const buffer = await fileContentResponse.arrayBuffer();
@@ -972,7 +838,7 @@ export const updateAssistantFiles = async (req, res, next) => {
   const files = req.files;
 
   try {
-    const existingAssistant = await Assistant.findOne({ assistant_id });
+    const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
     // TODO: Handle the case when the assistant is not found in a separate function
     if (!existingAssistant) {
@@ -982,9 +848,9 @@ export const updateAssistantFiles = async (req, res, next) => {
 
     const openai = await getOpenAIInstance();
 
-    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
 
-    let fileIds = [...myAssistant.file_ids];
+    let fileIds = [...myAssistant?.file_ids];
 
     /*
         You can attach a maximum of 20 files per Assistant, and they can be at most 512 MB each.
@@ -995,28 +861,16 @@ export const updateAssistantFiles = async (req, res, next) => {
     }
 
     if (files) {
-      const filePromises = files.map(async (file) => {
-        const uploadedFile = await openai.files.create({
-          file: fs.createReadStream(file.path),
-          purpose: "assistants",
-        });
-
-        return uploadedFile.id;
-      });
+      const filePromises = files.map(file => createOpenAIFileObject(openai, file,"assistants").then(uploadedFile => uploadedFile.id));
 
       fileIds = [...fileIds, ...(await Promise.all(filePromises))];
 
       // Delete the uploaded files from the "docs" directory
-      files.forEach((file) => {
-        fs.unlink(file.path, (err) => {
-          if (err) {
-            console.error(`Error deleting file: ${file.path}`, err);
-          }
-        });
-      });
+      Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
     }
 
-    const myUpdatedAssistant = await openai.beta.assistants.update(
+    const myUpdatedAssistant = await updateAssistantProperties(
+      openai,
       assistant_id,
       {
         file_ids: [...fileIds],
@@ -1053,9 +907,7 @@ export const assignTeamToAssistant = async (req, res, next) => {
   const { teamIds } = req.body;
 
   try {
-    const isExistingAssistant = await Assistant.findOne({
-      _id: assistant_id,
-    });
+    const isExistingAssistant = await getAssistantByObjectID(assistant_id);
 
     if (isExistingAssistant && Array.isArray(teamIds)) {
       isExistingAssistant.teamId = teamIds;
@@ -1086,13 +938,11 @@ export const assignTeamToAssistant = async (req, res, next) => {
  * @returns {Response} 200 - Returns success message and result of the operation
  */
 export const updateAssistant = async (req, res, next) => {
-  const { assistant_id } = req.params;
-  const { name, model, is_active = null } = req.body; // add more value as per the requirements
+	const { assistant_id } = req.params;
+	const { name, model, is_active = null, is_public = null, is_featured = null ,is_pinned = null } = req.body; // add more value as per the requirements
 
   try {
-    const isExistingAssistant = await Assistant.findOne({
-      _id: assistant_id,
-    });
+    const isExistingAssistant = await getAssistantByObjectID(assistant_id);
 
     if (isExistingAssistant) {
       isExistingAssistant.name = name || isExistingAssistant.name;
@@ -1100,7 +950,28 @@ export const updateAssistant = async (req, res, next) => {
       isExistingAssistant.is_active =
         is_active !== null ? is_active : isExistingAssistant.is_active;
 
-      const result = await isExistingAssistant.save();
+			isExistingAssistant.is_public =
+				is_public !== null ? is_public : isExistingAssistant.is_public;
+
+			isExistingAssistant.is_featured =
+				is_featured !== null ? is_featured : isExistingAssistant.is_featured;
+      isExistingAssistant.is_pinned =
+        is_pinned !== null ? is_pinned : isExistingAssistant.is_pinned;
+      if(is_active === false){
+          isExistingAssistant.is_public = false;
+          isExistingAssistant.is_featured = false;
+          const deletedDocument = await deletePublicAssistantService(isExistingAssistant.assistant_id);
+          if (deletedDocument) {
+            const findFromFavourite = await getSingleFavouriteAssistantService(isExistingAssistant.assistant_id);
+    
+            if (findFromFavourite != null && findFromFavourite) {
+              const deleteFromFavourite = await deleteManyFavouriteAssistantService(assistant_id);
+            }
+          }
+  
+        }
+
+			const result = await isExistingAssistant.save();
 
       res.status(StatusCodes.OK).json({
         result,
@@ -1131,11 +1002,7 @@ export const deleteAssistant = async (req, res, next) => {
   const { assistant_id } = req.params;
 
   try {
-    const openai = await getOpenAIInstance();
-
-    const existingAssistant = await Assistant.findOne({
-      assistant_id: assistant_id,
-    });
+    const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
     if (!existingAssistant) {
       return res
@@ -1168,7 +1035,6 @@ export const deleteAssistant = async (req, res, next) => {
 export const updateAssistantDataWithFile = async (req, res, next) => {
   try {
     const { assistant_id } = req.params;
-    const files = req.files;
     const {
       name,
       instructions,
@@ -1179,11 +1045,21 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       category,
       deleted_files,
       description,
+      regenerateWithDalle,
+      assistantTypes
     } = req.body;
 
+    const files = req.files['files'] ?? [];
+    const avatarFiles = req.files['avatar'] ?? [];
+    const avatar = avatarFiles.length > 0 ? avatarFiles[0] : null;
+    let image_url = null;
+
+    const dallEModel = await getOpenAiConfig("dallEModel");
+    const dallEQuality = (await getOpenAiConfig("dallEQuality")).toLowerCase();
+    const dallEResolution = await getOpenAiConfig("dallEResolution");
     const openai = await getOpenAIInstance();
 
-    const existingAssistant = await Assistant.findOne({ assistant_id });
+    const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
     if (!existingAssistant) {
       return res.status(StatusCodes.NOT_FOUND).json({
@@ -1191,7 +1067,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       });
     }
 
-    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
 
     let fileIds = [...myAssistant.file_ids];
 
@@ -1213,16 +1089,19 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       });
     }
 
+    if (avatar) {
+      image_url = await uploadImageToS3(avatar.path,'image')
+      files.push(avatar);
+    } else if (regenerateWithDalle && regenerateWithDalle?.toLowerCase() == 'true') {
+      const imageResponse = await dalleGeneratedImage(name,dallEModel,dallEQuality,dallEResolution) // Based on the assistant name and model it will generate an image
+      image_url= await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
+    } else {
+      image_url = null;
+    }
+
     if (files) {
       fileIds = [...fileIds, ...(await uploadFiles(openai, files))];
-
-      files.forEach((file) => {
-        fs.unlink(file.path, (err) => {
-          if (err) {
-            console.error(`Error deleting file: ${file.path}`, err);
-          }
-        });
-      });
+      Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
     }
 
     const updateData = {
@@ -1251,11 +1130,12 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
           : [],
         category,
         description,
+        image_url,
+        assistantTypes : assistantTypes
+
       };
 
-      if (teamId !== undefined) {
-        updatedAssistantFieldsObject.teamId = teamId;
-      }
+      teamId !== undefined && (updatedAssistantFieldsObject.teamId = teamId);
 
       Object.assign(existingAssistant, updatedAssistantFieldsObject);
 
@@ -1267,7 +1147,9 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       assistant: existingAssistant,
     });
   } catch (error) {
+    console.log("Error:", error)
     if (error instanceof OpenAI.APIError) {
+      
       const customOpenAIError = handleOpenAIError(error);
       return next(customOpenAIError);
     }
@@ -1277,96 +1159,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
   }
 };
 
-/** ============== UTILITY FUNCTION =================== */
-const parseTools = (toolsString) => {
-  try {
-    return JSON.parse(toolsString).map((tool) => ({ type: tool }));
-  } catch (error) {
-    console.error("Error parsing tools:", error);
-    throw new Error("Invalid tools format");
-  }
-};
-
-const parseStaticQuestions = (staticQuestionsString) => {
-  try {
-    return JSON.parse(staticQuestionsString);
-  } catch (error) {
-    console.error("Error parsing static questions:", error);
-    throw new Error("Invalid static questions format");
-  }
-};
-
-const deleteAssistantFilesAndFilterIds = async (
-  openai,
-  assistantId,
-  fileIds,
-  deletedFileIds
-) => {
-  try {
-    for (const deletedFileId of deletedFileIds) {
-      await openai.beta.assistants.files.del(assistantId, deletedFileId);
-    }
-    return fileIds.filter((fileId) => !deletedFileIds.includes(fileId));
-  } catch (error) {
-    console.error("Error deleting assistant files:", error);
-    throw error;
-  }
-};
-
-const uploadFiles = async (openai, files) => {
-  const filePromises = files.map(async (file) => {
-    const uploadedFile = await openai.files.create({
-      file: fs.createReadStream(file.path),
-      purpose: "assistants",
-    });
-
-    return uploadedFile.id;
-  });
-
-  return Promise.all(filePromises);
-};
-
-const updateAssistantProperties = async (openai, assistantId, updateData) => {
-  return openai.beta.assistants.update(assistantId, updateData);
-};
-
 //Function Calling API's
-
-//Helper Function
-/**
- * @async
- * @function createFunctionMap
- * @description A helper function which creates new function and maps it based on the function definitions stored in the database
- * @param {Object} req - No request params
- * @param {Object} res - Response object
- * @throws {Error} Will throw an error if function creation is failed
- */
-async function createFunctionMap() {
-  try {
-    // Get all function definitions from the database
-    const definitions = await FunctionDefinition.find({});
-
-    // Map function names to executable functions
-    const functionMap = definitions.reduce((acc, def) => {
-      try {
-        const funcDefinition = def.definition.replace("()", "(axios)");
-
-        const func = new Function("axios", `return async ${funcDefinition}`)(
-          axios
-        );
-
-        acc[def.name] = func;
-      } catch (error) {
-        console.error(`Failed to compile function ${def.name}:`, error);
-      }
-      return acc;
-    }, {});
-
-    return functionMap;
-  } catch (err) {
-    console.error("Error fetching function definitions:", err);
-  }
-}
 
 /**
  * @async
@@ -1380,7 +1173,6 @@ async function createFunctionMap() {
 export const fetchFunctionNamesPerAssistant = async (req, res) => {
   try {
     const { assistantName } = req.body;
-    console.log(assistantName);
     const openai = await getOpenAIInstance();
     if (
       !assistantName ||
@@ -1390,19 +1182,20 @@ export const fetchFunctionNamesPerAssistant = async (req, res) => {
     ) {
       res.status(400).send({ message: "Assistant name required" });
     } else {
-      const assistant = await Assistant.findOne({ name: assistantName });
+      const assistant = await getAssistantByName(assistantName);
 
-      const myAssistant = await openai.beta.assistants.retrieve(
+      const myAssistant = await retrieveAssistantFromOpenAI(
+        openai,
         assistant.assistant_id
       );
 
-      const functionNames = myAssistant.tools.map((tool) => tool.function.name);
+      const functionNames = myAssistant.tools.map((tool) => tool.function.name);      //name is not getting fro tools parameter
 
-      res.status(200).send({ assistantFunctionName: functionNames });
+      res.status(StatusCodes.OK).send({ assistantFunctionName: functionNames });
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: err.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
   }
 };
 
@@ -1427,9 +1220,10 @@ export const functionsParametersPerFunctionName = async (req, res) => {
       });
     }
 
-    const assistant = await Assistant.findOne({ name: assistantName });
+    const assistant = await getAssistantByName(assistantName);
 
-    const myAssistant = await openai.beta.assistants.retrieve(
+    const myAssistant = await retrieveAssistantFromOpenAI(
+      openai,
       assistant.assistant_id
     );
 
@@ -1449,10 +1243,10 @@ export const functionsParametersPerFunctionName = async (req, res) => {
     const properties = functionObj.function.parameters?.properties;
     const parametersList = properties ? Object.keys(properties) : [];
 
-    res.status(200).send({ parametersPerFunctionName: parametersList });
+    res.status(StatusCodes.OK).send({ parametersPerFunctionName: parametersList });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: err.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
   }
 };
 
@@ -1481,10 +1275,10 @@ export const validateFunctionDefinition = async (req, res) => {
     const result = func(...Object.values(parameters));
     console.log(result);
 
-    res.status(200).send({ message: "Function is correct" });
+    res.status(StatusCodes.OK).send({ message: "Function is correct" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: err.message,
     });
   }
@@ -1501,9 +1295,9 @@ export const validateFunctionDefinition = async (req, res) => {
  */
 export const addFunctionDefinition = async (req, res) => {
   try {
-    const { name, definition } = req.body;
-    if (!name || !definition) {
-      res.status(401).send({ error: "Both fields are mandatory" });
+    const { name, definition, description, purpose, parameters } = req.body;
+    if (!name || !definition || !description || !purpose) {
+      res.status(401).send({ error: "Please Provide Mandatory Fields" });
     }
 
     const nameExists = await FunctionDefinition.findOne({ name });
@@ -1513,13 +1307,16 @@ export const addFunctionDefinition = async (req, res) => {
       const newFunctionDefinition = new FunctionDefinition({
         name: name,
         definition: definition,
+        description: description,
+        purpose: purpose,
+        parameters: parameters
       });
       console.log(newFunctionDefinition);
       await newFunctionDefinition.save();
-      res.status(201).send(newFunctionDefinition);
+      res.status(StatusCodes.CREATED).send(newFunctionDefinition);
     }
   } catch (error) {
-    res.status(500).send({ message: error.message });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ message: error.message });
   }
 };
 
@@ -1617,10 +1414,7 @@ export const createAssistantWithFunctionCalling = async (req, res) => {
     const openai = await getOpenAIInstance();
 
     // Check if an assistant with the same name and user ID already exists
-    const isNameAndUserExist = await Assistant.findOne({
-      is_deleted: false,
-      name,
-    });
+    const isNameAndUserExist = await getAssistantByName(name);
 
     if (isNameAndUserExist) {
       return res.status(StatusCodes.CONFLICT).json({
@@ -1639,11 +1433,7 @@ export const createAssistantWithFunctionCalling = async (req, res) => {
       };
     });
 
-    const assistant = await openai.beta.assistants.create({
-      instructions,
-      tools: assistantTools,
-      model: userSelectedModel || "gpt-4-1106-preview",
-    });
+    const assistant = await createAssistantInOpenAI(openai, name, instructions, assistantTools, userSelectedModel)
 
     if (assistant) {
       newAssistantInstance = new Assistant({
@@ -1696,10 +1486,10 @@ export const getAssistantInfo = async (req, res) => {
 
     const openai = await getOpenAIInstance();
 
-    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
-    res.status(200).send(myAssistant);
+    const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
+    res.status(StatusCodes.OK).send(myAssistant);
   } catch (err) {
-    res.status(500).json({ error: err });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err });
   }
 };
 
@@ -1723,7 +1513,7 @@ export const updateFunctionCallingAssistantdata = async (req, res) => {
   } = req.body;
 
   try {
-    const existingAssistant = await Assistant.findOne({ assistant_id });
+    const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
     if (!existingAssistant || existingAssistant.functionCalling === false) {
       throw new Error("Assistant not found");
@@ -1731,7 +1521,7 @@ export const updateFunctionCallingAssistantdata = async (req, res) => {
 
     const openai = await getOpenAIInstance();
 
-    const myAssistant = await openai.beta.assistants.retrieve(assistant_id);
+    const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
 
     let assistantTools;
 
@@ -1756,7 +1546,8 @@ export const updateFunctionCallingAssistantdata = async (req, res) => {
     if (model) updateData.model = model;
     if (tools.length > 0) updateData.tools = assistantTools;
 
-    const myUpdatedAssistant = await openai.beta.assistants.update(
+    const myUpdatedAssistant = await updateAssistantProperties(
+      openai,
       assistant_id,
       updateData
     );
@@ -1775,6 +1566,32 @@ export const updateFunctionCallingAssistantdata = async (req, res) => {
     res.status(StatusCodes.CREATED).json({
       message: "Updated Function calling assistant successfully",
       assistant: existingAssistant,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+/**
+ * @async
+ * @function getAllFunctionDefinitions
+ * @description Retrieves all function definitions from the database
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @returns {Response} 200 - Returns all function definitions
+ * @throws {Error} Will throw an error if there are issues during the retrieval process
+ */
+export const getAllFunctionDefinitions = async (req, res) => {
+  try {
+    // Fetch all function definitions from the database
+    const functionDefinitions = await FunctionDefinition.find();
+
+    // Send the function definitions as a response
+    res.status(StatusCodes.OK).json({
+      functionDefinitions,
     });
   } catch (error) {
     console.log(error);

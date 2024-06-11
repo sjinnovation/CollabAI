@@ -1,6 +1,6 @@
 import { Form, Input } from 'antd';
 
-const FormInput = ({ name, label, rules, placeholder, type, dependencies, className, disabled }) => (
+const FormInput = ({ name, label, rules, placeholder, type, dependencies, className, disabled, inputFieldClassName = '' }) => (
   <Form.Item
     name={name}
     label={label}
@@ -10,9 +10,11 @@ const FormInput = ({ name, label, rules, placeholder, type, dependencies, classN
     hasFeedback
     disabled
   >
-    {type === 'password' ? 
-      <Input.Password placeholder={placeholder} /> : 
-      <Input disabled={disabled} placeholder={placeholder} />
+    {type === 'password' ?
+      <Input.Password className={inputFieldClassName} placeholder={placeholder} /> :
+      (type === 'number' ?
+        <Input type="number" min={0} max={8000} step={10} placeholder={placeholder} /> :
+        <Input disabled={disabled} placeholder={placeholder} />)
     }
   </Form.Item>
 );

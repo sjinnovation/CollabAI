@@ -34,12 +34,14 @@ const AssistantSettings = ({ data }) => {
       title: "Team name",
       dataIndex: "teamTitle",
       key: "teamTitle",
+      align: "center",
       render: (text) => <span className="text-left">{text}</span>,
     },
     {
       title: "Status",
       dataIndex: "hasAssistantCreationAccess",
       key: "hasAssistantCreationAccess",
+      align: "center",
       render: (hasAccess) => (
         <Tag color={hasAccess ? "green" : "red"}>
           {hasAccess ? "Given" : "Not Given"}
@@ -49,6 +51,7 @@ const AssistantSettings = ({ data }) => {
     {
       title: "Action",
       key: "action",
+      align: "center",
       width: 150,
       render: (_, record) => (
         <Space size="middle">

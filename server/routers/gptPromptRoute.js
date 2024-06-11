@@ -17,13 +17,14 @@ import {
   bulkThreadRecover,
   threadDelete,
   getGptStreamResponse,
-  regeneratePrompt,
+  regenerateLastPrompt,
 } from "../controllers/promptController.js";
-import authenticateUser from "../middlewares/login.js";
+
+import  authenticateUser from "../middlewares/login.js";
 
 const promptRouter = express.Router();
 
-promptRouter.post("/getprompt/:userid", authenticateUser, getGptPrompt);
+promptRouter.post("/getprompt/:userid", authenticateUser , getGptPrompt);
 
 promptRouter.post('/stream', authenticateUser, getGptStreamResponse);
 
@@ -51,7 +52,7 @@ promptRouter.put("/clearconversations/", authenticateUser, clearSavedPrompts);
 
 promptRouter.put("/updateprompts/", authenticateUser, updateEditedPrompt);
 
-promptRouter.put("/regenerate/:id", authenticateUser, regeneratePrompt);
+promptRouter.patch("/:id/last-response", authenticateUser, regenerateLastPrompt);
 
 promptRouter.get("/getstatistics/:date", authenticateUser, getStatistics);
 

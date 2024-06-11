@@ -6,7 +6,8 @@ import { axiosSecureInstance } from "../api/axios";
 import { getUserID } from "../Utility/service";
 import { SEARCH_ASSISTANTS } from "../api/assistant_api_constant";
 import { deleteAssistant, fetchAllAssistants, fetchAssistantStatisticsForUser, fetchAssistantsCreatedByUser, fetchTeams, updateAssistant, updateAssistantTeams } from "../api/assistant";
-
+import { addPublicAssistant, deletePublicAssistant, isPublicStateChange, deleteSinglePublicAssistant } from "../api/publicAssistant";
+import { AssistantSetAsPublic,AssistantSetAsPrivate,AssistantNeedToActiveFirst } from "../constants/PublicAndPrivateAssistantMessages";
 const initialLoaderState = {
   ASSISTANT_UPDATING: false,
   ASSISTANT_DELETING: false,
@@ -89,8 +90,11 @@ const useAssistantPage = () => {
   const handleUpdateAssistant = async (assistantId, data) => {
     try {
       updateLoader({ ASSISTANT_UPDATING: assistantId });
-      const response = await updateAssistant(assistantId, data);
+      if(data.is_active === false){
+        await deleteSinglePublicAssistant(assistantId);
 
+      }
+      const response = await updateAssistant(assistantId, data);
       if(response) {
         handleFetchUserCreatedAssistants();
         handleFetchAllAssistants(1);
@@ -239,7 +243,43 @@ const useAssistantPage = () => {
 
   }
 
-  
+  const handlePublicAssistantAdd = async (id, data, checked, assistantId, isActive) => {
+    updateLoader({ ASSISTANT_UPDATING: checked });
+    try {
+        if (checked == true && isActive == true) {
+            const response = await addPublicAssistant(id, data, checked, assistantId);
+            if (response?.data) {
+                const resp = await isPublicStateChange(id, data, checked, assistantId);
+                if (resp?.data) {
+                    message.success(AssistantSetAsPublic);
+                }
+            }
+        }else if (checked == true && isActive == false) {
+          message.error(AssistantNeedToActiveFirst);
+        }
+         else {
+            const response = await deletePublicAssistant(id, data, checked, assistantId);
+            if (response?.data) {
+                const resp = await isPublicStateChange(id, data, checked, assistantId);
+                if (resp?.data) {
+                    message.success(AssistantSetAsPrivate);
+                }
+            } 
+
+
+            } 
+
+        
+    } catch(error) {
+
+        handleShowMessage(error?.response?.data?.message);
+    } finally {
+        updateLoader({ ASSISTANT_UPDATING: !checked });
+    }
+    handleFetchUserCreatedAssistants();
+    handleFetchAllAssistants(1);
+};
+
 
   return {
     setAdminUserAssistants,
@@ -268,7 +308,8 @@ const useAssistantPage = () => {
     setOrgAssistantSearchQuery,
     //Search query for personal assistants
     personalAssistantSearchQuery,
-    setPersonalAssistantSearchQuery
+    setPersonalAssistantSearchQuery,
+    handlePublicAssistantAdd
   };
 };
 

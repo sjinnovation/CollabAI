@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import UserTrackUsageTable from '../../Account/TrackUsageComponent/UserTrackUsageTable'
-import { DatePicker } from 'antd';
+import { Avatar, DatePicker, Typography } from 'antd';
 import './TrackUsage.css'
 import { getDailyUsageReport } from '../../../api/track-usage-api-functions';
 import { useEffect } from 'react';
+import { UserOutlined } from '@ant-design/icons';
 
 const DailyUsage = () => {
     const [loading, setLoading] = useState(false)
@@ -17,9 +18,6 @@ const DailyUsage = () => {
         console.log(dateString);
         setSelectedDate(dateString);
     };
-
-    console.log("Date:", selectedDate)
-
     const handleFetchDailyReport = async () => {
         setLoading(true)
         try {
@@ -53,30 +51,77 @@ const DailyUsage = () => {
 
     const columns = [
         {
-            title: 'Date',
-            dataIndex: '_id',
-            render: day => <p>{day?.day}</p>
+          title: "Date",
+          dataIndex: "_id",
+          width: '20%',
+          render: (_id) => <p>{_id?.month}/{_id?.day}/{_id?.year}</p>,
+          onHeaderCell: () => {
+            return {
+              style: {
+                textAlign: 'center',
+              }
+            };
+          },
         },
         {
-            title: 'User ID',
-            dataIndex: '_id',
-            render: day => <p>{day?.user_id}</p>
+          title: "User",
+          dataIndex: "user_info",
+          width: '20%',
+          render: (day) => (
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Avatar style={{ marginRight: "20px" }} icon={<UserOutlined />} />
+              <div style={{ textAlign: "left" }}>
+                <Typography>{`${day?.fname} ${day?.lname}`}</Typography>
+                <Typography>{day?.email}</Typography>
+              </div>
+            </div>
+          ),
+          onHeaderCell: () => {
+            return {
+              style: {
+                textAlign: 'center',
+              }
+            };
+          },
         },
         {
-            title: 'Prompt Count',
-            dataIndex: 'count',
+          title: "Prompt Count",
+          dataIndex: "count",
+          width: '20%',
+          onHeaderCell: () => {
+            return {
+              style: {
+                textAlign: 'center',
+              }
+            };
+          },
         },
         {
-            title: 'Total Token',
-            dataIndex: 'total_tokens',
+          title: "Total Token",
+          dataIndex: "total_tokens",
+          width: '20%',
+          onHeaderCell: () => {
+            return {
+              style: {
+                textAlign: 'center',
+              }
+            };
+          },
         },
         {
-            title: 'Cost',
-            dataIndex: 'total_token_cost',
-            render: value => Number(value).toFixed(5)
+          title: "Cost",
+          dataIndex: "total_token_cost",
+          width: '20%',
+          render: (value) => <p>${Number(value).toFixed(5)}</p>,
+          onHeaderCell: () => {
+            return {
+              style: {
+                textAlign: 'center',
+              }
+            };
+          },
         },
-
-    ]
+    ];
 
     return (
         <div className=''>
@@ -87,8 +132,16 @@ const DailyUsage = () => {
                     placeholder="Select Date"
                 />
                 <div className='total-usage-report-container'>
-                    <p>Total Token: {totalUsageReport?.total_tokens}</p>
-                    <p>Total Cost: $ {totalUsageReport?.total_cost}</p>
+                    <Typography><b>Total Token: {totalUsageReport?.total_tokens ? totalUsageReport?.total_tokens : 0 }</b></Typography>
+                    <Typography>
+                        <b>
+                        Total Cost: $
+                        {totalUsageReport && !isNaN(Number(totalUsageReport.total_cost))
+                            ? Number(totalUsageReport.total_cost).toFixed(5)
+                            : "0.00000"
+                        }
+                        </b>
+                    </Typography>
                 </div>
             </div>
 

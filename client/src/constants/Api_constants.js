@@ -1,3 +1,14 @@
+//---------- taskCommandCategoryApiSlug -----------
+export const getAllTaskCommandsCategorySlug = () => `api/commandsCategory`;
+export const createATaskCommandCategorySlug = () => `/api/commandsCategory`;
+
+//------------ taskCommandApiSlug ------------------
+export const createATaskCommandSlug = () => `/api/taskCommands`;
+export const getAllTaskCommandsSlug = (currentPage, limit) => `api/taskCommands?page=${currentPage}&limit=${limit}`;
+export const deleteATaskCommandSlug = (id) => `api/taskCommands/${id}`;
+export const fetchATaskCommandSlug = (id) => `/api/taskCommands/${id}`;
+export const editATaskCommandSlug = (id) => `/api/taskCommands/${id}`;
+export const getTaskCommandsGroupedByCategorySlug = () => `/api/taskCommands/groupBy/category`;
 
 //------------------ TEAMS_API_SLUG -------------------
 export const SUPER_ADMIN_GET_ALL_TEAMS_SLUG = (page, limit) => `/api/teams?page=${page}&limit=${limit}`;
@@ -38,6 +49,9 @@ export const UPDATE_ASSISTANT_WITH_FILES_API = (assistantId) =>
 export const CREATE_SINGLE_ASSISTANT_API = "/api/assistants";
 export const UPDATE_ASSISTANT_ACCESS_FOR_TEAM_API =(teamId) => `/api/teams/${teamId}`;
 
+export const UPDATE_ASSISTANT_PUBLIC_STATE_CHECK = (id) => `/api/assistants/${id}`
+export const GET_SINGLE_ASSISTANT_INFO_SLUG = (assistantId) => `api/assistants/${assistantId}/info`
+
 //----------------USERS_PROMPTS_DETAILS_API 
 export const USER_PROMPTS_API_SLUG = (page, limit, searchInputValue) =>
   `/api/user/get-user-prompts?page=${page}&limit=${limit}${searchInputValue ? `&search=${searchInputValue}` : ""}`;
@@ -55,6 +69,7 @@ export const GET_USER_PROFILE_API_SLUG = `/api/user/get-single-user`;
 export const GET_USER_DELETED_THREADS_API_SLUG = `/api/prompt/fetchdeletedthreads`;
 export const USER_RECOVER_MULTI_THREADS_FROM_TRASH_API_SLUG = `/api/prompt/multithreadrecover`;
 export const USER_PERMANENT_DELETE_THREADS_API_SLUG = `/api/prompt/thread`;
+export const GET_SINGLE_USER_PROFILE_API_SLUG = (userId) => `/api/user/get-single-user/${userId}`;
 
 //------------ PROMPT_TEMPLATE_API_SLUG ------------------
 export const SUPER_ADMIN_GET_ALL_PROMPT_TEMPLATES_SLUG = (page, limit) => `api/template/get-templates-admin?page=${page}&limit=${limit}`;
@@ -67,7 +82,52 @@ export const ALL_USER_GET_PROMPT_TEMPLATES_SLUG = ()=> `api/template/get-templat
 //---------- PROMPT_TEMPLATE_CATEGORY_API_SLUG -----------
 export const GET_ALL_PROMPT_TEMPLATES_CATEGORY_SLUG = () => `api/category/getAll`;
 export const GET_SINGLE_PROMPT_TEMPLATES_CATEGORY_SLUG = (categoryId) => `api/category/get/${categoryId}`;
-export const CREATE_A_PROMPT_TEMPLATE_CATEGORY_SLUG = (userid)=> `/api/category/create/${userid}`;
+export const CREATE_A_PROMPT_TEMPLATE_CATEGORY_SLUG = (userId)=> `/api/category/create/${userId}`;
 
 //---------- SETTINGS_API_SLUG -----------
 export const API_SETTINGS_SLUG = `/api/config/settings`;
+
+//---------- USER_PREFERENCE_API_SLUG -----------
+export const API_USER_PREFERENCE_SLUG = `/api/usersPreference/settings`;
+
+//---------- PUBLIC_ASSISTANT_API_SLUG -----------
+export const GET_ALL_PUBLIC_ASSISTANT = () => `api/assistants/public`;
+export const ADD_PUBLIC_ASSISTANT = () => `api/assistants/public`;
+export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS = () => `api/assistants/public/details_info`;
+
+export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS_DETAILS = (searchQuery, selectAssistantType) => `api/assistants/public/categorized?search=${searchQuery ? searchQuery : ''}&type=${selectAssistantType ? selectAssistantType: ''}`;
+export const GET_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
+export const UPDATE_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
+export const DELETE_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
+
+//---------- FAVORITE_ASSISTANT_API_SLUG -----------
+
+export const GET_ALL_FAVORITE_ASSISTANT = () => `api/assistants/favourite`;
+export const ADD_FAVORITE_ASSISTANT = () => `api/assistants/favourite`;
+export const SINGLE_FAVORITE_ASSISTANT_DETAILS = (assistantId) => `api/assistants/favourite/${assistantId}/details_info`;
+
+export const GET_SINGLE_FAVORITE_ASSISTANT = (assistantId) => `api/assistants/favourite/${assistantId}`;
+export const PUT_SINGLE_FAVORITE_ASSISTANT = (assistantId) => `api/assistants/favourite/${assistantId}`;
+export const DELETE_SINGLE_FAVORITE_ASSISTANT = (assistantId) => `api/assistants/favourite/${assistantId}`;
+
+//-----------ASSISTANT_TYPE_API_SLUG----------------
+
+export const GET_ALL_ASSISTANT_TYPE = () => `api/assistants/types`;
+export const GET_SINGLE_ASSISTANT_TYPE = (id) => `api/assistants/types/${id}`;
+export const CREATE_ASSISTANT_TYPE = () => `api/assistants/types`;
+export const UPDATE_SINGLE_ASSISTANT_TYPE = (id) => `api/assistants/types/${id}`;
+export const DELETE_SINGLE_ASSISTANT_TYPE = (id) => `api/assistants/types/${id}`;
+export const GET_ALL_ASSISTANT_TYPE_PAGINATED = (page, limit) => `api/assistants/types?page=${page}&limit=${limit}`;
+
+
+
+//---------- PINNED_ASSISTANT_API_SLUG -----------
+
+export const GET_ALL_PINNED_ASSISTANT = () => `api/assistants/pinned`;
+export const ADD_PINNED_ASSISTANT = () => `api/assistants/pinned`;
+export const SINGLE_PINNED_ASSISTANT_DETAILS = (assistantId) => `api/assistants/pinned/${assistantId}/info`;
+
+export const GET_SINGLE_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinned/${assistantId}`;
+export const PUT_SINGLE_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinned/${assistantId}`;
+export const DELETE_SINGLE_PINNED_ASSISTANT = (assistantId,userId) => `api/assistants/pinned/${assistantId}/${userId}`;
+export const DELETE_MANY_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinned/${assistantId}`;

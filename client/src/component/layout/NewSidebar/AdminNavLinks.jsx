@@ -1,8 +1,11 @@
 import { CgProfile } from "react-icons/cg";
 import NavLinks from "../../Prompt/NavLink";
 import { getUserTeamAccessStatus } from "../../../Utility/service";
+import React, { useContext } from "react";
+import { ThemeContext } from "../../../contexts/themeConfig";
 
 const AdminNavLinks = () => {
+  const { theme } = useContext(ThemeContext);
   const checkAccess = getUserTeamAccessStatus();
   return (
     <div>
@@ -18,7 +21,7 @@ const AdminNavLinks = () => {
               xmlns="http://www.w3.org/2000/svg"
               width="1.5em"
               height="1.5em"
-              style={{ color: "white" }}
+              style={{ color: theme === "light" ? "#000" : "#fff" }}
               className="bi bi-file-earmark-bar-graph"
               viewBox="0 0 16 16"
             >

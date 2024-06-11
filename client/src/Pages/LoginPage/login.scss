@@ -1,4 +1,4 @@
-@use 'sass:map';
+@use "sass:map";
 
 .toaster-header {
   gap: 15px;
@@ -9,9 +9,9 @@
   border-radius: 10px;
   .toaster-icon {
     font-size: 40px;
-    background-color: 'transparent';
-    border: '0';
-    border-radius: '50%';
+    background-color: "transparent";
+    border: "0";
+    border-radius: "50%";
     color: #ffffff;
   }
   .toaster-body {
@@ -127,6 +127,37 @@
   // grid-template-columns: 1.5fr 1fr;
 }
 
+.login-page :where(.css-dev-only-do-not-override-hvqebt).ant-checkbox + span {
+  color: #ffffff;
+}
+.login-page [type=submit]:not(:disabled), .login-page button:not(:disabled) {
+    cursor: pointer;
+    background: #0d6efd;
+}
+.login-page :where(.css-dev-only-do-not-override-hvqebt).ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover {
+    color: #fff;
+    background: #0d6efd!important;
+    opacity: 0.8!important;
+}
+
+.login-page {
+  .login-btn{
+    width: 100% !important;
+  }
+  .login-btn:hover{
+    background: #0d6efd!important;
+  }
+}
+
+.custom-login-form input::placeholder {
+  color: gray;
+}
+
+.anticon-eye svg,
+.anticon-eye-invisible svg {
+  fill: gray;
+}
+
 .left-section {
   // background-image: url("https://i.ibb.co/B60KTM7/sorted-rack-login.png");
   background-size: 100% 100%;
@@ -137,7 +168,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
+  background-color: #171717;
   height: 100%;
 }
 
@@ -147,7 +178,7 @@
   }
 }
 @property --border-angle {
-  syntax: '<angle>';
+  syntax: "<angle>";
   inherits: true;
   initial-value: 0turn;
 }
@@ -183,6 +214,7 @@
   background-repeat: no-repeat;
 
   animation: bg-spin 20s linear infinite;
+  background-color: var(--chat-box-bg-color) !important;
 
   h1 {
     margin: 10px 0;
@@ -256,7 +288,7 @@
   font-size: 14px;
   a {
     padding-left: 4px;
-      text-decoration: underline;
+    text-decoration: underline;
   }
 }
 .width-toast {

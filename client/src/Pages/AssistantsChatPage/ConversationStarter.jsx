@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react';
-import { IoArrowUpCircle } from "react-icons/io5";
-import { getSingleAssistant } from '../../api/assistant-chat-page-api';
+import { FaArrowRight } from "react-icons/fa6";
+import { getSingleAssistant } from '../../api/assistantChatPageApi';
 import { useEffect } from 'react';
 
 const ConversationStarter = ({ states }) => {
@@ -21,24 +21,24 @@ const ConversationStarter = ({ states }) => {
     fetchAssistantStarterQuestions()
   },[assistant_id]);
 
-
-    return (
+  return (
       <div className='assistantsConversationStarterWrapper'>
         <div className="conversation-starter-box">
+        {starterQuestions?.length > 0 && <p>Try saying ... </p>}
           {starterQuestions?.length > 0 &&
-            starterQuestions.map((question, index) => (
+            starterQuestions.slice(-5).map((question, index) => (
                 <div
                 key={index}
                 className='conversation-starter'
                 onClick={() => handleSelectStarter(question)}
               >
                 <div className='conversation-contents'>
-                  <p>
-                    {question.length > 30
-                      ? `${question.slice(0, 30)} ...`
+                  <b>
+                    {question.length > 70
+                      ? `${question.slice(0, 70)} ...`
                       : question}
-                  </p>
-                  <IoArrowUpCircle className='conversation-starter-icon' />
+                  </b>
+                  <FaArrowRight className='conversation-starter-icon' />
                 </div>
               </div>
             ))}

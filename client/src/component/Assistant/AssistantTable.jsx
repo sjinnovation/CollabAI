@@ -8,18 +8,21 @@ import {
   Tag,
   Tooltip,
   Switch,
+  message
 } from "antd";
 import { AiOutlineDelete, AiOutlineTeam, AiOutlineEdit, AiOutlineArrowUp } from "react-icons/ai";
-
+import { BsRobot } from "react-icons/bs";
+import "./Assistant.css";
 //-----Helper----------//
-import { showDeleteConfirm } from "../../Utility/assistant-helper"
+import { showDeleteConfirm , redirectToAssistant } from "../../Utility/assistant-helper"
 
 //Components 
 import AssistantTeamAssignModal from "./AssistantTeamAssignModal";
 import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/DebouncedSearchInput";
-import { useEffect } from "react";
-import { axiosSecureInstance } from "../../api/axios";
-import { SEARCH_ALL_ORGANIZATIONAL_ASSISTANTS_SLUG } from "../../constants/Api_constants";
+import { handleSwitchChange, showRemoveConfirm } from "../../Utility/showModalHelper";
+import { AssistantNeedToActiveFirst } from "../../constants/PublicAndPrivateAssistantMessages";
+import { handleCheckAssistantActive } from "../../Utility/addPublicAssistantHelper";
+
 
 
 const AssistantTable = ({ data }) => {
@@ -36,10 +39,12 @@ const AssistantTable = ({ data }) => {
     updateLoader,
     searchOrganizationalAssistants,
     orgAssistantSearchQuery,
-    setOrgAssistantSearchQuery
+    setOrgAssistantSearchQuery,
+    handlePublicAssistantAdd
   } = data;
   const [selectedAssistant, setSelectedAssistant] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // const [fromOrganizationalPage,setFromOrganizationalPage] = useState(true);
 
   //Local function 
   const handleViewTeams = (team) => {
@@ -47,30 +52,42 @@ const AssistantTable = ({ data }) => {
   };
 
   const redirectToAssistant = (record) => {
-
-    const assistantName = record.name.split(" ").join("-");
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantName}/${assistantId}`;
+    const url = `/assistants/${assistantId}`;
     window.open(url, "_blank");
   };
 
   //column 
   const columns = [
     {
-      title: "Name",
+      title: "Assistant",
       dataIndex: "name",
       key: "name",
-      render: (text) => <span className="text-left">{text}</span>,
+      align: "center",
+      render: (_, { name, image_url }) => (
+        <Space size="middle" className="d-flex align-items-center">
+          <div className="assistantImageDiv">
+              {image_url ? (
+                  <img src={image_url} className="customImage" alt="avatar" />
+              ) : (
+                  <BsRobot className="customImage" />
+              )}
+          </div>
+          <div className="ms-2 text-start">{name}</div>
+        </Space>
+      ),
     },
     {
       title: "Created by",
       dataIndex: "userId",
       key: "userId",
+      align: "center",
       render: (user) => <span className="text-left">{user?.fname}</span>,
     },
     {
       title: "Teams",
       key: "teamId",
+      align: "center",
       dataIndex: "teamId",
       render: (_, { teamId: teams }) => (
         <div className="d-flex align-items-center flex-wrap gap-1">
@@ -87,6 +104,7 @@ const AssistantTable = ({ data }) => {
     {
       title: "Status",
       key: "is_active",
+      align: "center",
       dataIndex: "is_active",
       width: 100,
       render: (_, { is_active }) => (
@@ -98,6 +116,9 @@ const AssistantTable = ({ data }) => {
     {
       title: "Action",
       key: "action",
+      align: "center",
+      width: 400,
+
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -108,34 +129,29 @@ const AssistantTable = ({ data }) => {
           <Tooltip title="Activate or Deactivate">
             <Switch
               checked={record?.is_active}
-              onChange={(checked) =>
-                handleUpdateAssistant(record._id, {
-                  is_active: checked,
-                })
-              }
+              onChange={(checked) =>{
+                let fromOrganizationalPage = true
+                handleSwitchChange(record, checked, handleUpdateAssistant,fromOrganizationalPage)
+                fromOrganizationalPage = false
+
+              }}
               loading={
                 loader.ASSISTANT_UPDATING === record._id ?? false
               }
-              disabled={loader.ALL_ASSISTANT_LOADING ||
-                loader.ASSISTANT_UPDATING
-              }
+
             />
           </Tooltip>
           <Button
             onClick={() => showEditModalHandler(record)}
             icon={<AiOutlineEdit />}
-            disabled={
-              loader.ASSISTANT_LOADING
-            }
+
           >
 
           </Button>
           <Button
             onClick={() => handleViewTeams(record)}
             icon={<AiOutlineTeam />}
-            disabled={loader.ALL_ASSISTANT_LOADING ||
-              loader.ASSISTANT_UPDATING
-            }
+
           >
           </Button>
           <Button
@@ -145,11 +161,21 @@ const AssistantTable = ({ data }) => {
             loading={
               loader.ASSISTANT_DELETING === record._id
             }
-            disabled={loader.ASSISTANT_LOADING ||
-              loader.ASSISTANT_DELETING
-            }
+
           />
+          <Tooltip title="Public or Private">
+            <Switch
+              checked={record?.is_public}
+              onChange={(checked) =>{handleCheckAssistantActive(checked, record, handlePublicAssistantAdd)}
+              }
+              loading={
+                loader.ASSISTANT_UPDATING === record._id ?? false
+              }
+
+            />
+          </Tooltip>
         </Space>
+        
       ),
     },
   ];

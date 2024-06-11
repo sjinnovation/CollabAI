@@ -16,6 +16,18 @@ const FunctionDefinitionSchema = new mongoose.Schema(
       trim: true,
       minlength: [1, "Function definition cannot be empty"], // Definition must contain at least 1 character
     },
+    description: {
+      type: String,
+      required: [true, "Please provide a description for the function"],
+    },
+    purpose: {
+      type: String,
+      required: [true, "Please provide a purpose for the function"],
+    },
+    parameters: {
+      type: Object,
+      required: [true, "Parameters are necessary for the function"],
+    },
   },
   {
     timestamps: true,

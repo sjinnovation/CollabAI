@@ -79,6 +79,24 @@ const AssistantSchema = mongoose.Schema(
             type: String,
             required: false,
         },
+        is_public: {
+            type: Boolean,
+            default: false
+        },
+        
+        is_featured : {
+            type: Boolean,
+            default: false
+        },
+        is_pinned : {
+            type: Boolean,
+            default: false
+        },     
+        assistantTypes:
+        {
+            type: String,
+            required: true,
+        },
         functionCalling: {
             type: Boolean,
             required: false,

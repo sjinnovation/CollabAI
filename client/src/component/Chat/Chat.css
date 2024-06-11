@@ -41,5 +41,8 @@
     display: inline-block;
 }
 
-  
+.userIcon {
+    min-width: 32px;
+    max-width: 32px;
+}  
   

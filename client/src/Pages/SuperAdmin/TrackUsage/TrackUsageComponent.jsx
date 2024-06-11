@@ -2,6 +2,7 @@ import React from 'react'
 import { Tabs, Row, Col } from 'antd';
 import TrackUsage from './TrackUsage';
 import DailyUsage from './DailyUsage';
+import AssistantUsage from './AssistantUsage';
 
 const TrackUsageComponent = () => {
 
@@ -15,6 +16,11 @@ const TrackUsageComponent = () => {
           key: '2',
           label: 'Daily Usage',
           children: <DailyUsage/>,
+        },
+        {
+          key: '3',
+          label: 'Assistant Usage',
+          children: <AssistantUsage/>,
         },
        
       ]; 

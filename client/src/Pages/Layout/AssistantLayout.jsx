@@ -8,6 +8,7 @@ import { isLoggedIn } from "../../Utility/service";
 import AssistantSidebar from "../../component/layout/AssistantSidebar/AssistantSidebar";
 import AssistantContextProvider from "../../contexts/AssistantContext";
 import { AssistantFetchContextProvider } from "../../contexts/AssistantsFetchContext";
+import NewSidebar from "../../component/layout/NewSidebar/NewSidebar";
 
 const AssistantLayout = () => {
     const location = useLocation();
@@ -19,7 +20,7 @@ const AssistantLayout = () => {
                     <PromptTemplateContextProvider>
                         <main className="d-flex flex-nowrap">
                             {/* ----- Sidebar ----- */}
-                            <AssistantSidebar />
+                            <NewSidebar />
                             <div className="w-100 overflow-auto main-wrapper min-vh-100 d-flex flex-column">
                                 <Header />
                                 <section

@@ -108,6 +108,11 @@ const EditUser = (props) => {
     } else {
       requestBody.status = userInfo?.status;
     }
+    if (values.status) {
+        requestBody.maxTokens = values.maxusertokens;
+      } else {
+        requestBody.maxTokens = userInfo?.maxusertokens;
+      }
 
     (async () => {
       try {
@@ -134,7 +139,8 @@ const EditUser = (props) => {
     firstname: state.firstName,
     lastname: state.lastName,
     status: userInfo.status,
-    teams: userInfo?.teams?.map(team=> team._id)
+    teams: userInfo?.teams?.map(team=> team._id),
+    maxusertokens: userInfo?.maxusertokens
   };
 
   const formItems = [
@@ -166,6 +172,12 @@ const EditUser = (props) => {
       type: "text",
       disabled: true,
     },
+    {
+        name: "maxusertokens",
+        label: "Max UserToken",
+        type: "number",
+     
+      },
     {
       name: "teams",
       label: "Change Team",
@@ -201,6 +213,7 @@ const EditUser = (props) => {
           value: "inactive",
         },
       ],
+
       rules: [
         {
           required: true,
@@ -218,6 +231,8 @@ const EditUser = (props) => {
     },
   ];
 
+
+  
   return (
     <>
       <FormComponent

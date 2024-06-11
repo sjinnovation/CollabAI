@@ -119,18 +119,15 @@ const LoginForm = () => {
                 handleSubmit={handleLoginFormSubmit}
                 defaultValues={defaultValues}
                 layout="vertical"
-                className="form mb-4"
+                className="form mb-4 custom-login-form"
               />
-
-              
-              
 
               <FormButton
                 label="Forgot Password?"
                 variant="link"
                 htmlType="submit"
                 onClick={handleForgotPasswordSwitch} 
-                className="forgot-link text-decoration-non text-white"
+                className="forgot-link text-white border-0 bg-dark"
                 block="true"
               />
 

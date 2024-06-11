@@ -1,8 +1,7 @@
 import express from 'express'
 const imageRouter = express.Router();
-import {uploadImage , upload} from '../controllers/imageController.js'
+import {uploadImage , uploadS3} from '../controllers/imageController.js'
 
-imageRouter.route("/upload").post(upload.single("image"),uploadImage);
-
+imageRouter.route("/upload").post(uploadS3.single("image"),uploadImage);
 
 export default imageRouter;

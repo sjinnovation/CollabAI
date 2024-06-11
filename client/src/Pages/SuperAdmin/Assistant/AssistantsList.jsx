@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 //libraries
 import { Tabs, Button, Typography } from "antd";
 
+
 import {
   SettingOutlined,
   BuildFilled,
   UserDeleteOutlined,
+  GlobalOutlined ,
+  HeartOutlined
 } from "@ant-design/icons";
 import { Modal } from "react-bootstrap";
 import { MdOutlineAssistant } from "react-icons/md";
@@ -30,7 +33,6 @@ import {
 import {
   fetchAllAssistant,
   fetchFunctionNamesPerAssistant,
-  fetchParametersPerFunctionName,
 } from "../api/functionCallingAssistant";
 import FunctionDefinitionModel from "../Modals/FunctionDefinitionModal";
 import ValidationModel from "../Modals/ValidationModel";
@@ -39,6 +41,14 @@ import ValidationModel from "../Modals/ValidationModel";
 import useAssistantPage from "../../../Hooks/useAssistantPage";
 import { useAssistantContext } from "../../../contexts/AssistantsFetchContext";
 
+import FavoriteAssistantList from "../../../component/Assistant/FavoriteAssistantList";
+import PublicAssistantList from "../../../component/Assistant/PublicAssistantList";
+import { getFavoriteAssistant } from "../../../api/favoriteAssistant";
+
+//Hooks
+import { usePublicAssistant } from "../../../Hooks/usePublicAssistantPage";
+import { useFavoriteAssistant } from "../../../Hooks/useFavoriteAssistantPage";
+//-----Constants-----//
 const userId = getUserID();
 
 //-----Constants-----//
@@ -52,6 +62,7 @@ const initialAssistantState = {
   model: "",
   category: "",
   static_questions: [],
+  photoOption: "DEFAULT"
 };
 
 const initialFunctionCallingAssistantState = {
@@ -121,13 +132,17 @@ const AssistantsList = () => {
     personalAssistantSearchQuery,
     setPersonalAssistantSearchQuery,
     handleFetchFunctionCallingAssistants,
+    handlePublicAssistantAdd,
   } = useAssistantPage();
 
   const {
     setAllAssistants,
     allAssistants
   } = useAssistantContext();
-
+  const {
+    handleDeletePublicAssistant
+  } = usePublicAssistant();
+  const { handleDeleteFavoriteAssistant } = useFavoriteAssistant();
 
   // <---------------local-Functions------------------------->
 
@@ -242,7 +257,7 @@ function FunctionName(param1, param2) {
   const [functionDefinition, setFunctionDefinition] = useState(
     `function ${
       functionName ? functionName : "FunctionName"
-    }(${functionsParameterNames}) {
+    }(${functionsParameterNames.map(param => param.name).join(', ')}) {
     try {
         //Write your Function Logic
       
@@ -254,7 +269,7 @@ function FunctionName(param1, param2) {
   useEffect(() => {
     setFunctionDefinition(`function ${
       functionName ? functionName : "FunctionName"
-    }(${functionsParameterNames}) {
+    }(${functionsParameterNames.map(param => param.name).join(', ')}) {
     try {
         //Write your Function Logic
       
@@ -280,14 +295,6 @@ function FunctionName(param1, param2) {
     fetchFunctionNamesPerAssistant(assistantName, setAssistantFunctionNames);
   }, [assistantName]);
 
-  useEffect(() => {
-    fetchParametersPerFunctionName(
-      assistantName,
-      functionName,
-      setFunctionsParameterNames
-    );
-  }, [functionName]);
-
   return (
     <>
       <div className="mt-5">
@@ -296,12 +303,7 @@ function FunctionName(param1, param2) {
             <div className="col-8 d-flex align-items-center justify-content-between">
               <Title level={2}>Assistant Lists</Title>
             </div>
-            <div className="d-flex align-items-center justify-content-between">
-              <div className="col-2 d-flex justify-content-end">
-                <Button className="" onClick={toggleDefineFunctionsModal}>
-                  Define Functions
-                </Button>
-              </div>
+            <div className="d-flex align-items-center justify-content-end">
               <div className="col-2 d-flex justify-content-end">
                 <Button className="" onClick={handleClose}>
                   + Assistant
@@ -322,9 +324,32 @@ function FunctionName(param1, param2) {
               updateLoader,
               searchPersonalAssistants,
               personalAssistantSearchQuery,
-              setPersonalAssistantSearchQuery
+              setPersonalAssistantSearchQuery,
+              handlePublicAssistantAdd
             })}
-            {renderTabPane("2", "Organizational Assistants", AssistantTable, {
+            {renderTabPane("2", "Public Assistants", PublicAssistantList, {
+              adminUserAssistants,
+              loader,
+              handleDeleteAssistant,
+              handleUpdateAssistant,
+              showEditModalHandler,
+              handleFetchUserCreatedAssistants,
+              handlePublicAssistantAdd,
+              getFavoriteAssistant,
+              handleDeletePublicAssistant
+            })}
+            {renderTabPane("3", "Favorite Assistants", FavoriteAssistantList, {
+              adminUserAssistants,
+              loader,
+              handleDeleteAssistant,
+              handleUpdateAssistant,
+              showEditModalHandler,
+              handleFetchUserCreatedAssistants,
+              handlePublicAssistantAdd,
+              getFavoriteAssistant,
+              handleDeleteFavoriteAssistant
+            })}
+            {renderTabPane("4", "Organizational Assistants", AssistantTable, {
               assistants,
               setAssistants,
               loader,
@@ -337,11 +362,12 @@ function FunctionName(param1, param2) {
               updateLoader,
               searchOrganizationalAssistants,
               orgAssistantSearchQuery,
-              setOrgAssistantSearchQuery
+              setOrgAssistantSearchQuery,
+              handlePublicAssistantAdd
             })}
-            {renderTabPane(
-              "3",
-              "Function Calling Assistants",
+            {/* {renderTabPane(
+              "5",
+              "Function Definitions",
               FunctionCallingAssistantTable,
               {
                 functionCallingAssistants,
@@ -353,15 +379,16 @@ function FunctionName(param1, param2) {
                 handleFetchFunctionCallingAssistants,
                 updateLoader,
                 setActiveKey,
+                toggleDefineFunctionsModal,
               }
-            )}
+            )} */}
 
-            {renderTabPane("4", "User Assistants", UserAssistantList, {
+            {renderTabPane("6", "User Assistants", UserAssistantList, {
               userAssistants,
               loader,
               handleDeleteAssistant,
             })}
-             {renderTabPane("5", "Settings", AssistantSettings, {
+             {renderTabPane("7", "Settings", AssistantSettings, {
               loader,
               teamList,
               handleFetchTeams,
@@ -397,15 +424,11 @@ function FunctionName(param1, param2) {
           data={{
             showDefineFunctionsModal,
             toggleDefineFunctionsModal,
-            handleAssistantNameChange,
-            assistantName,
-            allAssistants,
             functionName,
             handleFunctionNameChange,
-            assistantFunctionNames,
             functionsParameterNames,
+            setFunctionsParameterNames,
             showDemo,
-            toggleDemo,
             demoFunctionDefinition,
             functionDefinition,
             handleFunctionDefinitionChange,
@@ -467,9 +490,13 @@ const IconComponent = ({ label }) => {
   switch (label) {
     case "My Assistants":
       return <MdOutlineAssistant className="me-2" />;
+    case "Public Assistants":
+        return <GlobalOutlined className="me-2"/> ;
+    case "Favorite Assistants":
+      return <HeartOutlined  className="me-2" />;  
     case "Organizational Assistants":
       return <BuildFilled className="me-2" />;
-    case "Function Calling Assistants":
+    case "Function Definitions":
       return <BuildFilled className="me-2" />;
     case "User Assistants":
       return <UserDeleteOutlined className="me-2" />;

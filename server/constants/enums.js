@@ -31,7 +31,9 @@ export const PromptMessages = {
 	INTERNAL_SERVER_ERROR: 'Internal server error',
 	BAD_REQUEST_OPEN_API: 'Invalid request was made to OpenAI',
 	CHAT_CREATION_SUCCESS: 'Chat created successfully.',
+	CHAT_EDIT_SUCCESS: 'Chat edited successfully.',
 	CHAT_CREATION_ERROR: 'Failed to create chat, please try again later.',
+	CHAT_EDIT_ERROR: 'Failed to edit chat, please try again later.',
 };
 
 export const ImageMessages = {
@@ -89,8 +91,10 @@ export const UserMessages = {
 	ALL_USER_PROMPTS_FETCHED_SUCCESSFULLY:
 		'All user prompts fetched successfully',
 	UPDATED_USER_STATUS_SUCCESSFULLY: 'Updated user status successfully',
+	UPDATED_USER_PREFERENCE_SUCCESSFULLY: 'Updated user preference successfully',
 	UNAUTHORIZED_TO_UPDATE: 'You are not authorized to update user status',
 	ALL_USERS_DELETED_SUCCESSFULLY: 'All users deleted successfully',
+    MAX_TOKEN_LIMIT : "User exhausted the  max token limit "
 };
 
 export const CategoryMessages = {
@@ -137,6 +141,25 @@ export const TemplateMessages = {
 	TEMPLATE_CREATION_FAILED: 'Failed to create template',
 };
 
+export const CommandsCategoryMessages = {
+	COMMANDS_CATEGORY_NAME_EMPTY: 'Commands category name is empty',
+	CATEGORY_ALREADY_EXISTS: 'Category name already exists',
+	CATEGORY_ADDED_SUCCESSFULLY: 'Category added successfully',
+	CATEGORIES_FETCHED_SUCCESSFULLY: 'Categories fetched successfully',
+};
+
+export const TaskCommandMessages = {
+	COMMANDS_REQUIRED: 'Label and icon are required for the task command',
+	COMMANDS_CATEGORY_NAME_REQUIRED: 'Category name is required for the task command',
+	COMMAND_ALREADY_EXISTS: 'Task command already exists',
+	CATEGORY_NOT_FOUND: 'Commands category not found',
+	TASK_COMMAND_CREATED_SUCCESSFULLY: 'Task command created successfully',
+	TASK_COMMAND_NOT_FOUND: 'Task command not found',
+	TASK_COMMAND_UPDATED_SUCCESSFULLY: 'Task command updated successfully',
+	TASK_COMMAND_DELETED_SUCCESSFULLY: 'Task command deleted successfully',
+	FETCH_SUCCESSFUL: 'Task commands fetched successfully',
+  };
+
 export const TeamMessages = {
 	TITLE_REQUIRED: 'Team Title is required',
 	TITLE_ALREADY_EXISTS: 'This title already exists',
@@ -156,6 +179,20 @@ export const ConfigMessages = {
 	GEMINI_MODEL_SAVED: 'Gemini AI Model saved successfully',
 	GEMINI_API_KEY_UPDATED: 'Gemini key updated successfully',
 	GEMINI_API_KEY_SAVED: 'Gemini key saved successfully',
+    GEMINI_TEMPERATURE_UPDATED: 'Gemini temperature updated successfully',
+    GEMINI_TEMPERATURE_SAVED: 'Gemini temperature saved successfully',
+
+	GEMINI_TOP_K_UPDATED: 'Gemini top k value updated successfully',
+	GEMINI_TOP_K_SAVED: 'Gemini top k value saved successfully',
+	GEMINI_TOP_P_UPDATED: 'Gemini top p value updated successfully',
+	GEMINI_TOP_P_SAVED: 'Gemini top p value saved successfully',
+	GEMINI_MAX_OUTPUT_TOKENS_UPDATED: 'Gemini max output tokens updated successfully',
+	GEMINI_MAX_OUTPUT_TOKENS_SAVED: 'Gemini max output tokens saved successfully',
+
+    CLAUDE_AI_TEMPERATURE_UPDATED: 'Claude AI temperature updated successfully',
+    CLAUDE_AI_TEMPERATURE_SAVED: 'Claude AI temperature saved successfully',
+	CLAUDE_AI_MAX_TOKEN_UPDATED: 'Claude AI max token updated successfully',
+	CLAUDE_AI_MAX_TOKEN_SAVED: 'Claude AI max token saved successfully',
 
 	CLAUDE_MODEL_UPDATED: 'Claude AI Model updated successfully',
 	CLAUDE_MODEL_SAVED: 'Claude AI Model saved successfully',
@@ -165,6 +202,17 @@ export const ConfigMessages = {
 	THRESHOLD_VALUE_FETCHED: 'Threshold value fetched successfully',
 	THRESHOLD_VALUE_UPDATED: 'Threshold value updated successfully',
 	THRESHOLD_VALUE_SAVED: 'Threshold value saved successfully',
+
+    OPENAI_TEMPERATURE_SAVED : 'OpenAI temperature saved successfully',
+    OPENAI_TEMPERATURE_UPDATED: 'OpenAI temperature updated successfully',
+	OPENAI_MAX_TOKENS_UPDATED: 'OpenAI max tokens updated successfully',
+	OPENAI_MAX_TOKENS_SAVED: 'OpenAI max tokens saved successfully',
+	OPENAI_FREQUENCY_PENALTY_UPDATED: 'OpenAI frequency penalty updated successfully',
+	OPENAI_FREQUENCY_PENALTY_SAVED: 'OpenAI frequency penalty saved successfully',
+	OPENAI_TOP_P_UPDATED: 'OpenAI top p saved successfully',
+    OPENAI_TOP_P_SAVED:'OpenAI top p updated successfully',
+	OPENAI_PRESENCE_PENALTY_UPDATED: 'OpenAI presence penalty updated successfully',
+	OPENAI_PRESENCE_PENALTY_SAVED: 'OpenAI presence penalty saved successfully',
 	OPENAI_KEY_SAVED: 'openai key saved successfully',
 	OPENAI_KEY_UPDATED: 'openai key updated successfully',
 	OPENAI_KEY_FETCHED: 'openai key fetched successfully',
@@ -173,6 +221,8 @@ export const ConfigMessages = {
 	UNAUTHORIZED_TO_ADD_KEY: 'You are not authorized to add api key',
 	TEMPERATURE_CANNOT_BE_EMPTY: 'Temperature cannot be empty',
 	TEMPERATURE_UPDATED: 'Temperature updated successfully',
+    MAX_TOKEN_UPDATED : " Max user Token updated successfully",
+    MAX_TOKEN_SAVED: ' Max user Token saved successfully',
 	TEMPERATURE_FETCHED: 'Temperature fetched successfully',
 	TEMPERATURE_SAVED: 'Temperature saved successfully',
 	UNAUTHORIZED_TO_MODIFY_TEMPERATURE:
@@ -235,6 +285,21 @@ export const AssistantMessages = {
 	ASSISTANT_THREAD_ID_REQUIRED: 'Thread id is required.',
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
 	USER_DOES_NOT_EXIST: 'User does not exist.',
+	ASSISTANT_TYPE_EXIST: 'Assistant Type Already Exist',
+	ASSISTANT_TYPE_CREATED_SUCCESSFULLY: 'Assistant Type Created Successfully',
+	ASSISTANT_TYPE_CREATION_FAILED: 'Assistant Type Creation failed',
+
+	ASSISTANT_TYPE_NOT_FOUND: 'Assistant type not found',
+	ASSISTANT_TYPE_FETCH_SUCCESS: 'Assistant type Fetched Successfully',
+	ASSISTANT_TYPE_FETCH_FAILED: 'Assistant type Fetching Failed',
+
+	ASSISTANT_TYPE_UPDATE_SUCCESS: 'Assistant type Updated successfully',
+	ASSISTANT_TYPE_UPDATE_FAILED: 'Assistant type Updating Failed',
+
+	ASSISTANT_TYPE_DELETE_SUCCESS: 'Assistant type Deleted successfully',
+	ASSISTANT_TYPE_DELETE_FAILED: 'Assistant type Deletion Failed',
+
+
 	ASSISTANT_NOT_FOUND_ON_OPENAI:
 		'This assistant is not available on the OpenAI platform. Please delete this assistant and create a new one if necessary.',
 	ASSISTANT_FILE_NOT_FOUND_MESSAGE: 'File not found in openai.',
@@ -251,6 +316,33 @@ export const AssistantThreadMessages = {
 	SOMETHING_WENT_WRONG: 'Something went wrong',
 };
 
+export const PublicAssistantMessages = {
+	DOCUMENT_ALREADY_EXIST_IN_PUBLIC: 'Assistant already exists in Public List',
+	DELETED_SUCCESSFULLY_FROM_PUBLIC: 'Assistant Successfully Removed From Public List',
+	ADDED_SUCCESSFULLY: 'Assistant Added Successfully into Public List',
+	PUBLIC_ASSISTANT_FETCH_SUCCESSFULLY: 'Public Assistant  fetched successfully',
+	PUBLIC_ASSISTANT_UPDATED_SUCCESSFULLY: 'Updated Public Assistant',
+
+
+};
+export const FavoriteAssistantMessages = {
+	DOCUMENT_ALREADY_EXIST_IN_FAVORITE: 'Assistant already exists in Favorite List',
+	DELETED_SUCCESSFULLY_FROM_OWN_FAVORITE: 'Assistant Removed from Favorite List',
+	ADDED_IN_FAVORITE_SUCCESSFULLY: 'Assistant Added Successfully into Favorite List',
+	FAVORITE_ASSISTANT_FETCH_SUCCESSFULLY: 'Favorite Assistant  fetched successfully',
+	FAVORITE_ASSISTANT_UPDATED_SUCCESSFULLY: 'Updated Favorite Assistant',
+
+};
+export const PinnedAssistantMessages = {
+	ALREADY_EXIST_IN_PINNED_ASSISTANT_LIST_OF_USER: 'Assistant already exists in Pinned List',
+	DELETED_SUCCESSFULLY_FROM_PINNED_ASSISTANT_LIST : 'Assistant Removed from Pinned List',
+	ADDED_IN_PINNED_ASSISTANT_LIST_SUCCESSFULLY: 'Assistant added into Pinned List',
+	PINNED_ASSISTANT_FETCHED_SUCCESSFULLY: 'Pinned Assistant fetched successfully',
+	PINNED_ASSISTANT_UPDATED_SUCCESSFULLY: 'Updated Pinned Assistant',
+
+};
+
+
 export const PostGreSqlDbMessages = {
 	COMPANY_CREATED_SUCCESS: 'Data created successfully',
 	COMPANY_UPDATED_SUCCESS: 'Data updated successfully',
@@ -263,16 +355,35 @@ export const TrackUsageMessage = {
 		'All track usage data fetched successfully.',
 };
 
+/*
+ [TODO]: these values should be made dynamic by adding them into config collection to be applied as default configs
+ [** concern : default max token was set to 200, which is too low, caused users to face issues with the response]
+*/
+export const openAiConfig = {
+	DEFAULT_MAX_TOKEN: 4096,
+	DEFAULT_TEMPERATURE: 0.7,
+	DEFAULT_TOP_P: 0.1,
+	DEFAULT_FREQUENCY_PENALTY: 0.8,
+    DEFAULT_PRESENCE_PENALTY: 0.9
+};
+
 export const GeminiConfig = {
-	DEFAULT_MAX_TOKEN: 200,
+	DEFAULT_MAX_TOKEN: 2048,
 	DEFAULT_TEMPERATURE: 0.7,
 	DEFAULT_TOP_P: 0.1,
 	DEFAULT_TOP_K: 16,
 };
 
+
 export const ClaudeConfig = {
-	DEFAULT_MAX_TOKEN: 704,
+	DEFAULT_MAX_TOKEN: 4096,
 	DEFAULT_TEMPERATURE: 0.7,
 	DEFAULT_TOP_P: 0.1,
 	DEFAULT_TOP_K: 16,
 };
+
+export const AssistantTrackUsage = {
+	ASSISTANT_USAGE_CREATED_SUCCESSFULLY: "Assistant usage successfully added",
+	ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY: "Assistant track usage data fetched successfully.",
+	ALL_USERS_FETCHED_FOR_ASSISTANT: "All user fetched for an assistant"
+}

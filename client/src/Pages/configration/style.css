@@ -1,0 +1,12 @@
+/* styles.css */
+
+.scrollable-list {
+    max-height: 61vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.editConfigInputField, 
+.editConfigSelectField {
+    width: 290px;
+}

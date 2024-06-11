@@ -80,6 +80,28 @@ export const getAllTrackUsageMonthly = async (req, res, next) => {
           }
         },
         {
+          $lookup: {
+            from: "users", // replace with your actual users collection name
+            localField: "_id.user_id",
+            foreignField: "_id", // replace with the actual field name in users collection
+            as: "user_info"
+          }
+        },
+        {
+          $unwind: "$user_info"
+        },
+        {
+          $project: {
+            _id: 1,
+            total_tokens: 1,
+            total_token_cost: 1,
+            count: 1,
+            "user_info.fname": 1,
+            "user_info.lname": 1,
+            "user_info.email": 1
+          }
+        },
+        {
           $sort: { '_id.day': 1 }
         }
       ])
@@ -176,6 +198,28 @@ export const getAllTrackUsageDaily = async (req, res, next) => {
             total_tokens: { $sum: '$total_tokens' },
             total_token_cost: { $sum: '$total_token_cost' },
             count: { $sum: 1 }
+          }
+        },
+        {
+          $lookup: {
+            from: "users", // replace with your actual users collection name
+            localField: "_id.user_id",
+            foreignField: "_id", // replace with the actual field name in users collection
+            as: "user_info"
+          }
+        },
+        {
+          $unwind: "$user_info"
+        },
+        {
+          $project: {
+            _id: 1,
+            total_tokens: 1,
+            total_token_cost: 1,
+            count: 1,
+            "user_info.fname": 1,
+            "user_info.lname": 1,
+            "user_info.email": 1
           }
         },
         {

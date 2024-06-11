@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { message } from "antd";
+import { message,Upload } from "antd";
 import { createAssistantWithFiles, updateAssistantWithDetailsAndFiles } from "../api/assistant";
 import {
   retrievalFileTypes,
@@ -9,6 +9,8 @@ import {
 const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [countTotalFile, setCountTotalFile] = useState(0)
+  const [totalFileList,setTotalFileList] = useState([]);
 
   useEffect(() => {
     const initialFiles = getInitialFiles();
@@ -19,7 +21,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     }));
     setFileList(fileListFormatted);
   }, [getInitialFiles]);
-    
+
   const handleCreateOrUpdateAssistantWithFiles = async (
     formData,
     editMode,
@@ -48,15 +50,22 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
 
   const handleRemoveFile = (file) => {
     const newFileList = fileList.filter((f) => f.uid !== file.uid);
+    const newTotalFileList = totalFileList.filter((f) => f.uid !== file.uid);
+
     setFileList(newFileList);
+    setTotalFileList(newTotalFileList);
 
     if (file.uid.startsWith("existing")) {
       const index = parseInt(file.uid.split("-")[1], 10);
       onDeleteFile(index);
     }
   };
-  const handleAddFile = (file) => {
-    const fileExtension = `.${file.name.split(".").pop().toLowerCase()}`; 
+  const handleAddFile = (file, fileList) => {
+    if (countTotalFile > 20) {
+      return false;
+
+    }
+    const fileExtension = `.${file.name.split(".").pop().toLowerCase()}`;
     let allowedFileTypes = [];
 
     const flatSelectedTools = Array.isArray(selectedTools)
@@ -80,8 +89,17 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
       message.error(`Unsupported file type: ${file.name} select the files that are supported for your tools enabled.`);
       return false;
     }
+    const existingFilenames = totalFileList.map(f => f.name);
+    if (existingFilenames.includes(file.name)) {
+      message.error(`The file "${file.name}" already exists. Please upload a file with a unique name.`);
+      return Upload.LIST_IGNORE;
+    }
+    else{
+      setFileList((prevList) => [...prevList, file]);
+      setTotalFileList((prevList) => [...prevList, file]);
 
-    setFileList((prevList) => [...prevList, file]);
+    }
+
     return false;
   };
 
@@ -94,6 +112,8 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     fileList,
     setFileList,
     isUploading,
+    setCountTotalFile,
+    countTotalFile
   };
 };
 

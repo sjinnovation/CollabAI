@@ -2,10 +2,11 @@ import DalleConfig from './DalleConfig';
 import OpenAIConfig from './OpenAIConfig';
 import GeminiConfig from './GeminiAIConfig';
 import ClaudeAIConfig from './ClaudeAIConfig';
+import UsersTokenConfig from './UsersTokenConfig'
 import { Tabs } from 'antd';
 
 const Configration = () => {
-	const { TabPane } = Tabs;
+  const { TabPane } = Tabs;
 
 	return (
 		<div className="m-5">
@@ -21,6 +22,9 @@ const Configration = () => {
 				</TabPane>
 				<TabPane tab="Claude Settings" key="claude">
 					<ClaudeAIConfig />
+				</TabPane>
+                <TabPane tab="Max Token Configuration Settings" key="maxtoken">
+					<UsersTokenConfig />
 				</TabPane>
 			</Tabs>
 		</div>

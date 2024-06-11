@@ -1,13 +1,13 @@
 import { Form, Checkbox } from 'antd';
 
-const FormCheckbox = ({ name, label, rules, className }) => (
+const FormCheckbox = ({ name, label, rules, className, labelClassName = ''  }) => (
   <Form.Item
     name={name}
     valuePropName="checked"
     rules={rules}
     className={className}
   >
-    <Checkbox> {label} </Checkbox>
+    <Checkbox className={labelClassName}>{label}</Checkbox>
   </Form.Item>
 );
 

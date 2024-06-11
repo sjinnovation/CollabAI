@@ -12,7 +12,7 @@ import Error from "../../component/Prompt/Error";
 import Loading from "../../component/Prompt/Loading";
 import SvgComponent from "../../component/Prompt/SvgComponent";
 import { axiosOpen, axiosSecureInstance } from "../../api/axios";
-import { getUserID ,getUserRole, getUserEmail } from "../../Utility/service";
+import { getUserID, getUserRole, getUserEmail } from "../../Utility/service";
 import { useNavigate, useParams } from "react-router-dom";
 import { SidebarContext } from "../../contexts/SidebarContext";
 import { toast } from "react-hot-toast";
@@ -24,13 +24,13 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import AssistantChatLoading from "./AssistantChatLoading";
 import { FaArrowDown } from "react-icons/fa";
 import { AssistantContext } from "../../contexts/AssistantContext";
-import IntroSection from "../../component/Prompt/Introsection"
+import IntroSection from "../../component/Prompt/Introsection";
 
 const initialChatMetaData = {
   has_more: false,
   first_id: false,
   last_id: false,
-}
+};
 
 const Assistants = () => {
   const { assistant_id, assistant_name, thread_id } = useParams();
@@ -44,7 +44,7 @@ const Assistants = () => {
   const [chatMetaData, setChatMetaData] = useState(initialChatMetaData);
   const [err, setErr] = useState(false);
   const [isFirstMessage, setIsFirstMessage] = useState(false);
-  const [assistantData, setAssistantData] = useState(null);   
+  const [assistantData, setAssistantData] = useState(null);
   const [initialConversation, setInitialConversation] = useState(true);
   // loading states
   const [responseFromAPI, setReponseFromAPI] = useState(false);
@@ -59,7 +59,7 @@ const Assistants = () => {
 
   const { setShowMenu } = useContext(SidebarContext);
   const { setTriggerUpdateThreads } = useContext(AssistantContext);
- 
+
   // ---------- hook variables ---------
   const chatLogWrapperRef = useRef(null);
   const navigate = useNavigate();
@@ -85,22 +85,23 @@ const Assistants = () => {
   // ---------- side effect ---------
 
   useEffect(() => {
-    console.log('[MOUNT] assistants')
-    if(thread_id && !isFirstMessage) {
+    console.log("[MOUNT] assistants");
+    if (thread_id && !isFirstMessage) {
       setChatLog([]);
       setChatMetaData(initialChatMetaData);
       handleFetchAssistantChats(false, false, thread_id);
-      setInitialConversation(false)
-    } else if(thread_id && isFirstMessage) {
+      setInitialConversation(false);
+    } else if (thread_id && isFirstMessage) {
       setIsFirstMessage(false);
-    } 
-    else if(!thread_id) {
+    } else if (!thread_id) {
       setChatLog([]);
       setChatMetaData(initialChatMetaData);
       setIsFirstMessage(false);
     }
-    
-    return () => { console.log('[UNMOUNT] assistants')};
+
+    return () => {
+      console.log("[UNMOUNT] assistants");
+    };
   }, [thread_id]);
 
   const chatLogMemo = useMemo(() => [...chatLog], [chatLog]);
@@ -131,9 +132,13 @@ const Assistants = () => {
   };
 
   // --------- api calls ---------
-   // [GET] - @desc: handles fetching all the chats for the assistant and current thread
-  const handleFetchAssistantChats = async (limit = false, after = false, threadId) => {
-    if(!threadId) return;
+  // [GET] - @desc: handles fetching all the chats for the assistant and current thread
+  const handleFetchAssistantChats = async (
+    limit = false,
+    after = false,
+    threadId
+  ) => {
+    if (!threadId) return;
 
     let query = `thread_id=${threadId}&limit=${limit || 30}`;
 
@@ -171,8 +176,8 @@ const Assistants = () => {
       setIsMessageFetching(false);
     }
   };
-  //get assistant converstaion starter on mount 
-   const fetchAssistantData = async () => {
+  //get assistant converstaion starter on mount
+  const fetchAssistantData = async () => {
     try {
       const response = await axiosSecureInstance.get(
         `api/assistants/${assistant_id}/info`
@@ -187,8 +192,6 @@ const Assistants = () => {
   useEffect(() => {
     fetchAssistantData();
   }, []);
-
-
 
   // [POST] - @desc: handles new chat creation for the assistant
   const handleSubmit = async (e) => {
@@ -207,9 +210,9 @@ const Assistants = () => {
             let isFistThreadMessage = false;
             const reqBody = {
               question: userPrompt,
-            }
+            };
 
-            if(thread_id) {
+            if (thread_id) {
               reqBody.thread_id = thread_id;
             } else {
               isFistThreadMessage = true;
@@ -221,7 +224,7 @@ const Assistants = () => {
             );
             const data = response.data.response;
 
-            if(data) {
+            if (data) {
               setChatLog([
                 {
                   chatPrompt: userPrompt,
@@ -232,7 +235,7 @@ const Assistants = () => {
               ]);
               e.target.blur();
               // updating threads, if this is the first message for this thread.
-              if(isFistThreadMessage) {
+              if (isFistThreadMessage) {
                 setIsFirstMessage(true);
                 setTriggerUpdateThreads(true);
                 navigate(`${response.data.thread_id}`);
@@ -252,7 +255,7 @@ const Assistants = () => {
             });
           } finally {
             setReponseFromAPI(false);
-            
+
             scrollToBottom();
           }
         }

@@ -79,7 +79,13 @@ const userSchema = new mongoose.Schema(
 				type: mongoose.Schema.Types.ObjectId,
 				ref: 'Teams'
 			}
-		]
+		],
+		userPreferences: {
+			type: String,
+		},
+		desiredAiResponse: {
+			type: String,
+		}
 	},
 	{ timestamps: true }
 );

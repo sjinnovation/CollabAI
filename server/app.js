@@ -13,16 +13,25 @@ import registeredCompanies from "./service/cronEmailService.js";
 import feedbackRouter from "./routers/feedbackRoute.js";
 import templateRouter from "./routers/templateRoute.js";
 import categoryRouter from "./routers/categoryRoute.js";
+import commandsCategoryRouter from "./routers/commandsCategoryRoute.js";
 import imageRouter from "./routers/imageRoute.js";
 import meetingTypeRouter from "./routers/meetingTypeRoute.js";
 import assistantRouter from "./routers/assistantRoutes.js";
 import assistantThreadRouter from './routers/assistantThreadRoutes.js';
+import taskCommandRouter from "./routers/taskCommandRoutes.js";
 import teamRouter from "./routers/teamRoutes.js";
 import organizationRouter from "./routers/organizationRoutes.js";
 import { errorLogger } from "./middlewares/errorMiddleware.js";
 import { initSetup } from './controllers/initController.js'
 import trackUsageRouter from "./routers/trackUsageRoute.js";
+import userPreferenceRouter from "./routers/userModalPreferenceRoute.js"
 
+import publicRouter from "./routers/publicAssistantRoute.js";
+import favoriteRouter from "./routers/favouriteAssistantRoute.js";
+
+import assistantTypesRoute from "./routers/assistantTypesRoutes.js";
+import pinnedRouter from "./routers/pinnedAssistantRoutes.js";
+import assistantUsageRoute from "./routers/assistantUsageRoutes.js";
 const app = express();
 const server = http.createServer(app);
 
@@ -48,10 +57,22 @@ app.use("/api/template", templateRouter);
 app.use("/api/meetingTypes", meetingTypeRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/assistants", assistantRouter);
+
+app.use("/api/assistants/public", publicRouter);
+app.use("/api/assistants/favourite", favoriteRouter);
+app.use("/api/assistants/pinned", pinnedRouter);
+
+app.use("/api/commandsCategory", commandsCategoryRouter);
+app.use("/api/taskCommands", taskCommandRouter);
 app.use('/api/assistants/threads', assistantThreadRouter);
 app.use("/api/teams", teamRouter);
 app.use("/api/organizations", organizationRouter);
 app.use("/api/usage", trackUsageRouter);
+app.use("/api/usersPreference", userPreferenceRouter)
+
+app.use("/api/assistants/types",assistantTypesRoute);
+app.use("/api/assistants/usage",assistantUsageRoute);
+
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));

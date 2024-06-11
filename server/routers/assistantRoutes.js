@@ -24,6 +24,7 @@ import {
   updateAssistantDataWithFile,
   getAllAssistantsByPagination,
   downloadAssistantFile,
+  getAllFunctionDefinitions,
 } from "../controllers/assistantController.js";
 import multer from 'multer';
 import authenticateUser from '../middlewares/login.js';
@@ -38,36 +39,36 @@ const storage = multer.diskStorage({
       cb(null, uniqueFilename);
     },
   });
+
 const upload = multer({ storage: storage });
 
 const router = express.Router();
 
 //  router.post("/testing",tesingfunction)
-router.route('/').get(getAllAssistants).post(upload.array('files',5),createAssistant);
-// router.post("/createassistant", upload.array('files', 5), createAssistant);
+router.route('/').get(getAllAssistants).post(upload.fields([{ name: 'files', maxCount: 21 }, { name: 'avatar', maxCount: 1 }]) , createAssistant);
 router.route('/users').get(authenticateUser, getAllUserAssignedAssistants);
 router.route('/all').get(authenticateUser, getAllAssistantsByPagination);
-router.post("/createassistant", upload.array('files', 5), createAssistant);
-router.patch("/updatedatawithfile/:assistant_id/",upload.array('files', 5),updateAssistantDataWithFile);
+router.patch("/updatedatawithfile/:assistant_id/",upload.fields([{ name: 'files', maxCount: 21 }, { name: 'avatar', maxCount: 1 }]) , updateAssistantDataWithFile);
 router.get("/users/stats",authenticateUser,getAllUserAssistantStats);
 router.get("/download/:file_id", authenticateUser, downloadAssistantFile)
-router.post("/:assistant_id/files", upload.array('files', 5), updateAssistantFiles);
+router.post("/:assistant_id/files", upload.array('files', 21), updateAssistantFiles);
 router.get("/:assistant_id/chats", authenticateUser, getChatPerAssistant);
 router.post("/:assistant_id/chats", authenticateUser, createChatPerAssistant);
 router.patch("/:assistant_id/teams", assignTeamToAssistant);
 router.route("/:assistant_id").patch(authenticateUser, updateAssistant).delete(authenticateUser, deleteAssistant);
 ///user/stats/
-router.get("/users/created/:userId",getAssistantsCreatedByUser);
+router.get("/users/created/:userId", getAssistantsCreatedByUser);
 router.get("/:id/info", getAssistantById);
 
 //Function calling routes
-router.post("/addFunctionDefinition", addFunctionDefinition);
+router.post("/function-definition", addFunctionDefinition);
 router.post("/fetchFunctionNamesPerAssistant", fetchFunctionNamesPerAssistant);
 router.post(
   "/fetchfunctionsParametersPerFunctionName",
   functionsParametersPerFunctionName
 );
 router.get("/getAllFunctionCallingAssistants", getAllFunctionCallingAssistants);
+router.get("/function-definitions", getAllFunctionDefinitions);
 router.post("/validateFunctionDefinition", validateFunctionDefinition);
 router.get(
   "/users/createdFunctionCalling",

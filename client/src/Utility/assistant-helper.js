@@ -17,3 +17,10 @@ export const showDeleteConfirm = (assistantId, assistantName, handleDeleteAssist
     },
   });
 };
+
+// Function to redirect to assistant details pages
+export const redirectToAssistant = (record) => {
+    const assistantId = record.assistant_id;
+    const url = `/assistants/${assistantId}`;
+    window.open(url, "_blank");
+  };

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Typography } from 'antd';
 import { DatePicker } from 'antd';
-import { getUserID, getUserRole } from '../../Utility/service';
-import { getDailyUsageReport, getMonthlyUsageReport } from '../../api/track-usage-api-functions';
+import { getUserID } from '../../Utility/service';
+import { getMonthlyUsageReport } from '../../api/track-usage-api-functions';
 import UserTrackUsageTable from './TrackUsageComponent/UserTrackUsageTable';
-import moment from 'moment';
 import './Usage.css'
 
 const { MonthPicker } = DatePicker;
@@ -12,7 +11,6 @@ const { MonthPicker } = DatePicker;
 const Usage = () => {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [loading, setLoading] = useState(false)
-  const [usageReport, setUsageReport] = useState([]);
   const [totalUsageReport, setTotalUsageReport] = useState({})
   const [aggregatedData, setAggregatedData] = useState([])
 
@@ -34,14 +32,28 @@ const Usage = () => {
         aggregatedDataTotal
       } = await getMonthlyUsageReport(userid, selectedMonth)
       if (success) {
-
+        let result = [];
+        aggregatedData.reduce((res, value) => {
+          if (!res[value._id.user_id]) {
+            res[value._id.user_id] = {
+              _id: value._id,
+              total_tokens: 0,
+              total_token_cost: 0,
+              count: 0,
+              user_info: value.user_info,
+            };
+            result.push(res[value._id.user_id]);
+          }
+          res[value._id.user_id].total_tokens += value.total_tokens;
+          res[value._id.user_id].total_token_cost += value.total_token_cost;
+          res[value._id.user_id].count += value.count;
+          return res;
+        }, {});
         setTotalUsageReport(aggregatedDataTotal)
-        setUsageReport(trackUsage)
-        setAggregatedData(aggregatedData)
+        setAggregatedData(result)
         setLoading(false)
       } else {
         setTotalUsageReport({})
-        setUsageReport([])
         setAggregatedData([])
         setLoading(false)
       }
@@ -58,27 +70,55 @@ const Usage = () => {
 
   const columns = [
     {
-      title: 'Date',
-      dataIndex: '_id',
-      render: day => <p>{day?.day}</p>
+      title: "Month",
+      dataIndex: "_id",
+      render: (_id) => {
+        const date = new Date(_id.year, _id.month - 1);
+        return <p>{date.toLocaleString('default', { month: 'long' })}</p>;
+      },
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      }
     },
     {
       title: 'Prompt Count',
       dataIndex: 'count',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
     {
       title: 'Total Token',
       dataIndex: 'total_tokens',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
     {
       title: 'Cost',
       dataIndex: 'total_token_cost',
-      render: value => Number(value).toFixed(5)
+      render: (value) => <p>${Number(value).toFixed(5)}</p>,
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
-
   ]
-
-
 
   return (
     <div>
@@ -88,8 +128,16 @@ const Usage = () => {
           onChange={handleMonthChange}
         />
         <div className='usage-report-container'>
-          <p>Total Token: {totalUsageReport?.total_tokens}</p>
-          <p>Total Cost: $ {totalUsageReport?.total_cost}</p>
+          <Typography><b>Total Token: {totalUsageReport?.total_tokens ? totalUsageReport?.total_tokens : 0 }</b></Typography>
+          <Typography>
+            <b>
+              Total Cost: $
+              {totalUsageReport && !isNaN(Number(totalUsageReport.total_cost))
+                ? Number(totalUsageReport.total_cost).toFixed(5)
+                : "0.00000"
+              }
+            </b>
+          </Typography>
         </div>
       </div>
       <div className="track-usage-table">

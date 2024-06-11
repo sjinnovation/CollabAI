@@ -1,0 +1,22 @@
+.assistants-header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap; /* Allows content to wrap onto the next line if needed */
+  }
+  
+  .assistant-name {
+    max-width: 100%; /* Sets maximum width of the assistant's name */
+    white-space: nowrap; /* Prevents the name from wrapping within the span */
+    overflow: hidden; /* Hides text that overflows the max-width */
+    text-overflow: ellipsis; /* Adds an ellipsis to indicate hidden text */
+    align-items: center;
+
+  }
+  
+  .assistant-suffix {
+    flex-shrink: 0; /* Prevents the suffix from shrinking below its natural size */
+    white-space: nowrap; /* Keeps "assistant's threads" on one line */
+    align-items: center;
+
+  }
+  

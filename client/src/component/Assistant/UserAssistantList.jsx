@@ -7,7 +7,7 @@ import {
   Tag,
   Modal,
 } from "antd";
-
+import "./Assistant.css";
 //--------------helper ------------//
 import { showDeleteConfirm } from "../../Utility/assistant-helper"
 
@@ -20,8 +20,9 @@ import {
 //-------api----------//
 import { fetchAssistantsCreatedByUser } from "../../api/assistant"
 import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/DebouncedSearchInput";
-
-
+import { BsRobot } from "react-icons/bs";
+//-----Helper----------//
+import {  redirectToAssistant} from "../../Utility/assistant-helper"
 
 const UserAssistantList = ({ data }) => {
   const {
@@ -41,9 +42,8 @@ const UserAssistantList = ({ data }) => {
 
   const redirectToAssistant = (record) => {
 
-    const assistantName = record.name.split(" ").join("-");
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantName}/${assistantId}`;
+    const url = `/assistants/${assistantId}`;
     window.open(url, "_blank");
   };
 
@@ -79,18 +79,33 @@ const UserAssistantList = ({ data }) => {
   const expandedRowRender = () => {
     const columns = [
       {
-        title: "Name",
+        title: "Assistant",
         dataIndex: "name",
         key: "name",
+        align: "center",
+        render: (_, { name, image_url }) => (
+          <Space size="middle" className="d-flex align-items-center">
+            <div className="assistantImageDiv">
+              {image_url ? (
+                <img src={image_url} className="customImage" alt="avatar" />
+              ) : (
+                <BsRobot className="customImage" />
+              )}
+            </div>
+            <div className="ms-2 text-start">{name}</div>
+          </Space>
+        ),
       },
       {
         title: "Instruction",
         dataIndex: "instruction",
         key: "instruction",
+        align: "center",
       },
       {
         title: "Status",
         key: "is_active",
+        align: "center",
         dataIndex: "is_active",
         width: 100,
         render: (_, { is_active = false }) => (
@@ -103,6 +118,7 @@ const UserAssistantList = ({ data }) => {
       {
         title: "Action",
         key: "action",
+        align: "center",
         render: (_, record) => (
           <Space size="middle">
             <Button
@@ -140,12 +156,14 @@ const UserAssistantList = ({ data }) => {
       title: "Person Name",
       dataIndex: "username",
       key: "username",
+      align: "center",
       render: (text) => <span className="text-left">{text}</span>,
     },
     {
       title: "Total Assistants",
       dataIndex: "totalAssistants",
       key: "totalAssistants",
+      align: "center",
     },
   ];
 

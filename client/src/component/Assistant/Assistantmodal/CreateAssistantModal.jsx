@@ -10,7 +10,7 @@ import useAssistantFileUpload from "../../../Hooks/useAssistantFileUpload";
 
 //Components
 import AssistantForm from "./AssistantForm";
-import { getUserID } from "../../../Utility/service";
+import { getUserID, getUserRole } from "../../../Utility/service";
 import { AssistantContext } from "../../../contexts/AssistantContext";
 import FunctionCallingAssistantForm from "./FunctionCallingAssistantForm";
 const { TabPane } = Tabs;
@@ -36,6 +36,8 @@ const CreateAssistantModal = ({ data }) => {
   const [deleteFileIds, setDeleteFileIds] = useState([]);
   const [selectedTools ,setSelectedTools] =  useState([]);
   const { triggerRefetchAssistants } = useContext(AssistantContext);
+  const role = getUserRole();
+  const [image, setImage] = useState(null);
 
   //----Callback----//
   const handleDeleteFileId = useCallback(
@@ -70,6 +72,8 @@ const CreateAssistantModal = ({ data }) => {
     handleCreateOrUpdateAssistantWithFiles,
     handleRemoveFile,
     handleAddFile,
+    setCountTotalFile,
+    countTotalFile
   } = useAssistantFileUpload(
     handleDeleteFileId,
     selectedTools,
@@ -77,6 +81,7 @@ const CreateAssistantModal = ({ data }) => {
   );
 
   //------Api calls --------//
+
   const handleUploadFileAndCreateAssistant = async () => {
     try {
       
@@ -85,6 +90,10 @@ const CreateAssistantModal = ({ data }) => {
       
       if(!formValues.assistantId && !editMode) {
         await form.validateFields();
+      }
+
+      if (image) {
+        formData.append('avatar', image);
       }
 
       fileList.forEach((file) => {
@@ -105,7 +114,18 @@ const CreateAssistantModal = ({ data }) => {
           formData.append("tools", JSON.stringify(value));
         } else if (key === "static_questions") {
           formData.append("staticQuestions", JSON.stringify(value));
-        } else {
+        } else if (key === "photoOption") {
+          if (editMode) {
+            formData.append("regenerateWithDalle", value === "DALLE" ? "true" : "false");
+          } else {
+            formData.append("generateDalleImage", value === "DALLE" ? "true" : "false");
+          }
+        } else if (key === "functions") {
+          let jsonArray = value.map(item => JSON.parse(item)); // Convert each item in the array from string to JSON
+          let jsonString = JSON.stringify(jsonArray);
+          formData.append("functionsArray", jsonString);
+        }
+         else {
           formData.append(key, value);
         }
       });
@@ -116,7 +136,7 @@ const CreateAssistantModal = ({ data }) => {
       );
 
       if (success) {
-        console.log("success");
+        
         handleClose();
         handleFetchUserCreatedAssistants();
         if (editMode) {
@@ -126,6 +146,7 @@ const CreateAssistantModal = ({ data }) => {
         if (isAdmin) {
           handleFetchAllAssistants(1);
         }
+        form.resetFields(); 
       }
     } catch (error) {
       message.error("Please correct the errors in the form before proceeding.");
@@ -193,7 +214,7 @@ const CreateAssistantModal = ({ data }) => {
           tabBarStyle={{ justifyContent: "space-around" }}
           centered
         >
-            {(editMode && isFunctionCallingAssistant ===false) || !editMode?(<TabPane
+            {<TabPane
             key="unoptimized-data"
             tab={
               <div
@@ -217,17 +238,22 @@ const CreateAssistantModal = ({ data }) => {
                 isAdmin,
                 handleUploadFileAndCreateAssistant,
                 fileList,
+                setFileList,
+                setCountTotalFile,
+                countTotalFile,
                 isUploading,
                 handleRemoveFile,
                 handleAddFile,
                 assistantData,
                 setAssistantData,
                 editMode,
+                image,
+                setImage
               }}
             />
-             </TabPane>): null}
+             </TabPane>}
 
-             {isAdmin && ((editMode && isFunctionCallingAssistant === true) || !editMode)? (<TabPane
+             {/* {isAdmin && ((editMode && isFunctionCallingAssistant === true) || !editMode)? (<TabPane
                 key="create-assistant-by-functionCalling"
                 tab={
                   <div
@@ -263,10 +289,10 @@ const CreateAssistantModal = ({ data }) => {
                 handleClose,
               }}
             /> 
-          </TabPane>): null}
+          </TabPane>): null} */}
 
 
-          {editMode ? null : (
+          {role == 'superadmin' && (editMode ? null : (
             <TabPane
               key={"optimized-data"}
               tab={
@@ -321,7 +347,7 @@ const CreateAssistantModal = ({ data }) => {
                 </Form.Item>
               </Form>
             </TabPane>
-          )}
+          ))}
         </Tabs>
       </Modal>
     </>

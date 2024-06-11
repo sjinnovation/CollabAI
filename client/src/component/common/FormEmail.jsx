@@ -1,6 +1,6 @@
 import { Form, Input } from 'antd';
 
-const FormEmail = ({ name, label, rules, placeholder, className }) => (
+const FormEmail = ({ name, label, rules, placeholder, className, inputFieldClassName = '' }) => (
     <Form.Item
         name={name}
         label={label}
@@ -8,7 +8,7 @@ const FormEmail = ({ name, label, rules, placeholder, className }) => (
         className={className}
         hasFeedback
     >
-        <Input placeholder={placeholder} />
+        <Input className={inputFieldClassName} placeholder={placeholder} />
     </Form.Item>
 );
 

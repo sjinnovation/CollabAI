@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Typography, DatePicker, Button } from 'antd'
+import { Typography, DatePicker, Button, Avatar } from 'antd'
 import { useEffect } from 'react';
 import { getDailyUsageReport, getMonthlyUsageReport } from '../../../api/track-usage-api-functions';
 import UserTrackUsageTable from '../../Account/TrackUsageComponent/UserTrackUsageTable';
 import moment from 'moment';
-import './TrackUsage.css'
+import './TrackUsage.css';
+import { UserOutlined } from '@ant-design/icons';
 
 const { MonthPicker } = DatePicker;
 const { Title } = Typography;
@@ -34,9 +35,26 @@ const TrackUsage = () => {
       } = await getMonthlyUsageReport("",selectedDate)
       if (success) {
 
+        let result = [];
+        aggregatedData.reduce((res, value) => {
+          if (!res[value._id.user_id]) {
+            res[value._id.user_id] = {
+              _id: value._id,
+              total_tokens: 0,
+              total_token_cost: 0,
+              count: 0,
+              user_info: value.user_info,
+            };
+            result.push(res[value._id.user_id]);
+          }
+          res[value._id.user_id].total_tokens += value.total_tokens;
+          res[value._id.user_id].total_token_cost += value.total_token_cost;
+          res[value._id.user_id].count += value.count;
+          return res;
+        }, {});
         setTotalUsageReport(aggregatedDataTotal)
         setUsageReport(trackUsage)
-        setAggregatedData(aggregatedData)
+        setAggregatedData(result)
         setLoading(false)
       } else {
         setTotalUsageReport({})
@@ -44,7 +62,6 @@ const TrackUsage = () => {
         setAggregatedData([])
         setLoading(false)
       }
-      // console.log(result)
     } finally {
       // setLoader(false);
     }
@@ -55,34 +72,82 @@ const TrackUsage = () => {
   }, [selectedDate])
 
   
-
-  
   const columns = [
     {
-      title: 'Date',
-      dataIndex: '_id',
-      render: day => <p>{day?.day}</p>
+      title: "Month",
+      dataIndex: "_id",
+      width: '20%',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
+      render: (_id) => {
+        const date = new Date(_id.year, _id.month - 1);
+        return <p>{date.toLocaleString('default', { month: 'long' })}</p>;
+      },
     },
     {
-      title: 'User ID',
-      dataIndex: '_id',
-      render: day => <p>{day?.user_id}</p>
+      title: "User",
+      dataIndex: "user_info",
+      width: '20%',
+      render: (day) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar style={{ marginRight: "20px" }} icon={<UserOutlined />} />
+          <div style={{ textAlign: "left" }}>
+            <Typography>{`${day?.fname} ${day?.lname}`}</Typography>
+            <Typography>{day?.email}</Typography>
+          </div>
+        </div>
+      ),
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
     {
-      title: 'Prompt Count',
-      dataIndex: 'count',
+      title: "Prompt Count",
+      dataIndex: "count",
+      width: '20%',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
     {
-      title: 'Total Token',
-      dataIndex: 'total_tokens',
+      title: "Total Token",
+      dataIndex: "total_tokens",
+      width: '20%',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
     {
-      title: 'Cost',
-      dataIndex: 'total_token_cost',
-      render: value => Number(value).toFixed(5)
+      title: "Cost",
+      dataIndex: "total_token_cost",
+      width: '20%',
+      render: (value) => <p>${Number(value).toFixed(5)}</p>,
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
     },
-    
-  ]
+  ];
 
 return (
     <div className=''>
@@ -93,8 +158,16 @@ return (
           placeholder="Select month"
         />
         <div className='total-usage-report-container'>
-          <p>Total Token: {totalUsageReport?.total_tokens}</p>
-          <p>Total Cost: $ {totalUsageReport?.total_cost}</p>
+          <Typography><b>Total Token: {totalUsageReport?.total_tokens ? totalUsageReport?.total_tokens : 0 }</b></Typography>
+          <Typography>
+              <b>
+              Total Cost: $
+              {totalUsageReport && !isNaN(Number(totalUsageReport.total_cost))
+                  ? Number(totalUsageReport.total_cost).toFixed(5)
+                  : "0.00000"
+              }
+              </b>
+          </Typography>
         </div>
       </div>
 

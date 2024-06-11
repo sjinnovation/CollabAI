@@ -1,0 +1,10 @@
+import express from 'express';
+import authenticateUser from '../middlewares/login.js';
+import { getAssistantTypes,getSingleAssistantType,createAssistantType,updateAssistantType,deleteAssistantType } from '../controllers/assistantTypesController.js';
+const assistantTypesRoute = express.Router();
+assistantTypesRoute.get('/', getAssistantTypes);
+assistantTypesRoute.get('/:id', authenticateUser, getSingleAssistantType);
+assistantTypesRoute.post('/', createAssistantType);
+assistantTypesRoute.patch('/:id', authenticateUser, updateAssistantType);
+assistantTypesRoute.delete('/:id', authenticateUser, deleteAssistantType);
+export default assistantTypesRoute;

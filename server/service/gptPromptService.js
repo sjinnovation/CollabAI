@@ -37,76 +37,6 @@ export const generatePrevChatHistoryContext = (chatHistory) => {
 };
 
 /**
- * Generates a streaming response from an OpenAI GPT model using a provided payload.
- *
- * @async
- * @function generateOpenAiStreamResponse
- * @description Creates a stream of responses from OpenAI based on dialogue context and a user prompt.
- * @param {Object} payload - An object containing the prompt, chatLog, temperature, gptModel
- * @param {string} payload.prompt - The user's input to the model.
- * @param {Array} payload.chatLog - The chat history to provide context for the model's response.
- * @param {number} payload.temperature - Controls randomness in the response generation.
- * @param {string} payload.gptModel - The specific GPT model to use for generating responses.
- * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
- * @throws {Error} Will throw an error if the streaming response cannot be generated.
- */
-export const generateOpenAiStreamResponse = async (payload) => {
-	const { prompt, chatLog, temperature, gptModel } = payload;
-
-	const contextArray = generatePrevChatHistoryContext(chatLog || []);
-
-	const openai = await getOpenAIInstance();
-
-	const stream = await openai.chat.completions.create(
-		{
-			model: gptModel,
-			messages: [...contextArray, { content: prompt, role: 'user' }],
-			stream: true,
-			temperature,
-		},
-		{ responseType: 'stream' }
-	);
-
-	return stream;
-};
-
-/**
- * Generates a streaming response from an OpenAI GPT model using a provided payload.
- *
- * @async
- * @function generateOpenAIResponse
- * @description Creates a updated responses from OpenAI based on dialogue context and a user prompt.
- * @param {Object} payload - An object containing the prompt, chatLog
- * @param {string} payload.userPrompt - The user's input to the model.
- * @param {Array} payload.chatLog - The chat history to provide context for the model's response.
- * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
- * @throws {Error} Will throw an error if the streaming response cannot be generated.
- */
-export const generateOpenAIResponse = async (payload) => {
-	const { userPrompt, chatLog } = payload;
-	let temperature, gptModel, openAi;
-
-	const contextArray = generatePrevChatHistoryContext(chatLog || []);
-
-	openAi = await getOpenAIInstance();
-	temperature = parseFloat(await getOpenAiConfig('temperature'));
-	gptModel = await getOpenAiConfig('model');
-
-	const response = await openAi.chat.completions.create({
-		model: gptModel,
-		messages: [...contextArray, { content: userPrompt, role: 'user' }],
-		temperature,
-	});
-
-	return {
-		response: response.choices[0].message.content,
-		inputToken: response.usage.prompt_tokens,
-		outputToken: response.usage.completion_tokens,
-		totalToken: response.usage.total_tokens,
-	};
-};
-
-/**
  * Creates a single prompt record in the database using the provided payload.
  *
  * @async
@@ -124,15 +54,15 @@ export const createSinglePrompt = async (payload) => {
 };
 
 /**
- * Creates a single prompt record in the database using the provided payload.
+ * Update the prompt record in the database using the provided payload.
  *
  * @async
- * @function updatePrompt
+ * @function updatePromptByID
  * @param {object} payload - An object containing the properties to update the existing prompt record.
  * @returns {Promise<object>} A promise that resolves with the created prompt document.
  * @throws {Error} Will throw an error if prompt creation fails.
  */
-export const updatePrompt = async (id, payload) => {
+export const updatePromptByID = async (id, payload) => {
 	try {
 		const prompt = await PromptModel.findByIdAndUpdate(id, payload, {
 			new: true,

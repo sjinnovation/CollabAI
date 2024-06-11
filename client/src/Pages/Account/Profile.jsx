@@ -4,7 +4,11 @@ import { Tabs, Row, Col } from 'antd';
 import ProfileInfo from './ProfileInfo';
 import Trash from './Trash';
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
+import { MdAppSettingsAlt } from "react-icons/md";
+
 import Usage from "./Usage";
+import CustomizeChat from "./CustomizeChat";
+import AdvanceAiParameters from "./AdvanceAiParameters";
 
 const Profile = () => {
 
@@ -23,10 +27,22 @@ const Profile = () => {
     },
     {
       key: '3',
-      label: 'Usage',
+      label: 'Personal Usage',
       children: <Usage/>,
       icon: <FaMoneyBillTrendUp />
     },
+    {
+      key: '4',
+      label: 'Customize Chat (Beta)',
+      children: <CustomizeChat/>,
+      icon: <MdAppSettingsAlt />
+    },
+    {
+        key: '5',
+        label: 'Advanced AI Settings (Beta)',
+        children: <AdvanceAiParameters/>,
+        icon: <FaMoneyBillTrendUp />
+      },
   ];
 
   return (

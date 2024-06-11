@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import { BsRobot } from "react-icons/bs";
 //libraries
 import {
   Button,
@@ -9,6 +9,8 @@ import {
   Modal,
   Tooltip,
   Switch,
+  Avatar,
+  message,
 } from "antd";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineArrowUp } from "react-icons/ai";
 import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/DebouncedSearchInput";
@@ -16,6 +18,10 @@ import { SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG } from "../../constants/Api_con
 import { axiosSecureInstance } from "../../api/axios";
 import { useEffect } from "react";
 import { getUserID } from "../../Utility/service";
+import { handleSwitchChange, showDeleteConfirm, showRemoveConfirm } from "../../Utility/showModalHelper";
+import "./Assistant.css";
+import { handleCheckAssistantActive } from "../../Utility/addPublicAssistantHelper";
+
 const { confirm } = Modal;
 
 const AdminAssistantList = ({ data }) => {
@@ -31,19 +37,21 @@ const AdminAssistantList = ({ data }) => {
     updateLoader,
     searchPersonalAssistants,
     personalAssistantSearchQuery,
-    setPersonalAssistantSearchQuery
+    setPersonalAssistantSearchQuery,
+    handlePublicAssistantAdd
   } = data;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
 
 
   const redirectToAssistant = (record) => {
 
-    const assistantName = record.name.split(" ").join("-");
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantName}/${assistantId}`;
+    const url = `/assistants/${assistantId}`;
     window.open(url, "_blank");
   };
+
 
 
   const showDeleteConfirm = (assistantId, assistantName) => {
@@ -64,14 +72,27 @@ const AdminAssistantList = ({ data }) => {
 
   const columns = [
     {
-      title: "Name",
+      title: "Assistant",
       dataIndex: "name",
       key: "name",
-      render: (text) => <span className="text-left">{text}</span>,
+      align: "center",
+      render: (_, { name, image_url }) => (
+        <Space size="middle" className="d-flex align-items-center">
+          <div className="assistantImageDiv">
+            {image_url ? (
+              <img src={image_url} className="customImage" alt="avatar" />
+            ) : (
+              <BsRobot className="customImage" />
+            )}
+           </div>
+          <div className="ms-2 text-start">{name}</div>
+        </Space>
+      ),
     },
     {
       title: "Status",
       key: "is_active",
+      align: "center",
       dataIndex: "is_active",
       width: 100,
       render: (_, { is_active }) => (
@@ -83,6 +104,7 @@ const AdminAssistantList = ({ data }) => {
     {
       title: "Action",
       key: "action",
+      align: "center",
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -93,9 +115,7 @@ const AdminAssistantList = ({ data }) => {
           <Button
             onClick={() => showEditModalHandler(record)}
             icon={<AiOutlineEdit />}
-            disabled={
-              loader.ASSISTANT_LOADING
-            }
+
           >
 
           </Button>
@@ -103,36 +123,43 @@ const AdminAssistantList = ({ data }) => {
             <Switch
               checked={record?.is_active}
               onChange={(checked) =>
-                handleUpdateAssistant(record._id, {
-                  is_active: checked,
-                })
+
+                handleSwitchChange(record, checked, handleUpdateAssistant)
+
               }
               loading={
                 loader.ASSISTANT_UPDATING === record._id ?? false
               }
-              disabled={loader.ASSISTANT_LOADING ||
-                loader.ASSISTANT_UPDATING
-              }
+
             />
           </Tooltip>
           <Button
-            onClick={() => showDeleteConfirm(record?.assistant_id, record?.name)}
+            onClick={() => showDeleteConfirm(record?.assistant_id, record?.name,handleDeleteAssistant)}
             danger
             icon={<AiOutlineDelete />}
             loading={
               loader.ASSISTANT_DELETING === record._id
             }
-            disabled={loader.ASSISTANT_LOADING ||
-              loader.ASSISTANT_DELETING
-            }
+
           />
+          <Tooltip title="Public or Private">
+            <Switch
+              checked={record?.is_public}
+              onChange={(checked) =>{handleCheckAssistantActive(checked, record, handlePublicAssistantAdd)}
+              }
+              loading={
+                loader.ASSISTANT_UPDATING === record._id ?? false
+              }
+
+            />
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
 
-  
+
   return (
     <>
       <div className="mb-3">
@@ -155,7 +182,7 @@ const AdminAssistantList = ({ data }) => {
           total: totalCount,
           onChange: (page) => {
             handleFetchUserCreatedAssistants(page)
-            
+
           }
         }}
       />

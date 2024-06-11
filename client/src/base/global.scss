@@ -1,4 +1,11 @@
-@use 'sass:map';
+@use "sass:map";
+
+:root {
+  --chat-box-bg-color: #ffffff; /* initial color for light theme */
+  --chat-box-text-color: #171717; /* initial color for light theme */
+  --secondary-color-light: #f9f9f9; /* secondary light color */
+  --secondary-color-dark: #171717; /* secondary dark color */
+}
 
 html,
 body {
@@ -10,8 +17,9 @@ body {
 }
 
 body {
-  font-family: map.get($theme-fonts, 'primary-font');
-  background-color: #131313;
+  font-family: map.get($theme-fonts, "primary-font");
+  background-color: var(--chat-box-bg-color) !important;
+  color: var(--chat-box-text-color) !important;
 }
 
 h1 {
@@ -188,7 +196,7 @@ td {
   width: 800px !important;
 }
 
-@media screen and (max-width: '1024px') {
+@media screen and (max-width: "1024px") {
   .offcanvas {
     width: 100% !important;
   }
@@ -200,7 +208,7 @@ td {
 }
 
 a.btn.btn-outline-dark {
-  border-color: #6c757d;
+  border-color: var(--border-color);
   margin: 20px 20px 19px 0;
-  color: #FFFFFF;
+  color: var(--chat-box-text-color) !important;
 }

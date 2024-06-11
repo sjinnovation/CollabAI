@@ -1,6 +1,6 @@
 .sideMenu {
-  width: 260px;
-  background-color: #000000;
+  width: 270px;
+  background-color: var(--secondary-color);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -9,7 +9,7 @@
 .sideMenuResponsive {
   width: 100%;
   padding: 8px;
-  background-color: #000000;
+  background-color: var(--secondary-color);
   height: 100%;
 }
 

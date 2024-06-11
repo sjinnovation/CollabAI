@@ -29,7 +29,10 @@ import SuperAdminRoutes from "./component/RoutesData/SuperAdminRoutes";
 import Templates from "./component/Prompt/Templates";
 import TrackUsage from "./Pages/SuperAdmin/TrackUsage/TrackUsage";
 import TrackUsageComponent from "./Pages/SuperAdmin/TrackUsage/TrackUsageComponent";
-
+import PublicAssistant from "./Pages/ExploreGPTs";
+import ProtectedRoutes from "./component/ProtectedRoute/ProtectedRoute";
+import AssistantTypeList from "./Pages/AssistantType/index";
+import TaskCommands from "./Pages/SuperAdmin/TaskCommands/TaskCommands";
 function App() {
   // Hook to get the current location
   const location = useLocation();
@@ -56,7 +59,23 @@ function App() {
         <Route path="promptlistview/:id" element={<PromptList />} />
         <Route path="promptuserview" element={<PrompotUsersList />} />
 
+        <Route element={<ProtectedRoutes />}>
+            <Route
+              path="assistants/:assistant_id"
+              element={<AssistantsChatPage />}
+            />
+            <Route
+              path="assistants/:assistant_id/:thread_id"
+              element={<AssistantsChatPage />}
+            />
+        </Route>
+
+
+        <Route path="/assistant-types" element={<AssistantTypeList />} />
+
+
         <Route path="/templates" element={<Templates />} />
+        <Route path="/public-assistant" element={<PublicAssistant />} />
 
         {/* Protected Routes of SuperAdmin */}
         <Route element={<SuperAdminRoutes />}>
@@ -74,10 +93,11 @@ function App() {
           <Route path="/teams" element={<TeamList />} />
 
           <Route path="/assistantsList" element={<AssistantsList />} />
-          <Route path="/trackUsage" element={<TrackUsageComponent/>} />
+          <Route path="/trackUsage" element={<TrackUsageComponent />} />
+          <Route path="/taskCommands" element={<TaskCommands />} />
         </Route>
       </Route>
-      <Route path="/assistants" element={<AssistantLayout />}>
+      {/* <Route path="/assistants" element={<AssistantLayout />}>
         <Route
           path=":assistant_name/:assistant_id"
           element={<AssistantsChatPage />}
@@ -86,11 +106,11 @@ function App() {
           path=":assistant_name/:assistant_id/:thread_id"
           element={<AssistantsChatPage />}
         />
-      </Route>
+      </Route> */}
       <Route
-          path="assistants/download/:file_id"
-          element={<AssistantFileDownloadPage />}
-        />
+        path="assistants/download/:file_id"
+        element={<AssistantFileDownloadPage />}
+      />
     </Routes>
   );
 }

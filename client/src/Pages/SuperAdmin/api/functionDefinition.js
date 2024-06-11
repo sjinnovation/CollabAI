@@ -1,4 +1,3 @@
-import toast from "react-hot-toast";
 import { message } from "antd";
 import { axiosOpen, axiosSecureInstance } from "../../../api/axios";
 import {Form, Input } from 'antd';
@@ -45,13 +44,13 @@ export const renderParameterInputs = (functionsParameterNames, parameterValues, 
   return functionsParameterNames.map((paramName, index) => (
     <div key={index} className="mb-3">
       <label style={{ marginRight: "5px" }} htmlFor={paramName}>
-        {paramName}:
+        {paramName.name}:
       </label>
       <input
         type="text"
-        id={paramName}
-        name={paramName}
-        value={parameterValues[paramName] || ""}
+        id={paramName.name}
+        name={paramName.name}
+        value={parameterValues[paramName.name] || ""}
         onChange={handleParameterChange}
         className="form-select inputField"
       />
@@ -60,13 +59,16 @@ export const renderParameterInputs = (functionsParameterNames, parameterValues, 
 };
 
 
-export const handleSaveFunctionToDB = async (functionName, functionDefinition, setFunctionName, setFunctionDefinition, setShowDefineFunctionsModal, showDefineFunctionsModal ) => {
+export const handleSaveFunctionToDB = async (functionName, functionDefinition, description, purpose, parameters, setFunctionName, setFunctionDefinition, setShowDefineFunctionsModal, showDefineFunctionsModal ) => {
   try {
     const response = await axiosSecureInstance.post(
-      "/api/assistants/addFunctionDefinition",
+      "/api/assistants/function-definition",
       {
         name: functionName,
         definition: functionDefinition,
+        description,
+        purpose,
+        parameters
       }
     );
 
@@ -76,10 +78,25 @@ export const handleSaveFunctionToDB = async (functionName, functionDefinition, s
       setShowDefineFunctionsModal(!showDefineFunctionsModal);
       message.success("Function saved successfully!");
     } else if (response.status === 400) {
-      toast.error("Name Already Exists");
+      message.error("Name Already Exists");
     }
   } catch (error) {
-    toast.error("Name Already Exists ");
+    message.error(error.response.data.error || error);
+    console.error(error);
+  }
+};
+
+export const getAllFunctionDefinitions = async (setFunctionDefinitions) => {
+  try {
+    const response = await axiosSecureInstance.get(
+      "/api/assistants/function-definitions"
+    );
+
+    if (response.status === 200) {
+      setFunctionDefinitions(response.data.functionDefinitions)
+    }
+  } catch (error) {
+    message.error(error.response.data.error || error);
     console.error(error);
   }
 };

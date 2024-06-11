@@ -226,6 +226,34 @@ export const getSingleUserByID = async (req, res, next) => {
 	}
 };
 
+
+/**
+ * @async
+ * @function getSingleUserInfoByID
+ * @description get Single User Info By ID 
+ * @param {Object} req - The request object. there is no request body.But 'id' should be pass a parameter with the end point and 'id' will be user's id
+ * @param {Object} res - The response will be single user's details
+ * @throws {Error} Will throw an error if it fails to get user's info
+ * @returns {Response} 200 - Returns success message  and user's details. And 500 - returns internal server error .
+ */
+export const getSingleUserInfoByID = async (req, res, next) => {
+	const { id } = req.params;
+	try {
+		const user = await User.findOne({ _id: id });
+		if (!user) {
+			return next(BadRequest(UserMessages.USER_NOT_FOUND));
+		}
+		return res.status(StatusCodes.OK).json({
+			message: UserMessages.SINGLE_USER_FETCHED_SUCCESSFULLY,
+			user,
+		});
+	} catch (error) {
+		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			message: CommonMessages.INTERNAL_SERVER_ERROR,error
+		});
+	}
+};
+
 /**
  * Asynchronous function for updating a user.
  *
@@ -254,22 +282,13 @@ export const getSingleUserByID = async (req, res, next) => {
 export const UpdateUser = async (req, res, next) => {
 	const { id } = req.params;
 	const {
-		body: { fname, lname, email, teams, status },
+		body: { fname, lname, email, teams, status ,maxTokens },
 	} = req;
 
 	if (!fname || !lname || !email) {
 		return next(BadRequest(UserMessages.PROVIDE_REQUIRED_FIELDS));
 	}
 
-	const updateFields = {
-		fname,
-		lname,
-		email,
-		...(teams && { teams }),
-		...(status && { status }),
-	};
-
-	// console.log("UpdatedFields:", updateFields)
 
 	try {
 		const updateFields = {
@@ -278,7 +297,10 @@ export const UpdateUser = async (req, res, next) => {
 			email,
 			...(teams && { teams }),
 			...(status && { status }),
+            maxusertokens :maxTokens
 		};
+
+        console.log(updateFields ,"updateFields")
 
 		const user = await User.findOneAndUpdate({ _id: id }, updateFields, {
 			new: true,
@@ -294,6 +316,7 @@ export const UpdateUser = async (req, res, next) => {
 			token: token,
 		});
 	} catch (error) {
+        console.log(error)
 		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 			message: CommonMessages.INTERNAL_SERVER_ERROR,
 		});
@@ -608,3 +631,55 @@ export const migrateDBForUserCollection = async (req, res) => {
 		console.log("Migration Failed:", error)
 	}
 }
+
+/**
+ * Asynchronous function for updating user preferences.
+ *
+ * @async
+ * @param {Object} req - Request object containing parameters and body.
+ * @param {Object} req.params - Parameters object containing the user ID.
+ * @param {string} req.params.id - The ID of the user to update preferences for.
+ * @param {Object} req.body - Body object containing user preferences and desired AI response.
+ * @param {Object} req.body.userPreferences - Object containing user preferences.
+ * @param {string} req.body.desiredAiResponse - The desired response from AI.
+ * @param {Object} req.user - Object containing user information from authentication middleware.
+ * @param {string} req.user.role - The role of the user making the request.
+ * @param {Object} res - Response object for sending back the status of the update operation.
+ * @param {Function} next - Next middleware function to be called in the Express middleware chain.
+ * @throws Will pass an error to the next middleware if the user update fails due to user not found.
+ *
+ * @typedef {Object} UpdateResult
+ * @property {string} message - Message indicating the success of updating user preferences.
+ *
+ * @typedef {Object} Response
+ * @property {UpdateResult} message - Object containing the success message.
+ *
+ * @returns {Response} Success message indicating that user preferences were updated successfully.
+ */
+export const UpdateUserPreferences = async (req, res, next) => {
+	const {
+		params: { id: userId },
+		body: { userPreferences, desiredAiResponse },
+	} = req;
+	const { role } = req.user;
+
+	try {
+		const updatedUser = await User.findOneAndUpdate(
+			{ _id: userId },
+			{ userPreferences, desiredAiResponse },
+			{ new: true }
+		);
+
+		if (!updatedUser) {
+			return next(BadRequest(UserMessages.USER_NOT_FOUND));
+		}
+
+		res.status(StatusCodes.OK).json({
+			message: UserMessages.UPDATED_USER_PREFERENCE_SUCCESSFULLY,
+		});
+	} catch (error) {
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			message: CommonMessages.INTERNAL_SERVER_ERROR,
+		});
+	}
+};

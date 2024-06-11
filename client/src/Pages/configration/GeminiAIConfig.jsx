@@ -18,6 +18,9 @@ const GeminiAIConfig = () => {
 					geminiApiKey: response.geminiApiKey,
 					geminiTemperature: response.geminiTemperature,
 					geminiModel: response.geminiModel,
+                    geminiTopK :response.geminiTopK,
+                    geminiTopP :response.geminiTopP,
+                    geminiMaxToken: response.geminiMaxToken
 				}));
 			}
 		} catch (error) {
@@ -64,13 +67,16 @@ const GeminiAIConfig = () => {
 			description: formState?.geminiTemperature || '',
 		},
 		{ title: 'GeminiModel', description: formState?.geminiModel || '' },
+        { title: 'Top K (between 1 and 40)', description: formState?.geminiTopK || '' },
+        { title: 'Top P (between 0 and 1)', description: formState?.geminiTopP || '' },
+        { title: 'Max Token (up to 2048 tokens)', description: formState?.geminiMaxToken || '' },
 	];
 
 	return (
 		<>
 			<List
 				header={<div>Change Settings</div>}
-				size="small"
+				size="medium"
 				bordered
 				dataSource={geminiAiData}
 				renderItem={(item) => (
@@ -97,6 +103,7 @@ const GeminiAIConfig = () => {
 											placeholder="Set Temperature"
 											type="number"
 											name="geminiTemperature"
+											className="editConfigInputField"
 											value={
 												formState.geminiTemperature ||
 												''
@@ -114,7 +121,7 @@ const GeminiAIConfig = () => {
 										/>
 									) : item.title == 'GeminiModel' ? (
 										<Select
-											style={{ width: '290px' }}
+											className='editConfigSelectField'
 											name="geminiModel"
 											value={formState?.geminiModel || ''}
 											onChange={(e) =>
@@ -129,6 +136,72 @@ const GeminiAIConfig = () => {
 											</Option>
 											{/* <Option value="gpt-4">GPT-4</Option> */}
 										</Select>
+                                    ): item.title ==
+									  'Top K (between 1 and 40)' ? (
+										<Input
+											placeholder="Set Temperature"
+											type="number"
+											name="geminiTopK"
+											className="editConfigInputField"
+											value={
+												formState.geminiTopK ||
+												''
+											}
+											min={0}
+											max={40}
+											step={1}
+											onChange={(e) =>
+												setFormState({
+													...formState,
+													geminiTopK:
+														e.target.value,
+												})
+											}
+										/>
+                                    ): item.title ==
+                                    'Top P (between 0 and 1)' ? (
+                                      <Input
+                                          placeholder="Set Temperature"
+                                          type="number"
+                                          name="geminiTopP"
+										  className="editConfigInputField"
+                                          value={
+                                              formState.geminiTopP ||
+                                              ''
+                                          }
+                                          min={0}
+                                          max={1}
+                                          step={0.1}
+                                          onChange={(e) =>
+                                              setFormState({
+                                                  ...formState,
+                                                  geminiTopP:
+                                                      e.target.value,
+                                              })
+                                          }
+                                      />
+                                    ): item.title ==
+                                    'Max Token (up to 2048 tokens)' ? (
+                                      <Input
+                                          placeholder="Set Temperature"
+                                          type="number"
+                                          name="geminiMaxToken"
+										  className="editConfigInputField"
+                                          value={
+                                              formState.geminiMaxToken ||
+                                              ''
+                                          }
+                                          min={0}
+                                          max={2048}
+                                          step={10}
+                                          onChange={(e) =>
+                                              setFormState({
+                                                  ...formState,
+                                                  geminiMaxToken:
+                                                      e.target.value,
+                                              })
+                                          }
+                                      />
 									) : null
 								) : item.title == 'GeminiAI API key' ? (
 									renderSecretKey()

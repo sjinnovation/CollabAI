@@ -161,6 +161,7 @@ const ListUser = () => {
       console.log(error);
     }
   };
+ 
 
   const columns = [
     {
@@ -196,6 +197,10 @@ const ListUser = () => {
       title: "Role",
       dataIndex: "role",
     },
+    {
+        title: "User Tokens",
+        dataIndex: "maxusertokens",
+      },
     {
       title: "Status",
       dataIndex: "status",

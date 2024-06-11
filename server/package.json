@@ -6,8 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "export NODE_ENV=local&& nodemon index.js",
+		"start": "set NODE_ENV=local&& nodemon index.js",
 		"dev_start": "npm install&& export NODE_ENV=dev&& pm2 start index.js",
+		"stop": "pm2 stop index.js",
 		"dev": "npm install&& export NODE_ENV=dev&& pm2 restart index.js",
 		"prod_start": "npm install&& export NODE_ENV=prod&& pm2 start index.js",
 		"prod": "npm install&& export NODE_ENV=prod&& pm2 restart index.js"
@@ -44,12 +45,13 @@
 		"node-cron": "^3.0.2",
 		"nodemailer": "^6.9.1",
 		"nodemailer-mailgun-transport": "^2.1.5",
-		"openai": "^4.17.4",
+		"openai": "^4.36.0",
 		"openai-cost-calculator": "^1.0.1",
 		"path": "^0.12.7",
 		"pg": "^8.11.3",
 		"socket.io": "^4.7.4",
-		"tiktoken-node": "^0.0.7",
+		"tiktoken": "^1.0.15",
+		"uuid": "^9.0.1",
 		"validator": "^13.7.0"
 	},
 	"devDependencies": {

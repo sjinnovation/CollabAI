@@ -3,7 +3,7 @@ import PulseLoader from "react-spinners/PulseLoader";
 
 const Loading = () => {
   const override = {
-    color: "#fff",
+    // color: "#fff",
     loading: true,
   };
 

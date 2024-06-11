@@ -61,6 +61,8 @@ const FormComponent = ({
               return <FormInput key={index} {...item} />;
             case "email":
               return <FormEmail key={index} {...item} />;
+            case "number": // New case for number input type
+              return <FormInput key={index} {...item} />;
             case "password":
               return <FormInput key={index} {...item} />;
             case "select":

@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Space, Table, Tag, Modal, Tooltip, Switch } from "antd";
 import {
   AiOutlineDelete,
   AiOutlineEdit,
   AiOutlineArrowUp,
 } from "react-icons/ai";
+import { getAllFunctionDefinitions } from "../../Pages/SuperAdmin/api/functionDefinition";
+
+//-----Helper----------//
+import { redirectToAssistant} from "../../Utility/assistant-helper"
 
 const { confirm } = Modal;
 
@@ -19,115 +23,64 @@ const FunctionCallingAssistantTable = ({ data }) => {
     handleFetchFunctionCallingAssistants,
     updateLoader,
     setActiveKey,
+    toggleDefineFunctionsModal,
   } = data;
 
-  const showDeleteConfirm = (assistantId, assistantName) => {
-    confirm({
-      title: "Are you sure delete this Assistant?",
-      content: `You are deleting ${assistantName}.`,
-      okText: "Yes",
-      okType: "danger",
-      cancelText: "No",
-      onOk() {
-        handleDeleteAssistant(assistantId);
-      },
-      onCancel() {
-        console.log("Cancel");
-      },
-    });
-  };
+  const [functionDefinitions, setFunctionDefinitions] = useState([]);
 
-  const redirectToAssistant = (record) => {
-    const assistantName = record.name.split(" ").join("-");
-    const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantName}/${assistantId}`;
-    window.open(url, "_blank");
-  };
+  const getAllfunctions = () => {
+    getAllFunctionDefinitions(setFunctionDefinitions);
+  }
+
+  useEffect(() => {
+    getAllfunctions();
+  }, []);
 
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      align: "center",
       render: (text) => <span className="text-left">{text}</span>,
     },
     {
-      title: "Status",
-      key: "is_active",
-      dataIndex: "is_active",
-      width: 100,
-      render: (_, { is_active }) => (
-        <Tag color={is_active ? "green" : "red"}>
-          {is_active ? "active" : "inactive"}
-        </Tag>
-      ),
+      title: "Description",
+      key: "description",
+      align: "center",
+      dataIndex: "description",
+      render: (text) => <span className="text-left">{text}</span>,
     },
-
     {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            onClick={() => redirectToAssistant(record)}
-            icon={<AiOutlineArrowUp />}
-          ></Button>
-
-          <Tooltip title="Activate or Deactivate">
-            <Switch
-              checked={record?.is_active}
-              onChange={(checked) =>
-                handleUpdateAssistant(record._id, {
-                  is_active: checked,
-                })
-              }
-              loading={loader.ASSISTANT_UPDATING === record._id ?? false}
-              disabled={
-                loader.ALL_ASSISTANT_LOADING || loader.ASSISTANT_UPDATING
-              }
-            />
-          </Tooltip>
-          <Button
-            onClick={() =>{
-              setActiveKey("create-assistant-by-functionCalling");
-              showEditModalHandler(record)}
-            } 
-            icon={<AiOutlineEdit />}
-            disabled={loader.ASSISTANT_LOADING}
-          ></Button>
-          <Button
-            onClick={() =>
-              showDeleteConfirm(
-                record?.assistant_id,
-                record?.name,
-                handleDeleteAssistant
-              )
-            }
-            danger
-            icon={<AiOutlineDelete />}
-            loading={loader.ASSISTANT_DELETING === record._id}
-            disabled={loader.ASSISTANT_LOADING || loader.ASSISTANT_DELETING}
-          />
-        </Space>
-      ),
+      title: "Definition",
+      key: "definition",
+      align: "center",
+      dataIndex: "definition",
+      render: (text) => <span className="text-left">{text}</span>,
+    },
+    {
+      title: "Parameters",
+      key: "parameters",
+      align: "center",
+      dataIndex: "parameters",
+      render: (text) => <span className="text-left">{text?.properties ? Object.keys(text.properties).join(', ') : ""}</span>,
     },
   ];
 
   return (
     <div>
+      <div className="mb-3">
+        <div className="col-2 d-flex justify-content-start">
+          <Button className="" onClick={toggleDefineFunctionsModal}>
+            Create Functions
+          </Button>
+        </div>
+      </div>
       <Table
-        loading={loader.ALL_ASSISTANT_LOADING}
         bordered={true}
         columns={columns}
-        dataSource={functionCallingAssistants}
+        dataSource={functionDefinitions}
         scroll={{ y: "50vh" }}
-        pagination={{
-          pageSize: 10,
-          total: functionCallingAssistants?.length,
-          onChange: (page) => {
-            handleFetchFunctionCallingAssistants(page);
-          },
-        }}
       />
     </div>
   );

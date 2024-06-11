@@ -1,0 +1,60 @@
+.card{
+    border: none;
+    border-radius: 10px;
+    box-shadow: 5px 5px 5px hsla(0, 0%, 0%, 0.1);
+    padding: 20px;
+    margin: 10px;
+    text-align: center;
+    max-width: 900px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    width: 22rem;
+
+}
+.card #buttonChat{
+    width:100%;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    margin:5px;
+    padding: 10px; 
+    border-radius: 5px;
+    background-color: #a39999;
+    color: white;
+    border: none;
+    cursor: pointer 
+
+}
+.card #buttonAdd{
+    width:100%;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    margin:5px;
+    padding: 10px; 
+    border-radius: 5px;
+    background-color: #635858;
+    color: white;
+    border: none;
+    cursor: pointer 
+
+}
+ .card-image{
+    max-width: 40%;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    margin-right: 20px;
+}
+.card .card-title{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    color: hsl(0, 0%, 20%);
+}
+.card .card-text{
+    font-family: Arial, sans-serif;
+    color: hsl(0, 0%, 30%);
+}

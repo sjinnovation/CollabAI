@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 
+import { ThemeContext } from "../../contexts/themeConfig";
+
 const NavLinks = ({ svg, link, text, setChatLog }) => {
+  const { theme } = useContext(ThemeContext);
   // const { dispatch } = useContext(AuthContext);
 
   const handleClick = async (text) => {
@@ -23,7 +26,10 @@ const NavLinks = ({ svg, link, text, setChatLog }) => {
       // target={link && "_blank"}
       target={link && "_self"}
       rel="noreferrer"
-      style={{ textDecoration: "none" }}
+      style={{
+        textDecoration: "none",
+        color: theme === "light" ? "#000" : "#fff",
+      }}
       onClick={() => handleClick(text)}
     >
       <div className="navPrompt">

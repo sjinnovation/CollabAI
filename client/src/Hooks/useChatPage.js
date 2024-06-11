@@ -3,6 +3,8 @@ import React, { useState } from "react";
 // libraries
 import {message as AntdMessage} from "antd";
 import { getChatsPerThread, getTags, getTemplates } from "../api/chat-page-api";
+import { axiosSecureInstance } from "../api/axios";
+import { UPDATE_LAST_PROMPT } from "../api/prompt_api_constant";
 
 const useChatPage = () => {
   // ----- STATES ----- //
@@ -15,8 +17,8 @@ const useChatPage = () => {
   const [templateCategories, setTemplateCategories] = useState([]);
 
 
-  // ----- HANDLE API CALLS ----- //
-
+// ----- HANDLE API CALLS ----- //
+  
 const fetchChatLogPerThread = async (thread_id) => {
     try {
       setIsFetchingChatLog(true);
@@ -31,7 +33,10 @@ const fetchChatLogPerThread = async (thread_id) => {
             tags: chat.tags,
             msgId: chat._id,
             tokenused: chat.tokenused,
-            modelused: chat.modelused
+            modelused: chat.modelused,
+            botProvider: chat?.botProvider,
+            promptId: chat._id,
+            threadId: chat.threadid
           };
         });
         //   setChatLogTimings(chatTimings);
@@ -46,9 +51,6 @@ const fetchChatLogPerThread = async (thread_id) => {
     }
   };
   
-
-  
-
   const fetchTagList = async () => {
     try {
       const { success, tags, message } = await getTags();
@@ -72,6 +74,26 @@ const fetchChatLogPerThread = async (thread_id) => {
     }
   };
 
+  const updateLastPrompt = async (promptId, newPrompt) => {
+    try {
+      setIsGeneratingResponse(true)
+      const response = await axiosSecureInstance.patch(UPDATE_LAST_PROMPT(promptId), {userPrompt: newPrompt});
+      setIsGeneratingResponse(false)
+      return {
+        success: true,
+        data: response.data?.data
+      }
+    } catch (error) {
+      console.log(error);
+      setIsGeneratingResponse(false)
+      return { success: false, error };
+    } finally {
+      setIsGeneratingResponse(false)
+    }
+    
+  };
+
+
   return {
     //STATES,
     chatLog,
@@ -91,7 +113,8 @@ const fetchChatLogPerThread = async (thread_id) => {
     //HANDLERS,
     fetchChatLogPerThread,
     fetchTagList,
-    fetchTemplates
+    fetchTemplates,
+    updateLastPrompt
   }
 }
 

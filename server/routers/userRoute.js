@@ -15,6 +15,8 @@ import {
 	bulkTeamAssignToUsers,
 	getSingleUserByID,
 	migrateDBForUserCollection,
+	UpdateUserPreferences,
+	getSingleUserInfoByID,
 } from '../controllers/userController.js';
 
 const userRouter = express.Router();
@@ -40,6 +42,8 @@ userRouter.post(
 );
 
 userRouter.patch('/update-status/:id', authenticateUser, UpdateUserStatus);
+
+userRouter.patch('/update-preference/:id', authenticateUser, UpdateUserPreferences);
 
 userRouter.get('/get-user-tokens/:id', getUserTokens);
 

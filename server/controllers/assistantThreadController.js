@@ -1,5 +1,4 @@
 import {
-  deleteOpenAiThreadById,
   getAssistantThreadById,
   getAssistantThreadsByQuery,
 } from "../service/assistantService.js";
@@ -12,6 +11,7 @@ import {
   NotFound,
   Unauthorized,
 } from "../middlewares/customError.js";
+import { deleteOpenAiThreadById } from "../lib/openai.js";
 
 /**
  * Asynchronous function to retrieve assistant threads for a specific user.
@@ -104,7 +104,7 @@ export const deleteAssistantThread = async (req, res, next) => {
     );
 
     if (isDeletedFromOpenAI) {
-      const result = await existingAsstThread.remove();
+      await existingAsstThread.remove();
 
       return res.status(StatusCodes.OK).json({
         message: AssistantThreadMessages.DELETED_SUCCESSFULLY,

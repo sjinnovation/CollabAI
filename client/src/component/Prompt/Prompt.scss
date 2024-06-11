@@ -1,8 +1,6 @@
 :root {
   --text-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  --primary-bg-color: #282c34;
-  --secondary-bg-color: #575969;
 }
 
 .App {
@@ -33,7 +31,6 @@ header h1 {
 }
 nav {
   display: none;
-  background-color: #4c4f5f;
   position: fixed;
   top: 0;
   right: 0;
@@ -139,15 +136,14 @@ nav {
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
-  // overflow: hidden;
   padding: 0.5rem;
-  // margin: 5px 0;
   text-align: left;
+  text-transform: capitalize;
   animation: fadeInChar 1s ease-in all;
+  color: var(--chat-box-text-color) !important;
 }
 
 .thread p {
-  color: #ececf1;
   overflow: hidden;
   white-space: nowrap;
   margin: 0;
@@ -157,8 +153,6 @@ nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #8e8ea0;
-  color: #565869;
   outline: none;
   border: none;
   box-shadow: none;
@@ -171,6 +165,7 @@ nav {
   background-color: transparent;
   background-image: none;
   box-sizing: border-box;
+  color: var(--chat-box-text-color) !important;
 }
 
 .thread_icon_button:hover {
@@ -193,11 +188,10 @@ nav {
 
 .thread:hover {
   cursor: pointer;
-  background-color: #202123;
 }
 
 .active_thread {
-  background-color: #202123;
+  background-color: var(--chat-box-bg-color);
 
   p {
     width: calc(100% - 2.25rem);
@@ -222,7 +216,7 @@ nav {
 .navPrompt p {
   font-size: 14px;
   line-height: 20px;
-  color: #ececf1;
+  color: var(--chat-box-text-color) !important;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -353,8 +347,10 @@ nav svg {
 }
 #introsection ul li {
   padding: 15px !important;
-  background: #41404d;
-  border: 1px solid #41404d;
+  background-color: var(--chat-box-bg-color) !important;
+  color: var(--chat-box-text-color) !important;
+  border-color: var(--border-color);
+  border-width: 1px;
 }
 .chatLogWrapper {
   // height: 74vh;
@@ -417,7 +413,7 @@ nav svg {
 }
 .botMessageMainContainer {
   width: 100%;
-  background-color: #444654;
+  background-color: var(--chat-box-bg-color);
   position: relative;
 }
 .botMessageWrapper {
@@ -429,6 +425,7 @@ nav svg {
   justify-content: left;
   /* align-items: center; */
   column-gap: 25px;
+  padding-bottom: 0px;
 }
 .stop-messgage {
   position: absolute;
@@ -490,34 +487,50 @@ nav svg {
   max-width: 48rem;
   margin: 0 auto;
   top: 120px;
+}
+
+.note-text-for-chat {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  font-size: 14px;
+  p {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
   }
-  
-  .note-text-for-chat {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    right: 0;
-    font-size: 14px;
 }
 .inputPrompttTextarea {
   padding: 10px 20px;
   flex: 1;
   resize: none;
-  background-color: #41414e;
-  color: #fff;
+  // background-color: transparent;
+  border: 1px solid var(--border-color) !important;
+  color: var(--chat-box-text-color);
   font-size: 1rem;
   line-height: 1.8rem;
   outline: none;
-  border: none;
   overflow-y: auto;
   border-radius: 10px;
   height: 49px;
   max-height: 200px;
   width: 100%;
   position: absolute;
-  bottom: 70px;
+  bottom: 75px;
   right: 0px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  // light-mode-filter [added as easy fix on Apr 22, 2024]
+  background-color: rgba(255, 255, 255, 1); /* for light mode */
+  backdrop-filter: blur(4px);
 }
+
+.inputPrompttTextarea.dark-mode {
+  // dark-mode-filter [added as easy fix on Apr 22, 2024] 
+  background-color: rgba(33, 33, 33, 1); /* for dark mode */
+  backdrop-filter: blur(4px);
+}
+
 .inputPrompttTextarea::-webkit-scrollbar {
   width: 8px;
   cursor: pointer;
@@ -537,14 +550,18 @@ nav svg {
   background-color: #666666;
 }
 #input-button {
-  background: rgb(65, 65, 78);
+  background-color: var(--chat-box-bg-color);
+  color: var(--chat-box-text-color) !important;
   border: none;
   position: absolute;
-  bottom: 82px;
+  bottom: 87px;
   right: 15px;
   width: 35px;
   height: 45px;
   border-radius: 50%;
+}
+.inputPrompttTextarea-container #input-button {
+  background-color: transparent;
 }
 
 .CustomNewButton {
@@ -563,19 +580,10 @@ nav svg {
 }
 
 .assistantChatBox {
-  // flex: 1;
-  // flex-grow: 1;
-  background-color: #353540;
-  // background-color: #222299;
   position: relative;
   line-height: 24px;
-  // width: 50vw;
-  // height: 100%;
   width: 100%;
-  // height: 85.2vh;
   height: calc(100vh - (56.64px + 36px));
-  // top: px;
-  color: #d1d5db;
   font-size: 16px;
 }
 
@@ -638,13 +646,11 @@ nav svg {
   position: relative;
   transform: translate(-50%, -10%);
   // width: 80%;
-  width: 48rem; 
+  width: 48rem;
   resize: none;
   // max-height: 200px;
   min-height: 100px;
-  background-color: #41414e;
   border-radius: 5px;
-  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
 }
@@ -686,7 +692,7 @@ nav svg {
   padding: 10px 20px;
   flex: 1;
   resize: none;
-  background-color: #41414e;
+  // background-color: #41414e;
   color: #fff;
   font-size: 16px;
   outline: none;
@@ -697,6 +703,10 @@ nav svg {
   width: 100%;
   scrollbar-width: thin;
   scrollbar-color: #888888 #41414e;
+
+  background-color: transparent;
+  border: 1px solid var(--border-color) !important;
+  color: var(--chat-box-text-color);
 }
 
 .assistantInputPromptTextarea::-webkit-scrollbar {
@@ -705,21 +715,21 @@ nav svg {
 }
 
 .assistantInputPromptTextarea::-webkit-scrollbar-track {
-  background-color: #41414e;
+  background-color: transparent;
 }
 
 .assistantInputPromptTextarea::-webkit-scrollbar-thumb {
-  background-color: #888888;
+  background-color: transparent;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .assistantInputPromptTextarea::-webkit-scrollbar-thumb:hover {
-  background-color: #666666;
+  background-color: transparent;
 }
 
 #assistant-input-button {
-  background: rgb(65, 65, 78);
+  background: transparent;
   border: none;
   position: absolute;
   top: 20%;
@@ -737,7 +747,7 @@ nav svg {
 }
 
 .assistantUploadButton {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--secondary-color);
   border: none;
   border-radius: 8px;
   color: white;
@@ -778,7 +788,7 @@ nav svg {
   width: 53vw;
   background-color: transparent;
   border: none;
-  color: white;
+  color: var(--chat-box-text-color) !important;
 }
 
 @media (hover: hover) {
@@ -885,7 +895,7 @@ nav svg {
   overflow: auto;
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   column-gap: 20px;
 }
 .predefinedprompts-container div ul {
@@ -930,22 +940,33 @@ nav svg {
   display: none;
 }
 .user-btn {
-  background: #222529 !important;
+  background-color: var(--chat-box-bg-color);
+  color: var(--chat-box-text-color) !important;
   border: none !important;
   display: flex;
   column-gap: 20px;
   padding: 12px;
-  color: white;
   border-radius: 7px;
   margin-top: 10px;
 }
 .user-btn:hover {
-  background: #222529 !important;
+  background-color: var(--secondary-color);
 }
 
-.thread-search{
-  background-color: #444654;
-  color: gray;
+.thread-search {
+  background-color: var(--chat-box-bg-color);
+  color: var(--chat-box-text-color) !important;
+  border: none;
+}
+.thread-search:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background-color: var(--chat-box-bg-color);
+}
+.thread-search::placeholder {
+  background-color: var(--chat-box-bg-color);
+  color: var(--chat-box-text-color) !important;
   border: none;
 }
 
@@ -953,25 +974,22 @@ nav svg {
   height: 200px;
   display: flex;
   justify-content: center;
-  align-items: center;  
+  align-items: center;
 }
 
-
-.custom-panel-style{
+.custom-panel-style {
   // background: #dd2f2f;
-  
 }
 
-.show-more-loading-container{
+.show-more-loading-container {
   height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
-// Styles for Templates
+  // Styles for Templates
 }
 
-
-.templates-page{
+.templates-page {
   width: 100%;
   height: 100%;
   background-color: #353540;
@@ -980,25 +998,18 @@ nav svg {
   align-items: center;
 }
 
-.assistants-menu-container{
+.assistants-menu-container {
   max-height: 50vh;
   overflow-y: auto;
 }
 
-.custom-show-btn{
+.custom-show-btn {
   display: flex;
   align-items: center;
-  gap: 1.7rem;
-  width: 100%;
-  color: whitesmoke;
-  background: transparent;
-  border: none;
-  height: 40px;
-  border-radius: 7px;
-  padding-left: 10px;
+  gap: 1rem;
 }
 
-.custom-show-btn-light{
+.custom-show-btn-light {
   display: flex;
   align-items: center;
   gap: 1.7rem;
@@ -1022,17 +1033,16 @@ nav svg {
   margin: 0px;
   font-size: 15px;
 }
-.templates-container{
+.templates-container {
   width: 60%;
   height: 60vh;
   background-color: #00000e;
   // border-radius: 1rem 0px 0px 1rem;
   box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.5);
-  border-radius: .3rem;
-  padding: 1.5rem .8rem;
+  border-radius: 0.3rem;
+  padding: 1.5rem 0.8rem;
   color: gray;
   overflow-y: auto;
-  
 }
 
 #table-response-container {
@@ -1040,18 +1050,27 @@ nav svg {
   overflow-x: auto;
 }
 
-#table-response-container table,
-#table-response-container th, 
-#table-response-container td {
-  border: 1px solid white;
+#table-response-container.table-light table,
+#table-response-container.table-light th,
+#table-response-container.table-light td {
+  border: 1px solid var(--border-color);
+  background-color: #f9f9f9;
 }
 
-.templates-loading-container { 
-  min-height: 300px; 
-  max-height: 400px; 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
+/* Dark Theme Styles */
+#table-response-container.table-dark table,
+#table-response-container.table-dark th,
+#table-response-container.table-dark td {
+  border: 1px solid var(--border-color);
+  background-color: #333;
+}
+
+.templates-loading-container {
+  min-height: 300px;
+  max-height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .template-description-container {
@@ -1066,47 +1085,44 @@ nav svg {
   padding-right: 1rem;
 }
 
-.assistantsConversationStarterWrapper{
-    margin-top: 40px;
-    left: 50%;
-    right: 50%;
-    bottom: 0;
-    position: relative;
-    transform: translate(-50%, -10%);
-    width: 48rem; 
-    resize: none;
-    max-height: 110px;
-    min-height: 110px;
-    border-radius: 5px;
-    display: flex;
-    overflow-y: scroll;
-    
+.assistantsConversationStarterWrapper {
+  margin-top: 40px;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  position: relative;
+  transform: translate(-50%, -10%);
+  width: 48rem;
+  resize: none;
+  max-height: 310px;
+  border-radius: 5px;
+  display: flex;
 }
 
 .conversation-starter-box {
   width: 100%;
-  margin: 10px;
-  display: flex;
-  flex-wrap: wrap;
+  margin-bottom: 4px;
 }
 
 .conversation-starter {
-  width: 22.6rem;
+  width: 99%;
+  height: 3rem;
   margin: 5px;
-  padding: 5px 8px;
-  border: 1px solid gray;
-  border-radius: 7px;
-  background-color: #41414e;
+  padding: 10px;
+  border-radius: 10px;
   display: flex;
-  align-items: center;
+  align-items: start;
+  background-color: var(--chat-box-bg-color) !important;
+  color: var(--chat-box-text-color) !important;
+  border: 1px solid var(--border-color);
 }
 
-.conversation-starter:hover{
+.conversation-starter:hover {
   background-color: rgb(118, 116, 119);
   cursor: pointer;
 }
 
-.conversation-starter :hover  .conversation-starter-icon{
+.conversation-starter :hover .conversation-starter-icon {
   display: block;
   color: #f0f5f5;
 }
@@ -1123,18 +1139,17 @@ nav svg {
   width: 100%;
 }
 
-.conversation-starter-icon{
+.conversation-starter-icon {
   color: white;
   font-size: 18px;
-  display: none;
 }
 
-.conversation-starter-icon:hover{
+.conversation-starter-icon:hover {
   color: white;
   font-weight: bold;
 }
 
-.assistant-info-container-on-chat-page{
+.assistant-info-container-on-chat-page {
   max-width: 450px;
   max-height: 350px;
   overflow-y: auto;
@@ -1151,7 +1166,7 @@ nav svg {
 
 .assistant-creator {
   color: gray;
-  margin-bottom: .7rem;
+  margin-bottom: 0.7rem;
 }
 @media screen and (max-width: 1440px) {
   .inputPrompttTextarea-container {
@@ -1163,15 +1178,36 @@ nav svg {
   }
 }
 
-.model-token-container{
+.rc-scrollbars-view {
+  overflow: auto !important;
+  border-bottom: 1px solid var(--border-color);
+}
+.model-token-container {
   display: flex;
   gap: 1rem;
 }
 
-.model-token-container p{
+.model-token-container p {
   margin: 0;
   padding: 0;
   font-size: 11px;
   font-style: italic;
   color: #9b9898;
+}
+
+// Need to check if we not required this css 
+body
+  .ant-select-focused.ant-select-outlined:not(.ant-select-disabled):not(
+    .ant-select-customize-input
+  ):not(.ant-pagination-size-changer)
+  .ant-select-selector {
+  border-color: inherit !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+body
+  :where(.css-dev-only-do-not-override-hvqebt).ant-select-dropdown
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: var(--secondary-color) !important;
+  color: var(--chat-box-text-color) !important;
 }

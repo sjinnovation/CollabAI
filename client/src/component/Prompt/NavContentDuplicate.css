@@ -1,0 +1,40 @@
+
+
+.assistant-name {
+    width: 150px;
+    margin-left: 15px;
+    align-items: center;
+    /* white-space: pre-wrap;
+    word-wrap: break-word; */
+    display: flex;
+    flex-wrap: wrap;
+    /* overflow: hidden; */
+
+}
+.assistant-suffix {
+    margin-left: 15px;
+    align-items: center;
+    justify-content: space-around;
+}
+.glyphicon p{
+    cursor: pointer;
+
+}
+
+
+
+.add-assistant-name-container p{
+    font-size: 12px;
+    color: gray;
+
+}
+
+.thread-no-data{
+    margin-left: 20px;
+    font-size: 12px;
+    color: gray;
+}
+
+.custom-size-for-explore-text{
+    font-size: 14px;
+}

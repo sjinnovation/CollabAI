@@ -408,6 +408,15 @@ export const getConfigurations = async (req, res, next) => {
 			'claudeModel',
 			'claudeTemperature',
 			'claudeApiKey',
+            'openaiMaxToken',
+            'geminiMaxToken',
+            'claudeMaxToken',
+            'openaiTopP',
+            'openaiFrequency',
+            'openaiPresence',
+            'geminiTopP',
+            'geminiTopK',
+            
 		];
 		const configValues = await config.find({ key: { $in: keysToFetch } });
 
@@ -447,6 +456,15 @@ export const updateConfigurations = async (req, res, next) => {
 			claudeModel,
 			claudeTemperature,
 			claudeApiKey,
+            tokens,
+            claudeMaxToken,
+            openaiMaxToken,
+            openaiTopP,
+            openaiFrequency,
+            openaiPresence,
+            geminiTopP,
+            geminiTopK,
+            geminiMaxToken
 		},
 	} = req;
 
@@ -488,6 +506,16 @@ export const updateConfigurations = async (req, res, next) => {
 				geminiTemperature,
 				ConfigMessages.TEMPERATURE_UPDATED,
 				ConfigMessages.TEMPERATURE_SAVED
+			);
+		}
+
+        // Update Token
+		if (tokens !== undefined) {
+			await updateConfiguration(
+				'tokens',
+				tokens,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
 			);
 		}
 
@@ -538,8 +566,8 @@ export const updateConfigurations = async (req, res, next) => {
 			await updateConfiguration(
 				'claudeTemperature',
 				claudeTemperature,
-				ConfigMessages.CLAUDE_TEMPERATURE_UPDATED,
-				ConfigMessages.CLAUDE_TEMPERATURE_SAVED
+				ConfigMessages.TEMPERATURE_UPDATED,
+				ConfigMessages.TEMPERATURE_SAVED
 			);
 		}
 
@@ -572,6 +600,85 @@ export const updateConfigurations = async (req, res, next) => {
 				ConfigMessages.DALLERESOLUTION_SAVED
 			);
 		}
+        // Update claude max token 
+		if (claudeMaxToken !== undefined) {
+			await updateConfiguration(
+				'claudeMaxToken',
+				claudeMaxToken,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
+			);
+		}
+        
+        // Update openai max token 
+		if (openaiMaxToken !== undefined) {
+			await updateConfiguration(
+				'openaiMaxToken',
+				openaiMaxToken,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
+			);
+		}
+        
+        // Update open ai top p 
+		if (openaiTopP !== undefined) {
+			await updateConfiguration(
+				'openaiTopP',
+				openaiTopP,
+				ConfigMessages.OPENAI_TOP_P_UPDATED,
+				ConfigMessages.OPENAI_TOP_P_SAVED
+			);
+		}
+        
+        // Update open ai frequency penalty 
+		if (openaiFrequency !== undefined) {
+			await updateConfiguration(
+				'openaiFrequency',
+				openaiFrequency,
+				ConfigMessages.OPENAI_FREQUENCY_PENALTY_UPDATED,
+				ConfigMessages.OPENAI_FREQUENCY_PENALTY_SAVED
+			);
+		}
+        
+        // Update open ai presence penalty 
+		if (openaiPresence !== undefined) {
+			await updateConfiguration(
+				'openaiPresence',
+				openaiPresence,
+				ConfigMessages.OPENAI_PRESENCE_PENALTY_UPDATED,
+				ConfigMessages.OPENAI_PRESENCE_PENALTY_SAVED
+			);
+		}
+        
+        // Update gemini top p
+		if (geminiTopP !== undefined) {
+			await updateConfiguration(
+				'geminiTopP',
+				geminiTopP,
+				ConfigMessages.GEMINI_TOP_P_UPDATED,
+				ConfigMessages.GEMINI_TOP_P_SAVED
+			);
+		}
+        
+        // Update  gemini top k
+		if (geminiTopK !== undefined) {
+			await updateConfiguration(
+				'geminiTopK',
+				geminiTopK,
+				ConfigMessages.GEMINI_TOP_K_UPDATED,
+				ConfigMessages.GEMINI_TOP_K_SAVED
+			);
+		}
+
+        // Update gemini max token 
+		if (geminiMaxToken !== undefined) {
+			await updateConfiguration(
+				'geminiMaxToken',
+				geminiMaxToken,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
+			);
+		}
 
 		res.status(StatusCodes.OK).json({
 			message: ConfigMessages.CONFIGURATIONS_UPDATED,
@@ -584,7 +691,7 @@ export const updateConfigurations = async (req, res, next) => {
 
 async function updateConfiguration(key, value, updateMessage, saveMessage) {
 	const keyRec = await config.findOne({ key });
-
+console.log(key,value,updateMessage,saveMessage)
 	if (keyRec) {
 		// const valueToUpdate = typeof value === 'number' ? value.toString() : value;
 		const newvalues = { $set: { value } };
@@ -597,7 +704,6 @@ async function updateConfiguration(key, value, updateMessage, saveMessage) {
 		await config.create({ key, value });
 		console.log(`${key} saved`);
 	}
-
 	return {
 		message: ConfigMessages[updateMessage] || ConfigMessages[saveMessage],
 	};

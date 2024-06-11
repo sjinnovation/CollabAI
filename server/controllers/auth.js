@@ -3,7 +3,7 @@ import Company from "../models/companyModel.js";
 import Team from "../models/teamModel.js";
 import { StatusCodes } from 'http-status-codes';
 import Config from "../models/configurationModel.js";
-import sendEmail from "../utils/mailGun.js";
+import sendEmail from "../utils/sendEmailViaOutlook.js";
 import { AuthMessages } from "../constants/enums.js";
 import { BadRequest, Unauthorized } from "../middlewares/customError.js";
 import ResetToken from "../models/token.js";
@@ -11,6 +11,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import BcryptSalt from 'bcrypt-salt';
 import config from '../config.js';
+
 
 /**
  * Registers a new user.
@@ -42,8 +43,8 @@ export const registerUser = async (req, res, next) => {
 
     // Fetch max user tokens from configuration
     const tokens = await Config.findOne({ key: 'tokens' });
-    let maxUserTokens = tokens.maxusertokens ? parseInt(tokens.maxusertokens) : 5000;
-
+    let maxUserTokens = tokens?.value ? parseInt(tokens?.value) : 5000;
+    
     // Create the new user
     const newUser = await User.create({
       fname,
@@ -59,7 +60,7 @@ export const registerUser = async (req, res, next) => {
     });
 
     // Send confirmation email
-    sendEmail(newUser.email, "User Signup", { name: newUser.fname, email: newUser.email, password }, "../utils/template/adminApprovedUser.handlebars", false);
+    sendEmail(newUser.email, "User Signup", { name: newUser.fname, email: newUser.email, password, platform: config.CLIENT_URL }, "../utils/template/adminApprovedUser.handlebars", true);
 
     res.status(StatusCodes.CREATED).json({ msg: AuthMessages.USER_REGISTERED_SUCCESSFULLY });
   } catch (error) {

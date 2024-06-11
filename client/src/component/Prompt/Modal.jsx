@@ -6,7 +6,10 @@ import { axiosOpen,axiosSecureInstance } from "../../api/axios";
 import Layout from "antd/es/layout/layout";
 import { PromptTemplateContext } from "../../contexts/PromptTemplateContext";
 import { useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../contexts/themeConfig";
+
 const Modal = () => {
+  const { theme } = useContext(ThemeContext);
   // const wino
   const { updateCurrentPromptTemplate } = useContext(PromptTemplateContext);
   const navigate = useNavigate();
@@ -76,7 +79,7 @@ const Modal = () => {
           height={25}
         >
           <path
-            stroke="#fff"
+            stroke={theme === "light" ? "#000" : "#fff"}
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
@@ -129,13 +132,19 @@ const Modal = () => {
                       })
                       .map((template) => (
                         <>
-                          <li key={template._id} style={{listStyle:'none'}}>
+                          <li key={template._id} style={{ listStyle: "none" }}>
                             <h4>{template.title}</h4>
                           </li>
-                          <div style={{display: 'flex', justifyContent: "space-between", gap: '1rem'}}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              gap: "1rem",
+                            }}
+                          >
                             <p>{template.description}</p>
                             <button
-                            style={{height: '3rem'}}
+                              style={{ height: "3rem" }}
                               className="btn btn-outline-light"
                               onClick={() => handleTest(template.description)}
                             >

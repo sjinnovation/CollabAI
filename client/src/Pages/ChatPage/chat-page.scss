@@ -1,45 +1,70 @@
 .chat-box {
-    background-color: #353540;
-    position: relative;
-    line-height: 24px;
-    width: 50vw;
-    height: 100%;
-    width: 100%;
-    color: #d1d5db;
-    font-size: 16px;
-  }
+  position: relative;
+  line-height: 24px;
+  width: 50vw;
+  height: 100%;
+  width: 100%;
+  font-size: 16px;
+}
 
-  // chatLogWrapper
-  .chat-list-container {
-    // height: 74vh;
-    height: 70vh;
-    overflow-y: auto;
-  }
+// chatLogWrapper
+.chat-list-container {
+  // height: 74vh;
+  height: 75vh;
+  overflow-y: auto;
+}
 
-  /* Apply to all selectable text elements within the markdown container */
-// .bot-response-markdown-container ::selection {
-//   background: black;
-// }
+.bot-response-control-container {
+  display: flex;
+}
 
-.copy-icon {
+.copy-icon,
+.share-icon {
   border: none;
   margin: 0;
   background: transparent;
-  display: none; /* Hide the copy icon button by default */
   color: #9b9b9b;
+  font-size: 14px;
 }
 
-.copy-icon:hover {
-  color: white;
+.copy-icon:hover,
+.share-icon:hover {
   background: transparent;
 }
 
-.bot-response-markdown-container:hover .copy-icon {
-  display: block; /* Show the copy icon button when the markdown-container is hovered */
+.copy-text {
+  margin-left: 5px;
 }
 
-.bot-response-copy-btn {
+.bot-response-copy-btn,
+.bot-response-share-btn {
   display: flex;
   height: 28px;
   margin-top: 4px;
+}
+
+.floating-title {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 9999; /* This will make sure the title is always on top */
+}
+
+.draftMessage {
+  font-size: 14px;
+}
+
+.draftUrl {
+  text-decoration: none;
+  color: #224f99;
+  font-weight: bold;
+  padding: 8px;
+  margin-left: 14px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  background-color: transparent;
+}
+
+.draftUrl:hover {
+  background-color: #eaeaea;
 }

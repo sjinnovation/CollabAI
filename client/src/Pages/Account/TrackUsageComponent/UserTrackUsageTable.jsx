@@ -1,9 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react';
 import { Table } from 'antd';
 
-const UserTrackUsageTable = ({dataProps}) => {
-  const {data, columns ,loading} = dataProps;
+const UserTrackUsageTable = ({ dataProps }) => {
+  const { data, columns, loading } = dataProps;
+  const [pageSize, setPageSize] = useState(10);
 
+  const handlePageSizeChange = (current, size) => {
+    setPageSize(size);
+  };
 
   return (
     <div className='mt-2'>
@@ -11,19 +15,18 @@ const UserTrackUsageTable = ({dataProps}) => {
         loading={loading}
         columns={columns}
         dataSource={data}
-        // pagination={{
-        //   pageSize: 10,
-        //   total: filteredTeams?.length,
-        //   onChange: (page, pageSize) => {
-        //     // fetchUserDetails(page)
-        //   },
-        // }}
         scroll={{ x: true, y: '50vh' }}
         bordered
         responsive
+        pagination={{
+          pageSize: pageSize,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '30', '40', '50'],
+          onShowSizeChange: handlePageSizeChange,
+        }}
       />
     </div>
-  )
-}
+  );
+};
 
-export default UserTrackUsageTable
+export default UserTrackUsageTable;

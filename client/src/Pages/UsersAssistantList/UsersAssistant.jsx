@@ -9,6 +9,7 @@ import {
   Tooltip,
   Typography,
   Switch,
+  Tabs
 } from "antd";
 import { AiOutlineDelete, AiOutlineEdit, AiOutlineArrowUp } from "react-icons/ai";
 
@@ -24,8 +25,44 @@ import DebouncedSearchInput from "../SuperAdmin/Organizations/DebouncedSearchInp
 import { axiosSecureInstance } from "../../api/axios";
 import { SEARCH_ALL_USER_CREATED_ASSISTANTS_SLUG } from "../../constants/Api_constants";
 import { getUserID } from "../../Utility/service";
+import FavoriteAssistantList from "../../component/Assistant/FavoriteAssistantList"; 
+import SingleUserAssistants from "../../component/Assistant/PersonalAssistantList"; 
+import { usePublicAssistant } from "../../Hooks/usePublicAssistantPage";
+import { useFavoriteAssistant } from "../../Hooks/useFavoriteAssistantPage";
+import { getFavoriteAssistant } from "../../api/favoriteAssistant";
+import { MdOutlineAssistant } from "react-icons/md";
 
+import {
+  SettingOutlined,
+  BuildFilled,
+  UserDeleteOutlined,
+  GlobalOutlined ,
+  HeartOutlined
+} from "@ant-design/icons";
+import AdminAssistantList from "../../component/Assistant/AdminAssistantList";
 const { Title } = Typography;
+const IconComponent = ({ label }) => {
+  switch (label) {
+    case "My Assistants":
+      return <MdOutlineAssistant className="me-2" />;
+    case "Favorite Assistants":
+      return <HeartOutlined  className="me-2" />;  
+
+  }
+};
+const renderTabPane = (key, label, Component, data) => (
+  <Tabs.TabPane
+    key={key}
+    tab={
+      <span>
+        <IconComponent label={label} />
+        {label}
+      </span>
+    }
+  >
+    <Component data={data} />
+  </Tabs.TabPane>
+);
 
 //constants
 const initialAssistantState = {
@@ -40,6 +77,7 @@ const initialAssistantState = {
   static_questions: [],
 };
 
+
 const UserAssistants = () => {
   //-----States ------//
   const [showModal, setShowModal] = useState(false);
@@ -50,6 +88,7 @@ const UserAssistants = () => {
   const [assistantData, setAssistantData] = useState({
     ...initialAssistantState,
   });
+
   const [searchQuery, setSearchQuery] = useState("");
 
   //------Side Effects ---------//
@@ -68,8 +107,15 @@ const UserAssistants = () => {
     totalCount,
     setAdminUserAssistants,
     updateLoader,
-    searchPersonalAssistants
+    searchPersonalAssistants,
+    handlePublicAssistantAdd,
   } = useAssistantPage();
+
+  const {
+    
+    handleDeletePublicAssistant
+  } = usePublicAssistant();
+  const { handleDeleteFavoriteAssistant } = useFavoriteAssistant();
 
   //--------Local functions------------//
   const showEditModalHandler = (assistant) => {
@@ -90,9 +136,8 @@ const UserAssistants = () => {
 
   const redirectToAssistant = (record) => {
     
-    const assistantName = record.name.split(" ").join("-");
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantName}/${assistantId}`;
+    const url = `/assistants/${assistantId}`;
     window.open(url, "_blank");
   };
 
@@ -169,6 +214,36 @@ const UserAssistants = () => {
               </Button>
             </div>
           </div>
+          <Tabs defaultActiveKey="1">
+          {renderTabPane("1", "My Assistants", SingleUserAssistants, {
+              adminUserAssistants,
+              loader,
+              handleDeleteAssistant,
+              handleUpdateAssistant,
+              showEditModalHandler,
+              handleFetchUserCreatedAssistants,
+              handlePublicAssistantAdd,
+              getFavoriteAssistant,
+              handleDeleteFavoriteAssistant
+            })}
+
+            {renderTabPane("2", "Favorite Assistants", FavoriteAssistantList, {
+              adminUserAssistants,
+              loader,
+              handleDeleteAssistant,
+              handleUpdateAssistant,
+              showEditModalHandler,
+              handleFetchUserCreatedAssistants,
+              handlePublicAssistantAdd,
+              getFavoriteAssistant,
+              handleDeleteFavoriteAssistant
+            })}
+
+
+
+
+
+          </Tabs>
           <CreateAssistantModal
             data={{
               handleClose,
@@ -183,30 +258,6 @@ const UserAssistants = () => {
               isFunctionCallingAssistant,
               activeKey,
               setActiveKey,
-            }}
-          />
-          <div className="mb-4">
-            <DebouncedSearchInput
-              data={{
-                search: searchQuery,
-                setSearch: setSearchQuery,
-                placeholder: "Search assistants",
-              }}
-            />
-          </div>
-          <Table
-            loading={loader.ASSISTANT_LOADING}
-            bordered={true}
-            columns={columns}
-            dataSource={adminUserAssistants}
-            scroll={{ y: "50vh" }}
-            pagination={{
-              pageSize: 10,
-              total: totalCount,
-              onChange: (page) => {
-                handleFetchUserCreatedAssistants(page)
-                
-              }
             }}
           />
         </div>
