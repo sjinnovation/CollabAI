@@ -87,7 +87,7 @@ Follow the steps below to get the project up and running.
 ### Setup
 1. **Clone the Repository**
    ```bash
-   https://github.com/sjinnovation/CollaborativeAI.git
+   https://github.com/sjinnovation/CollabAI.git
    
 
 2. **Navigate to the Client Folder**
