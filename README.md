@@ -1,11 +1,11 @@
-# Collaborative AI
+# CollabAI
 
 ## About
-Welcome to CollaborativeAi.Software, where we've taken the world of AI to new heights. We've been working tirelessly to bring you the most advanced, user-friendly platform that seamlessly integrates with the powerful OpenAI API, Gemini, and Claude. 
+Welcome to Collabai.software, where we've taken the world of AI to new heights. We've been working tirelessly to bring you the most advanced, user-friendly platform that seamlessly integrates with the powerful OpenAI API, Gemini, and Claude. 
 
-Imagine running your own ChatGPT on your server, with the ability to manage access for your entire team. Picture creating custom AI assistants that cater to your unique needs, and organizing your employees into groups for streamlined collaboration. With CollaborativeAi.Software, this is not just a dream, but a reality.
+Imagine running your own ChatGPT on your server, with the ability to manage access for your entire team. Picture creating custom AI assistants that cater to your unique needs, and organizing your employees into groups for streamlined collaboration. With Collabai.software, this is not just a dream, but a reality.
 
-## CollaborativeAi.Software Features:
+## Collabai.software Features:
 
 **Self-Hosting on Your Cloud:** Gain full control by hosting the platform on your private cloud. Ensure data privacy by using your API codes, allowing for secure data handling.
 
