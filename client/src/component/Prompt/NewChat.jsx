@@ -1,27 +1,39 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FaRegEdit } from "react-icons/fa";
-import { Avatar } from "antd";
-import { botIconsMap } from "../../constants/chatPageConstants";
+import { FaPlus } from "react-icons/fa";
+import { Button, ConfigProvider, Flex } from "antd";
 
 const NewChat = ({ setChatLog, setShowMenu }) => {
-    const navigate = useNavigate();
-    const newChatIcon = botIconsMap.newChat.icon;
+  const navigate = useNavigate();
 
-    return (
-        <div
-            onClick={() => {
-                navigate("/chat", { replace: true  });
-            }}
-            className={`thread mb-2 d-flex justify-content-between align-items-center`}
+  return (
+    <div className={`new-chat-btn`}>
+      <ConfigProvider
+        theme={{
+          token: {
+            // Seed Token
+            colorPrimary: "#2952BF",
+
+            borderRadius: 6,
+            algorithm: true,
+          },
+        }}
+      >
+        <Button
+          size="medium"
+          onClick={() => {
+            navigate("/chat", { replace: true });
+          }}
+          type="primary"
+          block
+          icon={<FaPlus />}
+          style={{ backgroundColor: "#2952BF", borderColor: "#2952BF" }}
         >
-            <div className="d-flex align-items-center gap-2">
-                <Avatar style={{ width: 41, height: 41 }} src={newChatIcon} /> 
-                <p className="fw-bold">New Chat</p>
-            </div>
-            <FaRegEdit className="" size={18} />
-        </div>
-    );
+          New Chat
+        </Button>
+      </ConfigProvider>
+    </div>
+  );
 };
 
 export default NewChat;

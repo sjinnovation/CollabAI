@@ -3,7 +3,7 @@ import { getUserID } from "../../Utility/service";
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { Checkbox } from 'antd';
-import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import { IoChatbubbleEllipsesOutline, IoGitCompareOutline } from "react-icons/io5";
 import { BsRobot } from "react-icons/bs";
 import "./Assistant.css";
 //libraries
@@ -24,6 +24,10 @@ import { fetchPublicAssistant, getFavoriteCount, deleteSinglePublicAssistant, ad
 import { showDeletePublicConfirm, handleCheckboxChange } from "../../Utility/showModalHelper";
 import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/DebouncedSearchInput";
 import { CustomSpinner } from "../common/CustomSpinner";
+import { personalizeAssistant } from "../../api/personalizeAssistant";
+import { LuCopyPlus } from "react-icons/lu";
+import { SyncOutlined } from "@ant-design/icons";
+import { axiosSecureInstance } from "../../api/axios";
 
 const { confirm } = Modal;
 
@@ -38,37 +42,47 @@ const PublicAssistantList = ({ data }) => {
         handleFetchUserCreatedAssistants,
         handlePublicAssistantAdd,
         getFavoriteAssistant,
-        handleDeletePublicAssistant
+        handleDeletePublicAssistant,
+        publicAssistant, 
+        setPublicAssistant, 
+        setIsLoading,
+        isLoading,
+        setLoadMyAssistants,
+        updateLoader
     } = data;
 
-    const [publicAssistant, setPublicAssistant] = useState([]);
-    const [totalCount, setTotalCount] = useState([]);
+    const [totalCount, setTotalCount] = useState();
     const [searchQuery, setSearchQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
+    const [isAssistantSyncing,setIsAssistantSyncing] = useState(false);
 
 
-    useEffect(() => {
-        // Fetch favorite cards from the API
-        fetchPublicAssistant(publicAssistant, setPublicAssistant, setIsLoading);
-    }, []);
+useEffect(()=>{
+    // Fetch public assistants
+    const page = 1;
+    const searchQuery = ""
+    
+    fetchPublicAssistant(publicAssistant, setPublicAssistant, setIsLoading,setTotalCount,page,searchQuery);
+},[]);
+useEffect(()=>{
+    // Fetch public assistants
+    const page = 1;
+    fetchPublicAssistant(publicAssistant, setPublicAssistant, setIsLoading,setTotalCount,page,searchQuery);
+},[searchQuery]);
 
 
-    // Filter the data based on the search query
-    const filteredData = publicAssistant.filter(item => {
-        const itemName = item.name.toLowerCase();
-        const query = typeof searchQuery === 'string' ? searchQuery.toLowerCase() : '';
-        return itemName.includes(query);
-    });
+
+const query = typeof searchQuery === 'string' ? searchQuery?.toLowerCase() : '';
+
 
     // Open selected card in a new page
     const openAssistantNewPage = (assistantId, name) => {
-        navigate(`/assistants/${assistantId}`);
+        navigate(`/agents/${assistantId}`);
 
     };
 
     const columns = [
         {
-            title: "Assistant",
+            title: "Agent",
             dataIndex: "name",
             key: "name",
             align: "center",
@@ -109,14 +123,14 @@ const PublicAssistantList = ({ data }) => {
             render: (_, record) => (
 
                 <Space size="middle">
-                    <Tooltip title="Chat with Assistant">
+                    <Tooltip title="Chat with Agent">
                         <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><IoChatbubbleEllipsesOutline /></Button>
                     </Tooltip>
 
                     <Tooltip title="Delete">
                         <Button
 
-                            onClick={() => showDeletePublicConfirm(record, handleDeletePublicAssistant, handleUpdateAssistant, publicAssistant, setPublicAssistant)}
+                            onClick={async () => await showDeletePublicConfirm(record, handleDeletePublicAssistant, handleUpdateAssistant, publicAssistant, setPublicAssistant)}
                             danger
                             icon={<AiOutlineDelete />}
                             loading={
@@ -126,6 +140,16 @@ const PublicAssistantList = ({ data }) => {
                                 loader.ASSISTANT_DELETING
                             }
                         />
+                    </Tooltip>
+
+                    <Tooltip title="Personalize Agent">
+                        <Button onClick={async () => 
+                            {await personalizeAssistant(record?.assistant_id);
+                                setLoadMyAssistants(true);
+
+                            
+                            }
+                        }><LuCopyPlus /></Button>
                     </Tooltip>
                     <Tooltip title="Add to Feature">
                         <Checkbox
@@ -138,7 +162,14 @@ const PublicAssistantList = ({ data }) => {
         },
 
     ];
-
+const handleSyncButton = async ()=>{
+    setIsAssistantSyncing(true);
+    setIsLoading(true);
+    const isSyncSuccess = await axiosSecureInstance.get('api/assistants/public/sync');
+    message.success(isSyncSuccess.data.message);
+    setIsLoading(false);
+    setIsAssistantSyncing(false);
+};
 
 
     return (
@@ -149,19 +180,26 @@ const PublicAssistantList = ({ data }) => {
                     data={{
                         search: searchQuery,
                         setSearch: setSearchQuery,
-                        placeholder: "Search Assistant",
+                        placeholder: "Search Agent",
                     }}
                 />
+               &nbsp;&nbsp;&nbsp; Sync Public Assistants  <Button icon={isLoading && isAssistantSyncing?<SyncOutlined spin/>:<SyncOutlined  />} onClick={handleSyncButton}></Button>
+                
+
             </div>
                 <Table
                 loading={isLoading}
                     bordered={true}
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={publicAssistant}
                     scroll={{ y: '50vh' }}
+
                     pagination={{
                         pageSize: 10,
-                        total: filteredData?.length,
+                        total: totalCount,
+                        onChange: (page) => {
+                            fetchPublicAssistant(publicAssistant, setPublicAssistant, setIsLoading,setTotalCount,page,query);              
+                        }
                       }}
                 />
 

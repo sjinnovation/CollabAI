@@ -56,7 +56,7 @@ const AssistantTypeList = () => {
       if (success && data) {
         AntdMessage.success(message);
         setLoader(false);
-      handleFetchAssistantTypes();
+      await handleFetchAssistantTypes();
       } else {
         setLoader(false);
         AntdMessage.error(message);
@@ -73,7 +73,7 @@ const AssistantTypeList = () => {
       const { success, message } = await deleteAssistantType(assistantTypeIdToDelete);
       if (success) {
         AntdMessage.success(message);
-        handleFetchAssistantTypes();
+        await handleFetchAssistantTypes();
         setConfirmationModalOpen(false);
       } else {
         AntdMessage.error(message);
@@ -105,7 +105,7 @@ const AssistantTypeList = () => {
       const { success, data, message } = await updateAssistantType(assistantTypeIdToEdit, updatedData);
       if (success) {
         AntdMessage.success(message);
-        handleFetchAssistantTypes();
+        await handleFetchAssistantTypes();
       } else {
         AntdMessage.error(message);
       }
@@ -131,10 +131,10 @@ const AssistantTypeList = () => {
         <div className="container" >
           <div className="d-flex align-items-center justify-content-between">
             <div className="col-8">
-              <Title level={2}>Assistant Types</Title>
+              <Title level={2}>Agent Types</Title>
             </div>
             <div>
-              <Button onClick={showCreateAssistantTypeModal}>+ Assistant Type</Button>
+              <Button onClick={showCreateAssistantTypeModal}>+ Agent Type</Button>
             </div>
           </div>
           <div>
@@ -183,7 +183,7 @@ const AssistantTypeList = () => {
             open={confirmationModalOpen}
             onConfirm={handleDeleteAssistantType}
             onCancel={handleCancel}
-            content="Are you sure! you want to delete this assistant type?"
+            content="Are you sure! you want to delete this agent type?"
           />
 
         </div>

@@ -13,28 +13,31 @@ import { ThemeProvider } from "./contexts/ThemeProvider";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 root.render(
   // <React.StrictMode>
-    <ThemeProvider>
-      <ThemeContext.Consumer>
-        {({ theme }) => (
-          <ConfigProvider theme={theme === "dark" ? darkConfig : lightConfig}>
-            <BrowserRouter>
+  <ThemeProvider>
+    <ThemeContext.Consumer>
+      {({ theme }) => (
+        <ConfigProvider theme={theme === "dark" ? darkConfig : lightConfig}>
+          <BrowserRouter>
+            <GoogleOAuthProvider clientId={CLIENT_ID}>
               <NewAuthProvider>
                 <Routes>
                   <Route path="/*" element={<App />} />
-              </Routes>
-              <ToastContainer />
+                </Routes>
+                <ToastContainer />
               </NewAuthProvider>
-            </BrowserRouter>
-          </ConfigProvider>
-        )}
+            </GoogleOAuthProvider>
+          </BrowserRouter>
+        </ConfigProvider>
+      )}
     </ThemeContext.Consumer>
-    
-    </ThemeProvider>
+
+  </ThemeProvider>
   // </React.StrictMode>
 );
 

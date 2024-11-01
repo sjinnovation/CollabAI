@@ -76,8 +76,8 @@ const SuperAdminNavLinks = () => {
           />
           
         }
-        text="Assistant Types"
-        link="/assistant-types"
+        text="Agent Types"
+        link="/agent-types"
       />
       {/*
                             // [NOTE: commenting for now, in future will be updated]   
@@ -185,8 +185,8 @@ const SuperAdminNavLinks = () => {
             style={{ color: theme === "light" ? "#000" : "#fff" }}
           />
         }
-        text="Assistants"
-        link="/assistantsList"
+        text="Agents"
+        link="/agentsList"
       />
       {/* [TODO : commenting for now, will be added later when organization functionality will be enabled ] */}
       {/* <NavLinks

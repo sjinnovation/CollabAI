@@ -36,49 +36,15 @@ export const getFavoriteCount = async (assistantId) => {
 
 };
 
-export const fetchPublicAssistant = async (publicAssistant, setPublicAssistant,setIsLoading) => {
+export const fetchPublicAssistant = async (publicAssistant, setPublicAssistant,setIsLoading,setTotalCount,page,searchQuery) => {
     setIsLoading(true);
-    const response = await axiosSecureInstance.get(FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS());
+    const pageSize = 10;
 
-    const filteredPublicAssistantData = response.data.result;
-    const promises = filteredPublicAssistantData.map(async col => {
-        try {
-            const response = await axiosSecureInstance.get(GET_SINGLE_PUBLIC_ASSISTANT(col.assistant_id));
-            if (response.status !== 200) {
-                // If the response is not OK, throw an error
-                throw new Error('Error fetching additional data');
-            }
+    const response = await axiosSecureInstance.get(FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS(page,pageSize,searchQuery));
+    setPublicAssistant(response.data.result);
+    setTotalCount(response.data.totalCount);
+    setIsLoading(false);
 
-            const singlePublicAssistantData = response.data;
-
-            const count = singlePublicAssistantData.documentWithCount.count;
-
-            const resp = await axiosSecureInstance.post(GET_USER_PROFILE_API_SLUG,{
-                "userId" : col.userId
-            });
-
-            if (resp.status !== 200) {
-                // If the response is not OK, throw an error
-                throw new Error('Error fetching additional data');
-
-            }
-            const info = await resp.data;
-            const userInfo = info.user.fname + " " + info.user.lname
-
-            return { ...col, count: count, userInfo: userInfo };
-        } catch (error) {
-            throw new Error('Error fetching additional data :',error);
-        }finally {
-            setIsLoading(false);
-          }
-    });
-
-
-    Promise.all(promises)
-        .then(publicAssistant => {
-            setPublicAssistant(publicAssistant);
-
-        });
 
 };
 export const deleteSinglePublicAssistant = async (assistantId) => {
@@ -151,15 +117,18 @@ export const fetchCards = async (cardsWithAdditionalData, setCardsWithAdditional
     };
 };
 
-export const getPublicAssistantWithCategory = async (searchQuery, selectAssistantType) => {
+export const getPublicAssistantWithCategory = async (searchQuery, selectAssistantType,loadMorePageAndType=[]) => {
     
     try {
-      const response = await axiosSecureInstance.get(FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS_DETAILS(searchQuery, selectAssistantType));
+        
+      const loadMoreData={
+        data : loadMorePageAndType
+      }
+      const response = await axiosSecureInstance.post(FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS_DETAILS(searchQuery, selectAssistantType),loadMoreData);
       const assistantsByCategory = response?.data?.data?.assistantByTypes;
       const featuredAssistants = response?.data?.data?.featuredAssistant;
       return { success: true, assistantsByCategory, featuredAssistants };
     } catch (error) {
-      console.log("🚀 ~ getPublicAssistantWithCategory ~ error:", error)
       return { success: false, message: error?.response?.data?.message };
     }
   };

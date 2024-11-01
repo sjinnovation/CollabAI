@@ -21,6 +21,8 @@ import { generateOpenAIStreamResponse } from "../../service/openaiService.js";
 import { generateGeminiAIStreamResponse } from "../../service/geminiAiPromptService.js";
 import { generateClaudeAIStreamResponse } from "../../service/claudeAiPromptService.js";
 import { calculateTokenAndCost } from "../../service/trackUsageService.js";
+import { extractAllGoogleDriveLinks, extractFileOrFolderId, longFileContextToUsableFileContext, replaceGoogleDriveLinks } from "../../utils/googleDriveHelperFunctions.js";
+import { downloadFilesFromGoogleDriveLink, getFileMetadata } from "../../controllers/googleAuth.js";
 
 /**
  * Creates a new chat using OpenAI's GPT-3 model and emits the response to the client.
@@ -37,11 +39,36 @@ export const createChat = async function (payload) {
 	const socket = this;
 	const socketEvent = 'chat:created';
 
-  const { userPreferences, desiredAiResponse } = await getUserCustomization(socket.user.userId);
 
+  const { userPreferences, desiredAiResponse } = await getUserCustomization(socket.user.userId);
   try {
     const { threadId, userPrompt, chatLog, tags, botProvider } = payload;
+    const links = extractAllGoogleDriveLinks(userPrompt);
+	let modifiedPrompt =  userPrompt;
+	  if (links?.length > 0) {
+		  const changedQuestionWithDataContext = replaceGoogleDriveLinks(userPrompt);
 
+		  const fileIds = links.map(link => extractFileOrFolderId(link));
+		  const { fileName, mimeType, fileSize } = await getFileMetadata(fileIds[0], socket.user.userId);
+		  let fileDataContext = [];
+
+		  if (fileName !== '' && mimeType !== '' && fileSize !== 0) {
+			  if (fileSize < 5000000) {
+				  fileDataContext = await downloadFilesFromGoogleDriveLink(links, socket.user.userId);
+			  }
+			  if (fileDataContext.length > 0) {
+				  const truncatedPrompt = await longFileContextToUsableFileContext(fileDataContext,botProvider);
+				  modifiedPrompt = `Based on the following documents, answer the question: ${changedQuestionWithDataContext}  ,ignore if there is any 'ENCODED_LINK' found in the question and do not try to access ENCODED_LINK. \n\nDocuments:\n${truncatedPrompt}`;
+			  } else {
+				  modifiedPrompt = "show this message only 'File Size Exceeds 5MB,please download it and upload for great experience'  and do not write anything extra with it";
+
+			  }
+		  } else {
+			  modifiedPrompt = "Write this message only 'Please Connect Your Apps First to Chat with any Apps Link'";
+
+		  }
+
+	  }
     await checkMaxUserTokensExhausted(socket.user.userId);
 
     // Constructing the final response object to emit to the client
@@ -65,7 +92,7 @@ export const createChat = async function (payload) {
 				// Generating OpenAI stream response
 				({ stream, model } =
 					await generateOpenAIStreamResponse({
-						prompt: userPrompt,
+						prompt:modifiedPrompt, //userPrompt,
 						chatLog,
 						userPreferences,
 						desiredAiResponse,
@@ -86,7 +113,7 @@ export const createChat = async function (payload) {
 				// Generating Gemini AI stream response
 				({ stream, model } =
 					await generateGeminiAIStreamResponse({
-						prompt: userPrompt,
+						prompt: modifiedPrompt,//userPrompt,
 						chatLog,
                         userId
 					}));
@@ -105,7 +132,7 @@ export const createChat = async function (payload) {
 				// Generating Claude AI stream response
 				({ stream, model } =
 					await generateClaudeAIStreamResponse({
-						prompt: userPrompt,
+						prompt: modifiedPrompt, //userPrompt,
 						chatLog,
                         userId
 					}));

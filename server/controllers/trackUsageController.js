@@ -34,7 +34,7 @@ export const getAllTrackUsageMonthly = async (req, res, next) => {
     if (role === UserRole.USER) {
       filter.user_id = _id;
     } else if (userid) {
-      filter.user_id = mongoose.Types.ObjectId(userid);
+      filter.user_id = new mongoose.Types.ObjectId(userid);
     }
 
     let dateFilter = {};

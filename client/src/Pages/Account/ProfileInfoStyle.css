@@ -1,0 +1,47 @@
+/* styles.css */
+.profile--container {
+    display: flex;
+    width: 100%;
+}
+
+.profile-card {
+    margin-right: 20px;
+}
+
+.profile-card__container {
+    width: 300px;
+}
+.profile-card__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scrollable-list {
+    max-height: 61vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.profile-card__avatar > img {
+    object-fit: contain;
+}
+
+.editConfigInputField,
+.editConfigSelectField {
+    width: 290px;
+}
+
+@media only screen and (max-width: 780px) {
+    .profile--container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    .profile-card {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+    }
+  }
+  

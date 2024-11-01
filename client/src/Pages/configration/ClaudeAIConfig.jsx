@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getConfig, updateConfig } from '../../api/settings';
 import { Input, Select, message, List } from 'antd';
+import { ClaudeModels } from '../../constants/setting_constant';
 const { Option } = Select;
 
-const ClaudeAIConfig = () => {;
+const ClaudeAIConfig = () => {
 	const [formState, setFormState] = useState({});
 	const [isEditing, setIsEditing] = useState(false);
 
@@ -16,7 +17,7 @@ const ClaudeAIConfig = () => {;
 					claudeApiKey: response.claudeApiKey,
 					claudeTemperature: response.claudeTemperature,
 					claudeModel: response.claudeModel,
-                    claudeMaxToken: response.claudeMaxToken
+					claudeMaxToken: response.claudeMaxToken
 				}));
 			}
 		} catch (error) {
@@ -63,9 +64,9 @@ const ClaudeAIConfig = () => {;
 			description: formState?.claudeTemperature || '',
 		},
 		{ title: 'ClaudeModel', description: formState?.claudeModel || '' },
-        { title: 'Max Token (up to 4096 tokens)', description: formState?.claudeMaxToken || '' },
+		{ title: 'Max Token (up to 4096 tokens)', description: formState?.claudeMaxToken || '' },
 	];
-   
+
 
 	return (
 		<>
@@ -93,7 +94,7 @@ const ClaudeAIConfig = () => {;
 											}
 										/>
 									) : item.title ==
-									  'ClaudeAiTemperature (between 0 and 1)' ? (
+										'ClaudeAiTemperature (between 0 and 1)' ? (
 										<Input
 											placeholder="Set Temperature"
 											type="number"
@@ -126,39 +127,32 @@ const ClaudeAIConfig = () => {;
 												})
 											}
 										>
-											<Option value="claude-3-opus-20240229">
-												claude-3-opus-20240229
-											</Option>
-											<Option value="claude-3-sonnet-20240229">
-												claude-3-sonnet-20240229
-											</Option>
-											<Option value=" claude-3-haiku-20240307">
-												{' '}
-												claude-3-haiku-20240307
-											</Option>
+											{ClaudeModels?.map((model, i) => (
+												<Option key={i} value={model.value}>{model.label}</Option>
+											))}
 										</Select>
-                                        ) : item.title ==
-                                        'Max Token (up to 4096 tokens)' ? (
-                                          <Input
-                                              placeholder="Set MaxToken"
-                                              type="number"
-                                              name="claudeMaxToken"
-											  className="editConfigInputField"
-                                              value={
-                                                  formState.claudeMaxToken ||
-                                                  ''
-                                              }
-                                              min={0}
-                                              max={4096}
-                                              step={10}
-                                              onChange={(e) =>
-                                                  setFormState({
-                                                      ...formState,
-                                                      claudeMaxToken:
-                                                          e.target.value,
-                                                  })
-                                              }
-                                          />
+									) : item.title ==
+										'Max Token (up to 4096 tokens)' ? (
+										<Input
+											placeholder="Set MaxToken"
+											type="number"
+											name="claudeMaxToken"
+											className="editConfigInputField"
+											value={
+												formState.claudeMaxToken ||
+												''
+											}
+											min={0}
+											max={4096}
+											step={10}
+											onChange={(e) =>
+												setFormState({
+													...formState,
+													claudeMaxToken:
+														e.target.value,
+												})
+											}
+										/>
 									) : null
 								) : item.title == 'ClaudeAI API key' ? (
 									renderSecretKey()

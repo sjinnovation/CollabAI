@@ -9,7 +9,7 @@ const Trash = () => {
   const [chatThread, setChatThread] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { triggerNavContent, setTriggerNavContent } = useContext(SidebarContext);
+  const { triggerNavContent, setTriggerNavContent, threadRestore, setThreadRestore } = useContext(SidebarContext);
   const hasSelected = selectedRowKeys.length > 0;
   const onSelectChange = (newSelectedRowKeys) => {setSelectedRowKeys(newSelectedRowKeys)};
   const rowSelection = { selectedRowKeys, onChange: onSelectChange };
@@ -31,6 +31,7 @@ const Trash = () => {
     if (operationType === 'recover') {
       apiCall = handleRecovery;
       requestBody = { selectedThreadIds: threadIds };
+      setThreadRestore(true);
     } else {
       apiCall = handlePermanentDelete;
       requestBody = { threadIds: threadIds };

@@ -86,7 +86,7 @@ export const generateGeminiAIStreamResponse = async (payload) => {
  * @function generateGeminiHttpResponse
  * @description Creates a stream of responses from gemini based on dialogue context and a user prompt.
  * @param {Object} payload - An object containing the userPrompt,chatLog and userId
- * @param {string} payload.userPrompt - The user's input to the model.
+ * @param {string} payload.modifiedPrompt - The user's input to the model.
  * @param {Array} payload.chatLog - The chat history to provide context for the model's response.
  * @param {string} payload.userId - The userId to get user saved details
  * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
@@ -94,7 +94,7 @@ export const generateGeminiAIStreamResponse = async (payload) => {
  */
 
 export const generateGeminiHttpResponse = async (payload) => {
-  const { userPrompt,chatLog, userId} = payload;
+  const { modifiedPrompt,chatLog, userId} = payload;
   try {
     const geminiAi = await getGeminiAIInstance();
     const temperature = parseFloat(await getOpenAiConfig('temperature'));
@@ -114,7 +114,7 @@ export const generateGeminiHttpResponse = async (payload) => {
       generationConfig,
     });
 
-    const result = await geminiModel.generateContent(userPrompt);    
+    const result = await geminiModel.generateContent(modifiedPrompt);    
     const response = result.response.text();
     
     return {

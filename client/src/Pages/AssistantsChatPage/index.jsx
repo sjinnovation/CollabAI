@@ -1,5 +1,5 @@
 // AssistantsChatPage.jsx
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useContext } from "react";
 
 // libraries
 import { useParams } from "react-router-dom";
@@ -22,11 +22,14 @@ import AssistantInfo from "./AssistantInfo";
 import { Typography } from "antd";
 import { getSingleAssistant } from "../../api/assistantChatPageApi";
 import NewChatWithSameAssistant from "../../component/Prompt/NewChatWithSameAssistant";
+import { getAssistantInfo } from "../../Utility/assistant-helper";
+import { PageTitleContext } from "../../contexts/TitleContext";
 // api
 
 const AssistantsChatPage = () => {
   const { assistant_id, thread_id } = useParams();
   const [assistantName, setAssistantName] = useState("");
+  const { pageTitle, setPageTitle } = useContext(PageTitleContext)
 
   // ----- STATES ----- //
   const [showScrollToBottomButton, setShowScrollToBottomButton] =
@@ -79,8 +82,9 @@ const AssistantsChatPage = () => {
 
   // ---------- constants ---------
   const userRole = getUserRole();
+  const [isAssistantExistInOpenAI,setIsAssistantExistInOpenAI] = useState(false);
 
-  const fetchAssistantData = async () => {
+  const fetchAssistantData = async (assistant_id) => {
     const response = await getSingleAssistant(assistant_id);
     setAssistantName(response?.assistant.name);
   };
@@ -88,9 +92,14 @@ const AssistantsChatPage = () => {
   useEffect(() => {
 	setAssistantName('');
 	handleFetchAssistantInfo();
-	fetchAssistantData();
-  }, [assistant_id]);
+	fetchAssistantData(assistant_id);
+  if(getAssistantInfo(assistant_id)){
+    setIsAssistantExistInOpenAI(true);
+  }else{
+    setIsAssistantExistInOpenAI(false);
 
+  }
+  }, [assistant_id]);
   useEffect(() => {
     const scrollableDiv = chatLogWrapperRef.current;
     if (scrollableDiv) {
@@ -158,15 +167,29 @@ const AssistantsChatPage = () => {
 
   let isChatLogEmpty = chatLog.length === 0 ? true : false;
 
+  useEffect(() => {
+    console.log(assistant_id)
+    setPageTitle((prevState) => ({
+        ...prevState,
+        [`/agents/${assistant_id}`]: assistantName 
+    }))
+    if(thread_id) {
+      setPageTitle((prevState) => ({
+        ...prevState,
+        [`/agents/${assistant_id}/${thread_id}`]: assistantName 
+    }))
+    }
+  }, [assistant_id, assistantName, setPageTitle, thread_id]);
+  
   return (
     <>
       <section className="assistantChatBox d-flex flex-column justify-content-between">
-        <Typography.Title
+        {/* <Typography.Title
           level={5}
           className="floating-title py-2 px-3 rounded"
         >
           <NewChatWithSameAssistant assistantName={assistantName} assistantId={assistant_id}/>
-        </Typography.Title>
+        </Typography.Title> */}
         {/* -----[START] CHAT BOX - ALL PROMPTS ----- */}
         {isMessageFetching ? (
           <ChatSkeleton />
@@ -218,7 +241,7 @@ const AssistantsChatPage = () => {
           </div>
         )}
         {/* -----[END] CHAT BOX - ALL PROMPTS ----- */}
-        {isChatLogEmpty ? (
+      {isChatLogEmpty ? (
           <AssistantInfo
             dataProps={{
               assistantAllInfo,
@@ -235,6 +258,7 @@ const AssistantsChatPage = () => {
             }}
           />
         ) : null}
+
         {/* -----[START] CHAT BOX - SUBMIT INPUT ----- */}
         <AssistantChatInputPrompt
           states={{
@@ -244,6 +268,7 @@ const AssistantsChatPage = () => {
             isGeneratingResponse,
             hasFileAttachmentAccess,
             inputPrompt,
+            assistant_id
           }}
           refs={{ fileInputRef }}
           actions={{

@@ -44,13 +44,15 @@ export const UPDATE_ASSISTANT_TEAM_LIST_API = (assistantId) =>
   `/api/assistants/${assistantId}/teams`;
 export const UPDATE_SINGLE_ASSISTANT_API = (assistantId) =>
   `/api/assistants/${assistantId}`;
+  
 export const UPDATE_ASSISTANT_WITH_FILES_API = (assistantId) =>
   `/api/assistants/updatedatawithfile/${assistantId}`;
 export const CREATE_SINGLE_ASSISTANT_API = "/api/assistants";
 export const UPDATE_ASSISTANT_ACCESS_FOR_TEAM_API =(teamId) => `/api/teams/${teamId}`;
 
 export const UPDATE_ASSISTANT_PUBLIC_STATE_CHECK = (id) => `/api/assistants/${id}`
-export const GET_SINGLE_ASSISTANT_INFO_SLUG = (assistantId) => `api/assistants/${assistantId}/info`
+export const GET_SINGLE_ASSISTANT_INFO_SLUG = (assistantId) => `api/assistants/${assistantId}/info`;
+export const CHECK_SINGLE_ASSISTANTS_INFO = (assistantId)=>`/api/assistants/getAssistantInfo/${assistantId}`
 
 //----------------USERS_PROMPTS_DETAILS_API 
 export const USER_PROMPTS_API_SLUG = (page, limit, searchInputValue) =>
@@ -93,9 +95,11 @@ export const API_USER_PREFERENCE_SLUG = `/api/usersPreference/settings`;
 //---------- PUBLIC_ASSISTANT_API_SLUG -----------
 export const GET_ALL_PUBLIC_ASSISTANT = () => `api/assistants/public`;
 export const ADD_PUBLIC_ASSISTANT = () => `api/assistants/public`;
-export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS = () => `api/assistants/public/details_info`;
+export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS = (page = 1,pageSize = 10 ,searchQuery ) => `api/assistants/public/details_info?page=${page}&pageSize=${pageSize}&searchQuery=${searchQuery ? searchQuery : ''}`;
 
-export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS_DETAILS = (searchQuery, selectAssistantType) => `api/assistants/public/categorized?search=${searchQuery ? searchQuery : ''}&type=${selectAssistantType ? selectAssistantType: ''}`;
+
+
+export const FETCH_SINGLE_USERS_ALL_PUBLIC_ASSISTANTS_DETAILS = (searchQuery, selectAssistantType) => `api/assistants/public/categorized?search=${searchQuery ?encodeURIComponent( searchQuery):''}&type=${selectAssistantType ? encodeURIComponent(selectAssistantType): ''}`;
 export const GET_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
 export const UPDATE_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
 export const DELETE_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/public/${assistantId}`;
@@ -104,7 +108,7 @@ export const DELETE_SINGLE_PUBLIC_ASSISTANT = (assistantId) => `api/assistants/p
 
 export const GET_ALL_FAVORITE_ASSISTANT = () => `api/assistants/favourite`;
 export const ADD_FAVORITE_ASSISTANT = () => `api/assistants/favourite`;
-export const SINGLE_FAVORITE_ASSISTANT_DETAILS = (assistantId) => `api/assistants/favourite/${assistantId}/details_info`;
+export const SINGLE_FAVORITE_ASSISTANT_DETAILS = (assistantId,page = 1, pageSize = 10 ,searchQuery) => `api/assistants/favourite/${assistantId}/details_info?page=${page}&pageSize=${pageSize}&searchQuery=${searchQuery ? searchQuery : ''}`;
 
 export const GET_SINGLE_FAVORITE_ASSISTANT = (assistantId) => `api/assistants/favourite/${assistantId}`;
 export const PUT_SINGLE_FAVORITE_ASSISTANT = (assistantId) => `api/assistants/favourite/${assistantId}`;
@@ -131,3 +135,35 @@ export const GET_SINGLE_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinn
 export const PUT_SINGLE_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinned/${assistantId}`;
 export const DELETE_SINGLE_PINNED_ASSISTANT = (assistantId,userId) => `api/assistants/pinned/${assistantId}/${userId}`;
 export const DELETE_MANY_PINNED_ASSISTANT = (assistantId) => `api/assistants/pinned/${assistantId}`;
+
+//----------- KNOWLEDGE BASE API SLUG--------------------
+export const GET_ALL_OR_CREATE_KNOWLEDGE_BASE = () => `api/knowledge-base`;
+export const GET_SINGLE_OR_UPDATE_OR_DELETE_KNOWLEDGE_BASE  = (id,userId,isAdmin) => `api/knowledge-base/${id}?userId=${userId}&isAdmin=${isAdmin}`;
+export const DELETE_MULTIPLE_KNOWLEDGE_BASE  = () => 'api/knowledge-base/multidelete';
+
+export const GET_SINGLE_USERS_ALL_KNOWLEDGE_BASE_OR_UPDATE_PUBLIC_STATE  = (userId) => `api/knowledge-base/${userId}`; 
+// For getting all knowledgebase endpoint will be (userId) => `api/knowledge-base/${userId}` and for update any resource it will be (resourceId) => `api/knowledge-base/${resourceId}`
+
+export const GET_ALL_KNOWLEDGE_BASE_PAGINATED = (page, limit) => `api/knowledge-base?page=${page}&limit=${limit}`;
+export const DELETE_ALL_KNOWLEDGE_BASE_OF_A_USER =(userId)=>`api/knowledge-base/all/${userId}`
+
+//--------------- RAG APIs-------------------------------
+
+export const CREATE_VECTORS_FROM_FILE = ()=>`api/rag/create-vector`;
+export const GET_FILE_FROM_GOOGLE_DRIVE=(fileId,apiKey)=>`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`
+
+//--------------- Personalize Assistant ------------------
+export const CREATE_A_CLONE_OF_AN_ASSISTANT = ()=>`api/assistants/clone-assistant`;
+export const API_SETTINGS_ENABLE_PERSONALIZE_ASSISTANT = `/api/config/settings/personalize-assistant`;
+
+//--------------- Google Drive ---------------------
+export const SYNC_GOOGLE_DRIVE_FILES = (userId)=>`/api/google-auth/sync-files/${userId}`;
+export const GET_OR_DELETE_GOOGLE_DRIVE_AUTH_CREDENTIALS = (userId)=>`/api/google-auth/${userId}`
+export const GOOGLE_AUTH_SLUG ='/api/google-auth';
+export const GOOGLE_DRIVE_FILES_GETTING_SLUG = `https://www.googleapis.com/drive/v3/files`;
+export const GOOGLE_DRIVE_FILES_TO_KNOWLEDGE_BASE = '/api/google-auth/google-drive-to-knowledgebase'
+
+// -----------------------------WorkBoard----------------------------------
+export const REACT_APP_WORKBOARD_REDIRECT_URI = `${process.env.REACT_APP_BASE_URL_FE}/ConnectionWithWorkboard`;
+export const REACT_APP_WORKBOARD_AUTH_URL = `https://www.myworkboard.com/wb/oauth/authorize`
+

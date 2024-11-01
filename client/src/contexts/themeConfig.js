@@ -12,7 +12,7 @@ export const darkConfig = {
     },
     Input: {
       colorPrimary: "#2c2a2a",
-      colorBorder: "#2c2a2a",
+      // colorBorder: "#2c2a2a",
     },
     Form: {
       colorPrimary: "#eb2f96",
@@ -38,7 +38,7 @@ export const lightConfig = {
     },
     Input: {
       colorPrimary: "#000000",
-      colorBorder: "#000000", 
+      // colorBorder: "#000000", // - [note]: this was causing extra border on inputs
     },
     Form: {
       colorPrimary: "#000000", 

@@ -25,26 +25,27 @@ import {
   getAllAssistantsByPagination,
   downloadAssistantFile,
   getAllFunctionDefinitions,
+  assistantClone,
+  migrateAssistantsFromV1toV2,
+  createVectorStoreForAllAssistantWhereStoreNotExist,
 } from "../controllers/assistantController.js";
 import multer from 'multer';
 import authenticateUser from '../middlewares/login.js';
+import { googleAuth } from '../controllers/googleAuth.js';
 
-// const storage = multer.memoryStorage(); // You can adjust the storage configuration as needed
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "docs/"); // Directory where the uploaded files will be stored
+      cb(null, "docs/"); 
     },
     filename: (req, file, cb) => {
       const uniqueFilename = file.originalname;
       cb(null, uniqueFilename);
     },
   });
-
 const upload = multer({ storage: storage });
-
 const router = express.Router();
-
-//  router.post("/testing",tesingfunction)
+router.patch("/migrate", migrateAssistantsFromV1toV2);
+router.patch("/createVectorStoresForExistingAssistant", createVectorStoreForAllAssistantWhereStoreNotExist);
 router.route('/').get(getAllAssistants).post(upload.fields([{ name: 'files', maxCount: 21 }, { name: 'avatar', maxCount: 1 }]) , createAssistant);
 router.route('/users').get(authenticateUser, getAllUserAssignedAssistants);
 router.route('/all').get(authenticateUser, getAllAssistantsByPagination);
@@ -84,6 +85,7 @@ router
   .route("/updateFunctionCallingAssistantdata/:assistant_id")
   .patch(updateFunctionCallingAssistantdata);
 router.route("/getAssistantInfo/:assistant_id").get(getAssistantInfo);
-
+router.post("/clone-assistant",assistantClone);
+router.post("/google-auth",googleAuth);
 
 export default router;

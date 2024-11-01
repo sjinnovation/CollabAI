@@ -11,7 +11,7 @@ const AssistantNewChat = ({ setChatLog, setShowMenu }) => {
     return (
         <div
             onClick={() => {
-                navigate(`/assistants/${assistant_name}/${assistant_id}`)}}
+                navigate(`/agents/${assistant_name}/${assistant_id}`)}}
             className={`thread mb-2 d-flex justify-content-between align-items-center overflow-hidden`}
         >
             <div className="d-flex align-items-center gap-2 overflow-hidden me-1">

@@ -32,6 +32,7 @@ export const fetchAssistantsCreatedByUser = async (page, userId, personalAssista
     USER_GET_ALL_USER_CREATED_ASSISTANTS_SLUG(userId || getUserID(), page, LIMIT, personalAssistantSearchQuery)
   );
 
+
   return {
     data: response.data.assistants,
     message: response.data.message,

@@ -29,9 +29,9 @@ const CreateAssistantTypeModal = ({ dataProps }) => {
 
             <InputModal
                 propsData={{
-                    title: "Add Assistant Type",
+                    title: "Add Agent Type",
                     data: null,
-                    placeholder: "Add Assistant Type Here",
+                    placeholder: "Add Agent Type Here",
                     open: open,
                     onCancel: handleCancel,
                     onOk: handleOk,

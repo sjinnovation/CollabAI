@@ -1,5 +1,12 @@
 import { getOpenAIInstance } from "../config/openAI.js";
 import fs from "fs";
+import { checkKnowledgeBasedAssistants } from "../service/knowledgeBase.js";
+import { findAssistantContext } from "../controllers/ragImplementationWithS3Files.js";
+import { extractAllGoogleDriveLinks, extractFileOrFolderId, longFileContextToUsableFileContext, replaceGoogleDriveLinks } from "../utils/googleDriveHelperFunctions.js";
+import { downloadFilesFromGoogleDriveLink, downloadGoogleFile, getFileMetadata, getGoogleDocContent } from "../controllers/googleAuth.js";
+import { extractText } from "../controllers/preprocessOfRAG.js";
+import { getGoogleAuthCredentialService } from "../service/googleAuthService.js";
+import {encode, decode} from 'gpt-3-encoder'; 
 
 /**
  * Creates a new assistant using the OpenAI API.
@@ -11,7 +18,7 @@ import fs from "fs";
  * @param {Array} file_ids - All the file path.
  * @returns {Promise<Object>} A promise that resolves to the created assistant object.
  */
-export const createAssistantInOpenAI = (openai,name,instructions,tools,userSelectedModel,file_ids) => {
+export const createAssistantInOpenAI = (openai, name, instructions, tools, userSelectedModel, file_ids = []) => {
   return openai.beta.assistants.create({
     name,
     instructions,
@@ -19,6 +26,47 @@ export const createAssistantInOpenAI = (openai,name,instructions,tools,userSelec
     model: userSelectedModel || "gpt-4-1106-preview",
     file_ids,
   });
+};
+
+
+export const createAssistantInOpenAIv2 = async (openai,name,instructions,tools,userSelectedModel,file_ids, vectorStoreId) => {
+  const payload = {
+        name,
+        instructions,
+        tools,
+        model: userSelectedModel || "gpt-4-1106-preview",
+  }
+
+  const hasFileSearchTool = tools.some(tool => tool.type === 'file_search');
+  const hasCodeInterpreterTool = tools.some(tool => tool.type === 'code_interpreter');
+
+  if(hasCodeInterpreterTool && hasFileSearchTool){
+    payload.tool_resources = {
+      "code_interpreter": {
+        "file_ids": file_ids
+      },
+      "file_search": {
+        "vector_store_ids": [vectorStoreId]
+      }
+    }
+  }else {
+    if(hasCodeInterpreterTool){
+      payload.tool_resources = {
+        "code_interpreter": {
+          "file_ids": file_ids
+        },
+      }
+    }
+    if(hasFileSearchTool){
+      payload.tool_resources = {
+        "file_search": {
+          "vector_store_ids": [vectorStoreId]
+        }
+      }
+    }
+  }
+  const createAssistant = await openai.beta.assistants.create(payload);
+  return createAssistant;
 };
 
 /**
@@ -40,7 +88,7 @@ export const updateAssistantProperties = async (openai, assistantId, updateData)
  * @returns {Promise<Object>} A promise that resolves to the deleted files from an assistant object.
  */
 export const deleteAssistantFileByID = async (openai, assistantId, deletedFileId) => {
-  return openai.beta.assistants.files.del(assistantId, deletedFileId);
+  return openai.beta.assistants?.files?.del(assistantId, deletedFileId);
 };
 
 /**
@@ -58,9 +106,15 @@ export const createAssistantThread = (openai) => {
  * @returns {Promise<Object>} A promise that resolves to the deleted assistant thread object.
  */
 export const deleteOpenAiThreadById = async (threadId) => {
+  
   const openai = await getOpenAIInstance();
 
-  return openai.beta.threads.del(threadId);
+  try {
+    const thread = await openai.beta.threads.del(threadId);
+    return thread;
+  } catch (error) {
+    return error
+  }
 };
 
 /**
@@ -71,13 +125,73 @@ export const deleteOpenAiThreadById = async (threadId) => {
  * @param {string} question - The content of the message.
  * @returns {Promise<Object>} - A promise that resolves to the created message object.
  */
-export const createMessageInThread = async (openai, threadId, question) => {
+export const createMessageInThread = async (openai, assistantId, threadId, question, userId) => {
+  const restoreFileName = false;
+  let modifiedPrompt = '';
+  let changedQuestionWithDataContext = '';
+  let fileDataContext = [];
+  const links = extractAllGoogleDriveLinks(question);
+  if(links?.length > 0){
+    const fileIds = links?.map(link => extractFileOrFolderId(link));
+    const { fileName, mimeType,fileSize } = await getFileMetadata(fileIds[0],userId);
+    if(fileName !== '' && mimeType !== '' && fileSize !== 0){
+      if(fileSize < 5000000){
+        fileDataContext = await downloadFilesFromGoogleDriveLink(links,userId);
+      }
+      changedQuestionWithDataContext = replaceGoogleDriveLinks(question);
+      modifiedPrompt = fileDataContext.length > 0?`Based on the following documents, answer the question: ${changedQuestionWithDataContext},ignore if there is any 'ENCODED_LINK' found in the question and do not try to access ENCODED_LINK.\n\nDocuments:\n${fileDataContext}`: "show this message only 'File Size Exceeds 5MB,please download it and upload for great experience'";
+    }else{
+      modifiedPrompt = "Write this message only 'Please Connect Your Apps First'";
+    }
+  }
+
+  if(fileDataContext.length > 0){
+
+    if (typeof fileDataContext[0] !== 'string') {
+      throw new TypeError('modifiedPrompt must be a string');
+    }
+    const truncatedPrompt = await longFileContextToUsableFileContext(fileDataContext,'openai');
+
+    return openai.beta.threads.messages.create(threadId, {
+      role: "user",
+      content:`Based on the following documents, answer the question: ${changedQuestionWithDataContext} ,ignore if there is any 'ENCODED_LINK' found in the question and do not try to access ENCODED_LINK.\n\nDocuments:\n${truncatedPrompt}`,
+    });
+  }
+  if(links.length > 0 && fileDataContext.length ===0){
+    return openai.beta.threads.messages.create(threadId, {
+      role: "user",
+      content:  "show this message only 'File Size Exceeds 5MB,please download it and upload for great experience'  and do not write anything extra with it",
+    });
+   
+  }
+
+  const isKnowledgeBaseExists = await checkKnowledgeBasedAssistants(assistantId,restoreFileName);
+  if (isKnowledgeBaseExists.length > 0 && isKnowledgeBaseExists[0].knowledgeSource === true) {
+    const file = isKnowledgeBaseExists[0].knowledgeBaseId
+    const responseOfContext = await findAssistantContext(userId, question, isKnowledgeBaseExists);
+    if (responseOfContext.StatusCodes === 200) {
+      return openai.beta.threads.messages.create(threadId, {
+        role: "user",
+        content: `Based on the following documents, answer the question: ${question}\n\nDocuments:\n${responseOfContext.context}`,
+      });
+    } else {
+      return openai.beta.threads.messages.create(threadId, {
+        role: "user",
+        content: question,
+      });
+
+    }
+
+  }
 
   return openai.beta.threads.messages.create(threadId, {
     role: "user",
     content: question,
   });
+
 };
+
+
 
 /**
  * Creates a run in a thread.
@@ -90,7 +204,7 @@ export const createMessageInThread = async (openai, threadId, question) => {
 export const createRunInThread = async (openai, threadId, assistantId) => {
 
   return openai.beta.threads.runs.create(threadId, {
-    assistant_id : assistantId,
+    assistant_id: assistantId,
   });
 };
 
@@ -177,9 +291,35 @@ export const submitToolOutputsAndStream = (openai, threadId, runId, toolOutputs)
  * @param {string} assistantId - The ID of the assistant to retrieve.
  * @returns {Promise<Object>} - A promise that resolves to the retrieved assistant object.
  */
+export const retrieveAssistantFromOpenAIv1 = async (openai, assistantId) => {
+  try {
+    const assistant = await openai.beta.assistants.retrieve(assistantId);
+    return assistant;
+  } catch (error) {
+    return error
+  }
+};
+
 export const retrieveAssistantFromOpenAI = async (openai, assistantId) => {
-  return openai.beta.assistants.retrieve(assistantId);
-}
+  try {
+    const assistant = await openai.beta.assistants.retrieve(assistantId);
+    const assistantInfo = {
+      ...assistant,
+      file_ids: assistant?.tool_resources?.code_interpreter?.file_ids || []
+    }
+    return assistant;
+  } catch (error) {
+    return error
+  }
+};
+export const doesAssistantExist = async (openai, assistantId) => {
+  try {
+    await openai.beta.assistants.retrieve(assistantId);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
 
 /**
  * Generated an image using OpenAI.
@@ -189,19 +329,19 @@ export const retrieveAssistantFromOpenAI = async (openai, assistantId) => {
  * @param {string} assistantId - The dallEResolution to generate image.
  * @returns {Promise<Object>} - A promise that resolves to the generated DallE image.
  */
-export const dalleGeneratedImage = async (name,dallEModel,dallEQuality,dallEResolution) => {
-    const openai = await getOpenAIInstance();
+export const dalleGeneratedImage = async (name, dallEModel, dallEQuality, dallEResolution) => {
+  const openai = await getOpenAIInstance();
 
-    const image = await openai.images.generate({
-        model: dallEModel,
-        prompt: name,
-        n: 1,
-        response_format: 'b64_json',
-        quality : dallEModel == "dall-e-3" ? dallEQuality : undefined,
-        size: dallEResolution,
-    });
+  const image = await openai.images.generate({
+    model: dallEModel,
+    prompt: name,
+    n: 1,
+    response_format: 'b64_json',
+    quality: dallEModel == "dall-e-3" ? dallEQuality : undefined,
+    size: dallEResolution,
+  });
 
-    return image;
+  return image;
 }
 
 /**
@@ -214,11 +354,19 @@ export const dalleGeneratedImage = async (name,dallEModel,dallEQuality,dallEReso
  * @returns {Promise<Object>} A promise that resolves with the file object when retrieval is successful.
  * @throws {Error} Will throw an error if the file object cannot be retrieved.
  */
-export const createOpenAIFileObject = async (openai, file, purpose) => {
-  return openai.files.create({
+export const createOpenAIFileObject = async (openai, file, purpose, assistantInformation) => {
+  const fileObjectResponse = await openai.files.create({
     file: fs.createReadStream(file.path),
     purpose,
   });
+  if(fileObjectResponse){
+    if ("key" in file) {
+      assistantInformation?.push({ file_id: fileObjectResponse.id, key: file.key });
+
+    }
+  }
+  file.id = fileObjectResponse.id;
+  return fileObjectResponse;
 };
 
 /**
@@ -246,4 +394,18 @@ export const retrieveOpenAIFile = async (file_id) => {
 export const retrieveOpenAIFileObject = async (fileId) => {
   const openai = await getOpenAIInstance();
   return openai.files.retrieve(fileId);
+};
+export const isOpenAIFileObjectExist = async (openai,fileId) => {
+    try {
+      const file = await openai.files.retrieve(fileId);
+      return true;
+    } catch (error) {
+      if (error.status === 404) {
+        console.log("File not found in openai");
+      } else {
+        console.log("An error occurred:", error.message);
+      }
+      return false;
+    }
+  
 };

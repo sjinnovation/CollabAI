@@ -96,14 +96,14 @@ export const generateOpenAIStreamResponse = async (payload) => {
  * @function generateOpenAIHttpResponse
  * @description Creates a updated responses from OpenAI based on dialogue context and a user prompt.
  * @param {Object} payload - An object containing the prompt, chatLog, userId
- * @param {string} payload.userPrompt - The user's input to the model.
+ * @param {string} payload.modifiedPrompt - The user's input to the model.
  * @param {Array} payload.chatLog - The chat history to provide context for the model's response.
  * @param {Array} payload.userId - The userId to get user saved details
  * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
  * @throws {Error} Will throw an error if the streaming response cannot be generated.
  */
 export const generateOpenAIHttpResponse = async (payload) => {
-	const { userPrompt, chatLog ,userId } = payload;
+	const { modifiedPrompt, chatLog ,userId } = payload;
 	let temperature, gptModel, openAi;
 
 	const contextArray = generatePrevChatHistoryContext(chatLog || []);
@@ -115,7 +115,7 @@ export const generateOpenAIHttpResponse = async (payload) => {
 
 	const response = await openAi.chat.completions.create({
 		model: gptModel,
-		messages: [...contextArray, { content: userPrompt, role: 'user' }],
+		messages: [...contextArray, { content: modifiedPrompt, role: 'user' }],
         temperature: userPreferences?.openAiTemperature ? userPreferences?.openAiTemperature : temperature,
         max_tokens:  userPreferences?.openAiMax_tokens ? userPreferences?.openAiMax_tokens : openAiConfig.DEFAULT_MAX_TOKEN ,
         top_p: userPreferences?.openAiTopP ? userPreferences?.openAiTopP : openAiConfig.DEFAULT_TOP_P,

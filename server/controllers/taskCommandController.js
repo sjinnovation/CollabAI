@@ -13,15 +13,15 @@ import CommandsCategory from "../models/commandsCategoryModel.js";
  * @function createTaskCommand
  * @description Create a new task command
  * @param {Object} req - The request object.
- * @param {Object} res - The response object. Expected body: label, icon, commandsCategoryName
+ * @param {Object} res - The response object. Expected body: label, icon, description, commandsCategoryName
  * @param {Object} next - The next middleware function in the Express request-response cycle.
  * @throws {Error} Will throw an error if failed to create task command
  */
 export const createTaskCommand = async (req, res, next) => {
-  const { label, icon, commandsCategoryName } = req.body;
+  const { label, icon, description, commandsCategoryName } = req.body;
 
   try {
-    if (!label || !icon) {
+    if (!label || !icon || !description) {
       next(BadRequest(TaskCommandMessages.COMMANDS_REQUIRED));
       return;
     }
@@ -42,7 +42,7 @@ export const createTaskCommand = async (req, res, next) => {
     }
 
     const newTaskCommand = new TaskCommands({
-      commands: { label, icon },
+      commands: { label, icon, description },
       commandsCategoryName,
     });
 
@@ -147,10 +147,10 @@ export const getTaskCommandById = async (req, res, next) => {
  */
 export const updateTaskCommandById = async (req, res, next) => {
   const { id } = req.params;
-  const { label, icon, commandsCategoryName } = req.body;
+  const { label, icon, description, commandsCategoryName } = req.body;
 
   try {
-    if (!label || !icon) {
+    if (!label || !icon || !description) {
       next(BadRequest(TaskCommandMessages.COMMANDS_REQUIRED));
       return;
     }
@@ -168,7 +168,7 @@ export const updateTaskCommandById = async (req, res, next) => {
 
     const updatedTaskCommand = await TaskCommands.findByIdAndUpdate(
       id,
-      { $set: { commands: { label, icon }, commandsCategoryName: category._id } },
+      { $set: { commands: { label, icon, description }, commandsCategoryName: category._id } },
       { new: true }
     );
 

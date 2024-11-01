@@ -1,0 +1,51 @@
+.parentLayout {
+    height: 100vh;
+    justify-content: space-between;
+
+}
+.plusNewButton {
+    height: 3rem; 
+    width: 85%; 
+    margin-bottom: 1.5rem;
+     margin-top: 2.2rem;
+}
+
+.treeParent {
+    align-items: center;
+    margin-left: 1.8rem;
+
+}
+.allFilesShowButton {
+    width: 91%; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem 
+}
+.createFolder {
+    margin-top: 1.5rem; 
+    width: 300px;
+}
+
+.tableContent {
+    margin: 37px 16px 0px;
+    overflow: initial;
+}
+.large-icon-container {
+    font-size: 1.5rem;
+    margin-top: 24px;
+
+}
+.description-container {
+    font-size: 1rem;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    color: gray
+
+}
+.tabs {
+    width: 100%; scroll-behavior: smooth;
+}
+* h2 {
+    color: black;
+}

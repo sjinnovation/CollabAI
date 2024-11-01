@@ -6,6 +6,10 @@ const AssistantSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        vectorStoreId: {
+            type: String,
+            // required: true,
+        },
         name: {
             type: String,
             required: true,
@@ -14,7 +18,7 @@ const AssistantSchema = mongoose.Schema(
             type: String,
             required: true,
         },
-        description:{
+        description: {
             type: String,
             required: false,
         },
@@ -35,14 +39,14 @@ const AssistantSchema = mongoose.Schema(
             required: false,
         },
         teamId: [
-            { 
-              
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "Teams",
-              
+            {
+
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Teams",
+
             },
-          ],
-          static_questions: [
+        ],
+        static_questions: [
             {
                 type: String,
                 required: false,
@@ -67,12 +71,12 @@ const AssistantSchema = mongoose.Schema(
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", 
+            ref: "User",
             required: false,
         },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", 
+            ref: "User",
             required: false,
         },
         image_url: {
@@ -83,31 +87,44 @@ const AssistantSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
-        
-        is_featured : {
+
+        is_featured: {
             type: Boolean,
             default: false
         },
-        is_pinned : {
+        is_pinned: {
             type: Boolean,
             default: false
-        },     
+        },
         assistantTypes:
         {
             type: String,
             required: true,
         },
+        assistantTypeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "AssistantTypes",
+            required: false,
+        },
         functionCalling: {
             type: Boolean,
             required: false,
             default: false,
-          },
+        },
+        functionDefinitionIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "FunctionDefinition",
+                required: false
+            }
+        ],
+        
 
     },
     {
         timestamps: true,
     },
-  
+
 );
 
 const Assistant = mongoose.model("assistant", AssistantSchema);

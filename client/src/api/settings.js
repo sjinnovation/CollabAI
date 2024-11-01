@@ -1,4 +1,5 @@
 import {
+  API_SETTINGS_ENABLE_PERSONALIZE_ASSISTANT,
   API_SETTINGS_SLUG,
 } from "../constants/Api_constants";
 import { axiosSecureInstance } from "./axios";
@@ -7,6 +8,15 @@ export const getConfig = async () => {
   try {
     const response = await axiosSecureInstance.get(API_SETTINGS_SLUG);
     return response?.data?.configValues;
+  } catch (error) {
+    console.log(error);
+    return;
+  }
+};
+export const getPersonalizeAssistantSetting = async () => {
+  try {
+    const response = await axiosSecureInstance.get(API_SETTINGS_ENABLE_PERSONALIZE_ASSISTANT);
+    return response?.data;
   } catch (error) {
     console.log(error);
     return;

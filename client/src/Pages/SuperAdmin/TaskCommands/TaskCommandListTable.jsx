@@ -13,7 +13,7 @@ const TaskCommandListTable = ({ propsData }) => {
       title: "Label",
       dataIndex: "label",
       key: "label",
-      width: "25%",
+      width: "20%",
       onHeaderCell: () => {
         return {
           style: {
@@ -42,10 +42,26 @@ const TaskCommandListTable = ({ propsData }) => {
       ),
     },
     {
+      title: "Prompt",
+      dataIndex: "description",
+      key: "description",
+      width: "30%",
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
+          },
+        };
+      },
+      render: (description, record) => (
+        <span>{record.commands && record.commands.description}</span>
+      ),
+    },
+    {
       title: "Commands Category Name",
       dataIndex: "commandsCategoryName",
       key: "commandsCategoryName",
-      width: "35%",
+      width: "25%",
       onHeaderCell: () => {
         return {
           style: {
@@ -58,7 +74,7 @@ const TaskCommandListTable = ({ propsData }) => {
     {
       title: "Actions",
       key: "actions",
-      width: "20%",
+      width: "5%",
       onHeaderCell: () => {
         return {
           style: {

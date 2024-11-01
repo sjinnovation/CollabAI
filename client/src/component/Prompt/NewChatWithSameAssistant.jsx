@@ -1,22 +1,27 @@
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaRegEdit } from "react-icons/fa";
 import { Avatar ,Button} from "antd";
 import { botIconsMap } from "../../constants/chatPageConstants";
+import { PageTitleContext } from "../../contexts/TitleContext";
 
 const NewChatWithSameAssistant = ({ assistantName ,assistantId}) => {
     const navigate = useNavigate();
     const newChatIcon = botIconsMap.newChat.icon;
+    const { pageTitle, setPageTitle } = useContext(PageTitleContext);
 
     return (
         <div
             onClick={() => {
-                navigate(`/assistants/${assistantId}`, { replace: true  });
+                navigate(`/agents/${assistantId}`, { replace: true  });
             }}
-            className={`thread mb-2 d-flex justify-content-between align-items-center`}
+            style={{ padding: 0}}
+            className={`thread d-flex justify-content-between align-items-center`}
         >
-            {assistantName} &ensp;
-            <Button>New Chat &ensp; <FaRegEdit className="" size={18} /></Button>
+            <spam className="header-title">
+                {assistantName} &ensp;
+            </spam>
+            <Button size="small" >New Chat<FaRegEdit className="" size={12} /></Button>
         </div>
     );
 };

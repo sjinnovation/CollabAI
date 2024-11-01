@@ -1,6 +1,13 @@
 import { StatusCodes } from 'http-status-codes';
 import { AssistantMessages } from '../constants/enums.js';
 import { getAllAssistantTypesService, getSingleAssistantTypesService, createSingleAssistantTypesService, updateSingleAssistantTypesService, deleteSingleAssistantTypesService } from '../service/assistantTypeService.js';
+
+
+const hasIconMiddleOrEnd = (text) => {
+    const iconPattern =  /[^\w\s]+$/;
+     // Non-word, non-whitespace character in the middle or at the end
+    return iconPattern.test(text);
+  };
 export const getAssistantTypes = async (req, res) => {
     try {
         const data = await getAllAssistantTypesService();
@@ -44,11 +51,19 @@ export const getSingleAssistantType = async (req, res) => {
 export const createAssistantType = async (req, res) => {
     try {
         const { name } = req.body;
+        const hasIconInTheMiddleOrInTheEnd=hasIconMiddleOrEnd(name);
+        if(hasIconInTheMiddleOrInTheEnd){
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: AssistantMessages.ASSISTANT_TYPE_ICON_IN_THE_MID_OR_END
+    
+            });
+
+        }
         const data = await createSingleAssistantTypesService(name);
         if (data === false) {
             return res.status(StatusCodes.OK).json({
                 data,
-                message: AssistantMessages.ASSISTANT_TYPE_CREATION_FAILED
+                message: AssistantMessages.ASSISTANT_TYPE_EXIST
             });
 
         }

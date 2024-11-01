@@ -18,6 +18,7 @@ const initialLoaderState = {
   TEAM_LOADING: true,
 };
 
+const userId = getUserID();
 const useAssistantPage = () => {
   const [adminUserAssistants, setAdminUserAssistants] = useState([]);
   const [userAssistants, setUserAssistants] = useState([]);
@@ -87,14 +88,14 @@ const useAssistantPage = () => {
     }
   };
 
-  const handleUpdateAssistant = async (assistantId, data) => {
+  const handleUpdateAssistant = async (record, data) => {
     try {
-      updateLoader({ ASSISTANT_UPDATING: assistantId });
+      updateLoader({ ASSISTANT_UPDATING: record?.assistant_id });
       if(data.is_active === false){
-        await deleteSinglePublicAssistant(assistantId);
+       const deleteSinglePublicAssistantResponse =  await deleteSinglePublicAssistant(record?.assistant_id);
 
       }
-      const response = await updateAssistant(assistantId, data);
+      const response = await updateAssistant(record?._id, data);
       if(response) {
         handleFetchUserCreatedAssistants();
         handleFetchAllAssistants(1);
@@ -102,6 +103,10 @@ const useAssistantPage = () => {
         handleShowMessage(response.message);
         triggerRefetchAssistants();
       }
+      updateLoader({ ASSISTANT_UPDATING: false });
+
+      return response;
+
     } catch (error) {
       handleShowMessage(error);
     } finally {
@@ -109,12 +114,10 @@ const useAssistantPage = () => {
     }
   };
 
-  const handleFetchUserCreatedAssistants = async (page, personalAssistantSearchQuery) => {
-    
+  const handleFetchUserCreatedAssistants = async (page, personalAssistantSearchQuery = null) => {    
     try {
       updateLoader({ ASSISTANT_LOADING: true });
-      const response = await fetchAssistantsCreatedByUser(page, false , personalAssistantSearchQuery);
-
+      const response = await fetchAssistantsCreatedByUser(page, userId , personalAssistantSearchQuery);
       if(response) {
         setAdminUserAssistants(response.data);
         setTotalCount(response.meta.total);

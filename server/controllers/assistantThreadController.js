@@ -12,6 +12,7 @@ import {
   Unauthorized,
 } from "../middlewares/customError.js";
 import { deleteOpenAiThreadById } from "../lib/openai.js";
+import AssistantThread from "../models/assistantThreadModel.js";
 
 /**
  * Asynchronous function to retrieve assistant threads for a specific user.
@@ -98,13 +99,14 @@ export const deleteAssistantThread = async (req, res, next) => {
     if (!authorizeUserAction(existingAsstThread.user, req.user)) {
       return next(Unauthorized(AssistantThreadMessages.UNAUTHORIZED_ACTION));
     }
-
+    
     const isDeletedFromOpenAI = await deleteOpenAiThreadById(
       existingAsstThread.thread_id
     );
-
+   
     if (isDeletedFromOpenAI) {
-      await existingAsstThread.remove();
+      
+      await AssistantThread.findByIdAndDelete(existingAsstThread._id);
 
       return res.status(StatusCodes.OK).json({
         message: AssistantThreadMessages.DELETED_SUCCESSFULLY,

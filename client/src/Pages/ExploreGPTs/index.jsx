@@ -14,6 +14,11 @@ import { addFavoriteAssistant } from '../../api/favoriteAssistant';
 import { useContext } from 'react';
 import { ThemeContext } from '../../contexts/themeConfig';
 import ExploreAssistantModal from './ExploredAssistantModal';
+import { personalizeAssistant } from '../../api/personalizeAssistant';
+import { getPersonalizeAssistantSetting } from '../../api/settings';
+import { FileContext } from '../../contexts/FileContext';
+import { DoubleRightOutlined } from '@ant-design/icons';
+
 const { Title } = Typography;
 const { Meta } = Card;
 const PublicAssistant = () => {
@@ -26,22 +31,48 @@ const PublicAssistant = () => {
     const [selectAssistantType, setSelectAssistantType] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [assistantsByCategory, setAssistantsByCategory] = useState([]);
-    const [featuredAssistants, setFeaturedAssistants] = useState({})
+    const [featuredAssistants, setFeaturedAssistants] = useState({});
+    const {enablePersonalize,setEnablePersonalize} = useContext(FileContext);
+    const [page,setPage]= useState(1);
+    const [loadMorePageAndType,setLoadMorePageAndType] = useState([]);
+
     const userId = getUserID()
 
 
     useEffect(() => {
         getAllAssistantType(setAssistantTypes);
+        getPersonalizeAssistantSetting().then(response =>{
+            let isPersonalizeAssistantEnabled= false;
+            if(response!== undefined){
+              isPersonalizeAssistantEnabled = JSON.parse(response?.personalizeAssistant);
+        
+            }
+              setEnablePersonalize(isPersonalizeAssistantEnabled);
+            });
     }, []);
 
-    useEffect(() => {
-        handleFetchPublicAssistantWithCategory()
-    }, [searchQuery, selectAssistantType]);
+    const isSelectAssistantType = selectAssistantType === '';
+    const isSelectAssistantTypeNotEmpty = selectAssistantType !== '';
+    const isSearchQueryNotEmpty = searchQuery !== '';
+    useEffect(()=>{
+        if(assistantTypes.length > 0){
+            for(const type of assistantTypes){
+                setLoadMorePageAndType((prev)=>[...prev,{type:type.name,page :1}]);
+            }
+            setLoadMorePageAndType((prev)=>[...prev,{type:"featured",page :1}]);
 
-    const handleFetchPublicAssistantWithCategory = async () => {
+        }
+    },[assistantTypes]);
+    useEffect(() => {
+        handleFetchPublicAssistantWithCategory(loadMorePageAndType)
+    }, [searchQuery, selectAssistantType,loadMorePageAndType]);
+
+    const handleFetchPublicAssistantWithCategory = async (loadMorePageAndType) => {
         try {
-            setLoading(true)
-            const { success, assistantsByCategory, featuredAssistants } = await getPublicAssistantWithCategory(searchQuery, selectAssistantType);
+            if(loadMorePageAndType.length === 0){
+                setLoading(true);
+            }
+            const { success, assistantsByCategory, featuredAssistants } = await getPublicAssistantWithCategory(searchQuery, selectAssistantType,loadMorePageAndType);
             if (success) {
                 setAssistantsByCategory(assistantsByCategory);
                 setFeaturedAssistants(featuredAssistants);
@@ -72,7 +103,7 @@ const PublicAssistant = () => {
 
     }
     const chatWithAssistant = (id, title) => {
-        navigate(`/assistants/${id}`);
+        navigate(`/agents/${id}`);
     };
     const showModal = () => {
         setIsModalOpen(true);
@@ -81,14 +112,26 @@ const PublicAssistant = () => {
     const handleCancel = () => {
         setIsModalOpen(false);
     };
+    const handleLoadMore = (type)=>{
+        const indexOfType = loadMorePageAndType.findIndex((info)=>info.type === type.categoryName);
+        const loadPage =indexOfType !==-1?loadMorePageAndType[indexOfType].page + 1 :1;
+        const typeWithPage = {type:type.categoryName,page:loadPage}
+        setLoadMorePageAndType((prev) => {
+            if (indexOfType !== -1) {
+                return prev.map((item, i) => i === indexOfType ? typeWithPage : item);
+            } else {
+                return [...prev, typeWithPage];
+            }
+        });
+    }
     return (
 
         <>
             <div className="mt-5 container" >
                 <div className="ms-3 custom-page-size">
                     <div>
-                        <Title level={2}>Assistants </Title>
-                        <Typography>Find assistants that can enhance your productivity.</Typography>
+                        <Title level={2}>Agents </Title>
+                        <Typography>Find Agents that can enhance your productivity.</Typography>
                     </div>
 
                     <div className='mt-3'>
@@ -119,7 +162,7 @@ const PublicAssistant = () => {
                     
                         <div>
                             {
-                                featuredAssistants?.assistants?.length === 0 && assistantsByCategory?.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /> : <Title level={4}>Featured Assistants </Title>
+                                featuredAssistants?.assistants?.length === 0 && assistantsByCategory?.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /> : !loading&&<Title level={4}>{featuredAssistants?.assistants?.length ? "👑Featured Agents" : ''}</Title>
                             }
                         </div>
                         {
@@ -159,12 +202,19 @@ const PublicAssistant = () => {
                                         </>)
                                     }
                                 </div>
+                                    {featuredAssistants?.assistants?.length > 0 && featuredAssistants?.assistants?.length !== featuredAssistants?.totalAssistantCount
+                                        && <div style={{ marginTop: "15px" }}>
+                                            <span >Load More </span> <Button icon={<DoubleRightOutlined />} onClick={() => handleLoadMore({ categoryName: "featured" })}></Button>
+                                        </div>
+                                    }
+
 
                                 <div>
-                                    {
-                                        assistantsByCategory?.map((category, i) => (
+                                    { 
+                                        
+                                        assistantsByCategory?.assistants?.length > 0  || assistantsByCategory?.map((category, i) => (
                                             <div style={{ maxWidth: "1100px", }} key={category}>
-                                                <Title className='mt-3' level={4}>{category.categoryName}</Title>
+                                                {category?.categoryInfo?.assistants?.length > 0 ? <Title className='mt-3' level={4}>{category?.categoryName}</Title> : ((searchQuery?.trim() || selectAssistantType?.trim())&&<Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />) }
                                                 <div className='category-assistant-container'>
                                                     {
                                                         category?.categoryInfo?.assistants?.length > 0 && (
@@ -197,12 +247,11 @@ const PublicAssistant = () => {
                                                             </Card>)
                                                         )
                                                     }
-                                                    {
-                                                        category.categoryInfo.assistants.length === 0 && (
-                                                            <p>No assistants found for this category</p>
-                                                        )
-                                                    }
+
                                                 </div>
+                                                {category.categoryInfo.assistants.length > 0 && category.categoryInfo.assistants.length !== category.categoryInfo?.totalAssistantCount &&<div style={{ marginTop: "15px" }}>
+                                                    <span>Load More </span> <Button icon={<DoubleRightOutlined />} onClick={() => handleLoadMore(category)}></Button>
+                                                </div>}
                                             </div>
                                         ))
                                     }
@@ -217,6 +266,8 @@ const PublicAssistant = () => {
                                 onCancel={handleCancel}
                                 onChat={chatWithAssistant}
                                 handleShowModal={showModal}
+                                personalizeAssistant = {personalizeAssistant}
+                                enablePersonalize = {enablePersonalize}
                             />
                         )}
 

@@ -13,6 +13,7 @@ import {
   updateThread,
 } from "../../api/assistantApiFunctions";
 import { AssistantContext } from "../../contexts/AssistantContext";
+import { PageTitleContext } from "../../contexts/TitleContext";
 
 const NavPrompt = ({
   chatPrompt,
@@ -28,12 +29,12 @@ const NavPrompt = ({
   const [activeEditPrompt, setActiveEditPrompt] = useState(false);
   const [deleteThread, setDeleteThread] = useState(false);
   const [activeDeleteThread, setActiveDeleteThread] = useState(0);
-  const [promptTitle, setPromptTitle] = useState("");
+  const [promptTitle, setPromptTitle] = useState(chatPrompt);
   const [isPromptTitleLoading, setIsPromptTitleLoading] = useState(false);
   const [show, setShow] = useState(false);
   const [isThreadDeleting, setIsThreadDeleting] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-
+  const { pageTitle, setPageTitle } = useContext(PageTitleContext);
   const { setDeletedAssistantThreadId } = useContext(AssistantContext);
 
   const textAreaRef = useRef(null);
@@ -55,9 +56,7 @@ const NavPrompt = ({
           className="dropdown-item"
         >
           <MdOutlineEdit />
-          <span className="ms-1">
-            Rename
-          </span>
+          <span className="ms-1">Rename</span>
         </button>
       ),
       key: "1",
@@ -68,10 +67,8 @@ const NavPrompt = ({
           onClick={() => setConfirmationModalOpen(true)}
           className="dropdown-item text-error"
         >
-          <MdDeleteOutline/>
-          <span className="ms-1 text-error" >
-            Delete
-          </span>
+          <MdDeleteOutline />
+          <span className="ms-1 text-error">Delete</span>
         </button>
       ),
       key: "2",
@@ -80,19 +77,6 @@ const NavPrompt = ({
   ];
 
   // -------------------------------- API Calls ----------------------------
-
-  const handleFetchPromptTitle = async () => {
-    const { success, data, error } = await getPromptTitle(
-      threadId,
-      setIsPromptTitleLoading
-    );
-
-    if (success) {
-      setPromptTitle(data);
-    } else {
-      console.log(error);
-    }
-  };
 
   const handleEditPrompt = async () => {
     const editedValue = textAreaRef.current.value;
@@ -147,15 +131,13 @@ const NavPrompt = ({
         setIsThreadDeleting
       );
       setShow(false);
+      setConfirmationModalOpen(false);
     } catch (error) {
       console.error("Error deleting thread:", error);
     }
   };
 
   //----------------------- side effects -----------------------------
-  useEffect(() => {
-    handleFetchPromptTitle();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -190,8 +172,12 @@ const NavPrompt = ({
   const handleLinkClick = (e) => {
     e.stopPropagation();
     if ((assistantId, assistantThreadId)) {
+      setPageTitle((prevState) => ({
+        ...prevState,
+        [`/agents/${assistantId}/${assistantThreadId}`]: assistantName 
+      }))
       navigate(
-        `/assistants/${assistantId}/${assistantThreadId}`
+        `/agents/${assistantId}/${assistantThreadId}`
       );
     } else {
       navigate(`/chat/${threadId}`);
@@ -243,7 +229,7 @@ const NavPrompt = ({
             </p>
           ) : (
             <>
-              <p>{promptTitle || chatPrompt}</p>
+              <p >{promptTitle || chatPrompt}</p>
             </>
           )}
 

@@ -43,7 +43,7 @@ const UserAssistantList = ({ data }) => {
   const redirectToAssistant = (record) => {
 
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantId}`;
+    const url = `/agents/${assistantId}`;
     window.open(url, "_blank");
   };
 
@@ -79,7 +79,7 @@ const UserAssistantList = ({ data }) => {
   const expandedRowRender = () => {
     const columns = [
       {
-        title: "Assistant",
+        title: "Agent",
         dataIndex: "name",
         key: "name",
         align: "center",
@@ -160,7 +160,7 @@ const UserAssistantList = ({ data }) => {
       render: (text) => <span className="text-left">{text}</span>,
     },
     {
-      title: "Total Assistants",
+      title: "Total Agents",
       dataIndex: "totalAssistants",
       key: "totalAssistants",
       align: "center",
@@ -201,7 +201,7 @@ const UserAssistantList = ({ data }) => {
         scroll={{ y: "50vh" }}
       />
       <Modal
-        title="Assistant Information"
+        title="Agent Information"
         open={isInfoModalVisible}
         onCancel={handleInfoModalCancel}
         footer={null}

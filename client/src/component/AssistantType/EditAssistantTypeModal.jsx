@@ -33,7 +33,7 @@ const EditAssistantTypeModal = ({ propsData }) => {
   return (
     <InputModal
       propsData={{
-        title: "Edit Assistant Type",
+        title: "Edit Agent Type",
         data: data,
         placeholder:'',
         open: open,

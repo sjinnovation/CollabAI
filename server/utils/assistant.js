@@ -1,5 +1,8 @@
+import { getOpenAIInstance } from "../config/openAI.js";
 import { createOpenAIFileObject, deleteAssistantFileByID, retrieveAssistantFromOpenAI, retrieveOpenAIFile, retrieveOpenAIFileObject } from "../lib/openai.js";
+import FunctionDefinition from "../models/functionDefinitionModel.js";
 import { assistantFuncMap } from "./assistantFunctionMapper.js";
+import axios from 'axios';
 import fs from "fs";
 
 /**
@@ -282,7 +285,7 @@ export const annotateMessageContent = async (messageContent) => {
 
 export const parseStaticQuestions = (staticQuestionsString) => {
   try {
-    return JSON.parse(staticQuestionsString);
+    return staticQuestionsString !== undefined && staticQuestionsString !== "undefined"? JSON.parse(staticQuestionsString):[];
   } catch (error) {
     console.error("Error parsing static questions:", error);
     throw new Error("Invalid static questions format");
@@ -306,7 +309,10 @@ export const deleteAssistantFilesAndFilterIds = async (
 ) => {
   try {
     for (const deletedFileId of deletedFileIds) {
-      await deleteAssistantFileByID(openai, assistantId, deletedFileId);
+      if(fileIds.includes(deletedFileId)){
+        const responseOfFileIdsDelete = await deleteAssistantFileByID(openai, assistantId, deletedFileId);
+
+      }
     }
     return fileIds.filter((fileId) => !deletedFileIds.includes(fileId));
   } catch (error) {
@@ -315,9 +321,9 @@ export const deleteAssistantFilesAndFilterIds = async (
   }
 };
 
-export const uploadFiles = async (openai, files) => {
+export const uploadFiles = async (openai, files,assistantInformation = []) => {
   const filePromises = files.map(async (file) => {
-    const uploadedFile = await createOpenAIFileObject(openai,file,"assistants");;
+    const uploadedFile = await createOpenAIFileObject(openai,file,"assistants",assistantInformation);
 
     return uploadedFile.id;
   });

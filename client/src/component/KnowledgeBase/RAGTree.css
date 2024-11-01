@@ -1,0 +1,48 @@
+.selected-node {
+    background-color: gray;
+}
+
+.selected-files {
+    margin-top: 20px;
+}
+
+.selected-files h3 {
+    margin-bottom: 10px;
+}
+
+.selected-files ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.selected-files li {
+    margin-bottom: 5px;
+}
+.treeName {
+color: black;
+}
+
+.ant-modal-confirm-info .anticon {
+    display: none;
+  }
+  .modalTitle{
+    color: black;
+  }
+  
+  .flex-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; 
+
+}
+
+.file-tree-wrapper {
+    flex: 1; 
+    max-height: 75vh;
+    overflow-y: scroll; 
+    overflow-x: scroll; 
+    padding: 10px; 
+
+}
+
+

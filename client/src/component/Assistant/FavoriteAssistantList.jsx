@@ -29,35 +29,40 @@ const FavoriteAssistantList = ({ data }) => {
     const {
         loader,
         handleDeleteFavoriteAssistant,
+        favoriteAssistant,
+        setFavoriteAssistant,
+        isLoading, 
+        setIsLoading
     } = data;
 
-    const [favoriteAssistant, setFavoriteAssistant] = useState([]);
     const [searchQuery, setSearchQuery] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        // Fetch favorite cards from the API
-        fetchSingleFavoriteAssistant(setFavoriteAssistant, setIsLoading);
-    }, []);
 
 
+    const [totalCount,setTotalCount] = useState();
 
-    const filteredData = favoriteAssistant.filter(item => {
-        const itemName = item.name.toLowerCase();
-        const query = typeof searchQuery === 'string' ? searchQuery.toLowerCase() : '';
+    useEffect(()=>{
+            // Fetch all the favorite assistants
+            const page  = 1;
+            const searchQuery ="";
+    fetchSingleFavoriteAssistant(setFavoriteAssistant, setIsLoading,setTotalCount,page,searchQuery);
+    },[]);
 
-        return itemName.includes(query);
-    });
 
+    useEffect(()=>{
+        // Fetch public assistants
+        const page = 1;
+        fetchSingleFavoriteAssistant(setFavoriteAssistant, setIsLoading,setTotalCount,page,searchQuery);
+
+    },[searchQuery]);
 
     const openAssistantNewPage = (assistantId, name) => {
-        navigate(`/assistants/${assistantId}`);
+        navigate(`/agents/${assistantId}`);
 
     };
 
     const columns = [
         {
-            title: "Assistant",
+            title: "Agent",
             dataIndex: "name",
             key: "name",
             align: "center",
@@ -81,7 +86,7 @@ const FavoriteAssistantList = ({ data }) => {
             render: (_, record) => (
 
                 <Space size="middle">
-                    <Tooltip title="Chat with Assistant">
+                    <Tooltip title="Chat with Agent">
                         <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><IoChatbubbleEllipsesOutline /></Button>
                     </Tooltip>
 
@@ -114,7 +119,7 @@ const FavoriteAssistantList = ({ data }) => {
                     data={{
                         search: searchQuery,
                         setSearch: setSearchQuery,
-                        placeholder: "Search Assistant",
+                        placeholder: "Search Agent",
                     }}
                 />
             </div>
@@ -123,11 +128,15 @@ const FavoriteAssistantList = ({ data }) => {
                     loading={isLoading}
                     bordered={true}
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={favoriteAssistant}
                     scroll={{ y: '50vh' }}
                     pagination={{
                         pageSize: 10,
-                        total: filteredData?.length,
+                        total: totalCount,
+                        onChange: (page) => {
+                            fetchSingleFavoriteAssistant(setFavoriteAssistant, setIsLoading,setTotalCount,page,searchQuery);
+                        }
+                      
                     }}
                 />
 

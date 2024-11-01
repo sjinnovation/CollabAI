@@ -1,0 +1,43 @@
+.file-list {
+    list-style-type: none; 
+    padding: 0; 
+    margin: 0; 
+  }
+  
+.file-list-item {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 8px 0; 
+  position: relative;
+  border-bottom: 1px solid #ddd; 
+}
+
+.file-list-item:last-child {
+  border-bottom: none; 
+}
+
+  
+  
+  .file-title {
+    flex-grow: 1;
+    margin: 0; 
+  }
+  
+
+  .delete-button {
+    display: none;
+    margin: 0; 
+  }
+  
+ 
+  .file-list-item:hover .delete-button {
+    display: block;
+  }
+  
+
+  .delete-button .ant-btn {
+    padding: 0; 
+    line-height: 1; 
+  }
+  

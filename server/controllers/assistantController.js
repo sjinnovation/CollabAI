@@ -3,11 +3,11 @@ import OpenAI from "openai";
 import mime from "mime-types";
 import Assistant from "../models/assistantModel.js";
 import AssistantThread from "../models/assistantThreadModel.js";
-import {hardDeleteAssistant,getAssistantByAssistantID,createAssistantThreadInDb, getAssistantByName, createAssistantInstance, getAssistantByObjectID} from "../service/assistantService.js";
+import { hardDeleteAssistant, getAssistantByAssistantID, createAssistantThreadInDb, getAssistantByName, createAssistantInstance, getAssistantByObjectID, softDeleteAssistant, getSingleAssistantByIdService, extractQuestion, updateChatPrompts, createAssistantInstanceV2 } from "../service/assistantService.js";
 import User from "../models/user.js";
 import * as errorMessage from "../locale/index.js";
-import { AssistantMessages, CommonMessages } from "../constants/enums.js";
-import {BadRequest,Conflict,InternalServer, NotFound} from "../middlewares/customError.js";
+import { AssistantMessages, CommonMessages, KnowledgeBaseMessages, VectorStoreMessages } from "../constants/enums.js";
+import { BadRequest, Conflict, InternalServer, NotFound } from "../middlewares/customError.js";
 import { getOpenAIInstance } from "../config/openAI.js";
 import { createChatPerAssistantSchema } from "../utils/validations.js";
 import { handleOpenAIError } from "../utils/openAIErrors.js";
@@ -16,13 +16,30 @@ import { calculateCostFromTokenCounts, calculateTokenAndCost, createTrackUsage }
 import TrackUsage from "../models/trackUsageModel.js";
 import axios from "axios";
 import FunctionDefinition from "../models/functionDefinitionModel.js";
-import { createAssistantInOpenAI, createAssistantThread, createMessageInThread, createOpenAIFileObject, createRunInThread, dalleGeneratedImage, retrieveAssistantFromOpenAI, messageListFromThread, retrieveOpenAIFile, retrieveOpenAIFileObject, retrieveRunFromThread, submitToolOutputs, updateAssistantProperties } from "../lib/openai.js";
+import { createAssistantInOpenAI, createAssistantThread, createMessageInThread, createOpenAIFileObject, createRunInThread, dalleGeneratedImage, retrieveAssistantFromOpenAI, messageListFromThread, retrieveOpenAIFile, retrieveOpenAIFileObject, retrieveRunFromThread, submitToolOutputs, updateAssistantProperties, createAssistantInOpenAIv2, doesAssistantExist, isOpenAIFileObjectExist } from "../lib/openai.js";
 import { uploadImageToS3 } from "../lib/s3.js";
 import { deleteAssistantFilesAndFilterIds, deleteLocalFile, onToolCalls, parseStaticQuestions, parseTools, processAssistantMessage, uploadFiles } from "../utils/assistant.js";
 import { getAssistantByIdOrAssistantIdService } from "../service/assistantService.js";
 import { deleteSinglePublicAssistant } from "./publicAssistantController.js";
 import { deletePublicAssistantService } from "../service/publicAssistantService.js";
-import { deleteFavouriteAssistantService,getSingleFavouriteAssistantService,deleteManyFavouriteAssistantService  } from "../service/favoriteAssistantService.js";
+import { deleteFavouriteAssistantService, getSingleFavouriteAssistantService, deleteManyFavouriteAssistantService } from "../service/favoriteAssistantService.js";
+import { getSingleUsersPinnedAssistService } from "../service/PinnedAssistantService.js";
+import { uploadToS3Bucket } from "../lib/s3.js";
+import { checkKnowledgeBasedAssistants, replaceCharacters, storeKnowledgeBaseAssistantsReference } from "../service/knowledgeBase.js";
+import { createSingleKnowledgeBaseService } from "../service/knowledgeBase.js";
+import { createAndUpsertVector, preprocessFilesForRAG } from "./preprocessOfRAG.js";
+import { getAssistantIdByName } from "../service/assistantTypeService.js";
+import AssistantTypes from "../models/assistantTypes.js";
+import { findFileFromDBandDownload } from "./knowledgeBase.js";
+import { createOpenAiVectorStore, createOpenAiVectorStoreWithFileIds, deleteFilesFromVectorStoreUtils, getFileIdsFromVectorStore, updateOpenAiVectorStoreName, uploadFilesToVectorStore } from "../lib/vectorStore.js";
+import mongoose from "mongoose";
+import { fileSearchFileTypes } from "../utils/fileSearchFileExtensions.js";
+
+
+
+const getFileExtension = (filePath) => {
+  return filePath.split('.').pop().toLowerCase();
+}
 /**
  * @function createAssistant
  * @async
@@ -41,7 +58,7 @@ export const createAssistant = async (req, res, next) => {
       instructions,
       description,
       assistantId,
-      tools: toolsString,
+      tools: toolsString = '',
       model: userSelectedModel,
       userId,
       category,
@@ -49,22 +66,58 @@ export const createAssistant = async (req, res, next) => {
       imageGeneratePrompt,
       staticQuestions,
       functionsArray,
-      assistantTypes
+      assistantTypes,
+      fileNameList = [],
+      assistantBase,
+      knowledgeSource
     } = req.body;
-  
-    const files = req.files['files'] ?? [];
+    let createFileObject = true;
+    const fileNameListParsed = fileNameList !== 'undefined' && fileNameList.length > 0 ? JSON.parse(fileNameList) : [];
+    if(fileNameListParsed.length === 0 && (knowledgeSource === "true" || knowledgeSource === true) ){
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: KnowledgeBaseMessages.SELECT_ANY_FILE_FROM_KNOWLEDGE_BASE,
+      });
+
+    }
+    let files = req.files['files'] ?? [];
+    let ragFiles = [];
+    let filePath = "";
+    if(fileNameListParsed.length > 0){
+      
+      filePath = await findFileFromDBandDownload(fileNameListParsed, files,ragFiles,knowledgeSource);
+      if(knowledgeSource === "true" || knowledgeSource === true){
+        await preprocessFilesForRAG(ragFiles,userId);
+        createFileObject = false;
+      }else{
+        createFileObject = true;
+      }
+
+    }
+
+
+    const s3UploadResponse = files?.map(async file => {
+      const uploadDir = 'docs';
+      const relativeFilePath = file.path?.split(uploadDir)[1]?.substring(1)?.replace(/\\/g, '/');
+      
+      const { resultFileName, replacedIndices } = replaceCharacters(relativeFilePath);
+
+      const filenameWithoutSpace = resultFileName;
+      const fileType = getFileExtension(file.path);
+      const s3_link = 'knowledgeBase/' + userId + '/' + filenameWithoutSpace
+      const unlinkFlag = false;
+      const path = file.path;
+    })
     const avatarFiles = req.files['avatar'] ?? [];
     const avatar = avatarFiles.length > 0 ? avatarFiles[0] : null;
     let newAssistantInstance = null;
     let myAssistant = null;
-  
-    const tools = JSON.parse(toolsString);
-    const parsedTools = tools.map((tool) => (tool !== "functionCalling" ? { type: tool } : null)).filter(Boolean);
-    let parsedToolsWithFunctions = [...parsedTools];
-    if(functionsArray){
-      let parsedFunctions = JSON.parse(functionsArray);
 
-     const parsedFunctionsList = parsedFunctions.map(func => {
+    const tools = toolsString && JSON.parse(toolsString);
+    const parsedTools = tools && tools.map((tool) => (tool !== "function" ? { type: tool } : null)).filter(Boolean);
+    let parsedToolsWithFunctions = [...parsedTools];
+    if (functionsArray) {
+      let parsedFunctions = JSON.parse(functionsArray);
+      const parsedFunctionsList = parsedFunctions.map(func => {
         return {
           type: "function",
           function: {
@@ -76,30 +129,28 @@ export const createAssistant = async (req, res, next) => {
       }).filter(Boolean);
       parsedToolsWithFunctions = [...parsedFunctionsList, ...parsedTools];
     }
-
-
     const dallEModel = await getOpenAiConfig("dallEModel");
     const dallEQuality = (await getOpenAiConfig("dallEQuality")).toLowerCase();
     const dallEResolution = await getOpenAiConfig("dallEResolution");
     const openai = await getOpenAIInstance();
     const isNameExist = await getAssistantByName(name);
+    let assistantInformation = [];
 
     if (isNameExist) return next(Conflict(AssistantMessages.NAME_EXISTS));
 
-    // Handle file uploads for the new assistant
-    const filePromises = files?.map(file => createOpenAIFileObject(openai, file,"assistants").then(uploadedFile => uploadedFile.id));
-
+    const filePromises = files?.map(file => createOpenAIFileObject(openai, file, "assistants", assistantInformation).then(uploadedFile => uploadedFile.id));
     // TODO: Handle promises here. If one promise is rejected then the entire promises will be rejected
     const newFileIds = await Promise.all(filePromises);
+
     let image_url = null;
 
     if (avatar) {
-      image_url = await uploadImageToS3(avatar.path,'image')
+      image_url = await uploadImageToS3(avatar.path, 'image')
     } else if (generateDalleImage && generateDalleImage?.toLowerCase() == 'true') {
-      const imageResponse = await dalleGeneratedImage(name,dallEModel,dallEQuality,dallEResolution) // Based on the assistant name and model it will generate an image
-      image_url= await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
+      const imageResponse = await dalleGeneratedImage(name, dallEModel, dallEQuality, dallEResolution) // Based on the assistant name and model it will generate an image
+      image_url = await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
     }
-    
+
     // if assistantId is given, then we have to retrieve the assistant and create it in our database
     if (assistantId) {
       // check if already an assistant exists with the given assistantId
@@ -108,11 +159,14 @@ export const createAssistant = async (req, res, next) => {
       if (existingAssistant) return next(Conflict(AssistantMessages.ASSISTANT_ALREADY_EXISTS));
       myAssistant = await retrieveAssistantFromOpenAI(openai, assistantId);
     } else {
-      myAssistant = await createAssistantInOpenAI(openai,name,instructions,parsedToolsWithFunctions,userSelectedModel,newFileIds); // create new assistant and save it in our database
+      const vectorStore = await createOpenAiVectorStoreWithFileIds(openai, name, newFileIds);
+      myAssistant = await createAssistantInOpenAIv2(openai, name, instructions, parsedToolsWithFunctions, userSelectedModel, newFileIds,vectorStore? vectorStore?.id : null); // create new assistant and save it in our database
     }
 
-    if(myAssistant){
-      newAssistantInstance = await createAssistantInstance(myAssistant,userId,category,description,image_url,tools.includes("functionCalling"),staticQuestions,userSelectedModel,assistantTypes);
+    if (myAssistant) {
+      newAssistantInstance = await createAssistantInstanceV2(myAssistant, userId, category, description, image_url, tools.includes("function"), staticQuestions, userSelectedModel, assistantTypes);
+      const storeKnowledgebaseReference = await storeKnowledgeBaseAssistantsReference(newAssistantInstance._id, myAssistant.id, fileNameListParsed, assistantInformation, knowledgeSource);
+
     }
 
     if (newAssistantInstance) {
@@ -120,6 +174,7 @@ export const createAssistant = async (req, res, next) => {
       avatar && files.push(avatar);
 
       Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
+      Promise.all(ragFiles.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
 
       if (newAssistantInstance) {
         res.status(StatusCodes.CREATED).json({
@@ -177,11 +232,10 @@ export const createChatPerAssistant = async (req, res, next) => {
 
     // Step 1.1: check if assistant exists in database
     const existingAssistant = await getAssistantByAssistantID(assistant_id);
-
-    if(!existingAssistant) {
+    if (!existingAssistant) {
       return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
     }
-    
+
     // Step 1.2: create a thread if doesn't exist for the requested user
     if (thread_id) {
       threadId = thread_id;
@@ -194,12 +248,11 @@ export const createChatPerAssistant = async (req, res, next) => {
     }
 
     // Step 2: now we have a threadId, create a message in the thread
-    await createMessageInThread(openai, threadId, question);
+    await createMessageInThread(openai, assistant_id, threadId, question, userId);
 
     // Step 3: now we have to create a run that will wait for the response from the assistant
     const run = await createRunInThread(openai, threadId, assistant_id);
     let runId = run.id;
-    console.log(runId);
     let retrieveRun = await retrieveRunFromThread(openai, threadId, runId);
 
     // Step 4: now we have to create a polling mechanism to check if the assistant has responded
@@ -250,12 +303,12 @@ export const createChatPerAssistant = async (req, res, next) => {
       outputTokenCount,
       totalCost,
       totalTokens
-  } = calculateCostFromTokenCounts(
+    } = calculateCostFromTokenCounts(
       retrieveRun?.usage?.prompt_tokens,
-			retrieveRun?.usage?.completion_tokens,
-			retrieveRun?.model,
-			'openai'
-		);
+      retrieveRun?.usage?.completion_tokens,
+      retrieveRun?.model,
+      'openai'
+    );
     await createTrackUsage({
       userId,
       inputTokenCount,
@@ -317,9 +370,6 @@ export const createChatPerAssistant = async (req, res, next) => {
 export const getAllAssistants = async (req, res) => {
   try {
     const { page = 1, limit = 10, searchQuery = "" } = req.query;
-
-    console.log("page:", page, "Limit:", limit);
-
     // Define the query object with the is_deleted condition
     const query = { is_deleted: false, category: "ORGANIZATIONAL" };
 
@@ -336,19 +386,34 @@ export const getAllAssistants = async (req, res) => {
         model: "User",
         select: "fname",
       })
+      .populate({
+        path: "assistantTypeId",
+        model: AssistantTypes,
+        select: "name"
+      })
       .populate("teamId")
       .sort({ createdAt: -1 })
       .skip((Number(page) - 1) * Number(limit))
       .limit(limit)
       .lean();
+  const openai = await getOpenAIInstance();
 
     // Iterate over each assistant and fetch filenames for file_ids
     for (const assistant of assistants) {
+      let existingFileIds = [];
+      for(const fileId of assistant?.file_ids){
+        const isFileExist = await isOpenAIFileObjectExist(openai,fileId);
+        if(isFileExist){
+          existingFileIds.push(fileId);
+        }
+      }
+      assistant.file_ids = existingFileIds;
       const fileNames = await Promise.all(
         assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
       );
       // Update the assistant object with fileNames
       assistant.fileNames = fileNames;
+      assistant.assistantTypes = assistant.assistantTypeId.name
     }
 
     res.status(StatusCodes.OK).json({
@@ -374,7 +439,7 @@ export const getAllAssistants = async (req, res) => {
  * @throws {Error} Will throw an error if it fails to fetch the assistant
  * @returns {Response} 200 - Returns fetched assistant
  */
-export const getAssistantById = async (req, res,next) => {
+export const getAssistantById = async (req, res, next) => {
   try {
     const { id: assistant_id } = req.params;
 
@@ -389,9 +454,19 @@ export const getAssistantById = async (req, res,next) => {
     if (!assistant) {
       return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
     }
+    const openai = await getOpenAIInstance();
 
     // Check if the assistant has file_ids and if found update the assistant object with fileNames otherwise set an empty array
     if (assistant.file_ids && assistant.file_ids.length > 0) {
+      let existingFileIds = [];
+      for(const fileId of assistant?.file_ids){
+        const isFileExist = await isOpenAIFileObjectExist(openai,fileId);
+        if(isFileExist){
+          existingFileIds.push(fileId);
+        }
+      }
+      assistant.file_ids = existingFileIds;
+
       const fileNames = await Promise.all(
         assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
       );
@@ -492,6 +567,7 @@ export const getAllUserAssistantStats = async (req, res) => {
  * @throws {Error} Will throw an error if it fails to fetch the assistants
  * @returns {Response} 200 - Returns a list of assistants created by the user
  */
+
 export const getAssistantsCreatedByUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -510,6 +586,7 @@ export const getAssistantsCreatedByUser = async (req, res) => {
     if (typeof searchQuery === "string" && searchQuery?.length) {
       query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
     }
+    const openai = await getOpenAIInstance();
 
     const [assistants, totalCount] = await Promise.all([
       Assistant.find(query)
@@ -522,13 +599,21 @@ export const getAssistantsCreatedByUser = async (req, res) => {
 
     // Iterate over each assistant and fetch filenames for file_ids
     for (const assistant of assistants) {
+      let existingFileIds = [];
+      for(const fileId of assistant?.file_ids){
+        const isFileExist = await isOpenAIFileObjectExist(openai,fileId);
+        if(isFileExist){
+          existingFileIds.push(fileId);
+        }
+      }
+      assistant.file_ids = existingFileIds;
+
       const fileNames = await Promise.all(
         assistant.file_ids.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo.filename))
       );
 
       assistant.fileNames = fileNames;
     }
-
     res.status(StatusCodes.OK).json({
       assistants,
       totalCount,
@@ -552,15 +637,16 @@ export const getAssistantsCreatedByUser = async (req, res) => {
  * @returns {Response} 200 - Returns a list of assistants assigned to the user including pagination details
  */
 export const getAllUserAssignedAssistants = async (req, res) => {
-  const { _id: user_id } = req.user;
+  const { _id: userId } = req.user;
   const pageSize = parseInt(req.query.pageSize) || 10;
   const currentPage = parseInt(req.query.page) || 1;
 
   const searchQuery = req.query.searchQuery || "";
   const searchConditionOnName = { $regex: new RegExp(searchQuery, "i") };
-
+  const getUsersPinnedAssistant = await getSingleUsersPinnedAssistService(userId);
+  const assistantIdsFromPinnedAssistant = new Set(getUsersPinnedAssistant.map(entry => entry.assistantId));
   try {
-    const reqUser = await User.findById(user_id).populate("teams");
+    const reqUser = await User.findById(userId).populate("teams");
 
     if (!reqUser) {
       return next(BadRequest(AssistantMessages.USER_DOES_NOT_EXIST));
@@ -601,32 +687,38 @@ export const getAllUserAssignedAssistants = async (req, res) => {
     } else if (!reqUser.teams.length) {
       return res.status(StatusCodes.OK).json({ assistants: [] });
     }
-
     const [assistants, totalCount] = await Promise.all([
-      Assistant.find(query)
-      .sort({
-        is_pinned: -1,  // Sort by 'is_pinned' in descending order (true first)
-        createdAt: -1   // Within each 'is_pinned' group, sort by 'createdAt' in descending order
-      })
-        .skip((currentPage - 1) * pageSize)
-        .limit(pageSize),
+      Assistant.find(query).sort({ createdAt: -1 }).lean(),
       Assistant.countDocuments(query),
     ]);
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    console.log(
-      "totalPages:",
-      totalPages,
-      "totalCount:",
-      totalCount,
-      "pageSize:",
-      pageSize,
-      "Assistants:"
-      // assistants
-    );
+    const allFilteredPinnedAssistants = [];
+    const allFilteredNotPinnedAssistants = [];
+
+    for (const entry of assistants) {
+      if (assistantIdsFromPinnedAssistant.has(entry.assistant_id)) {
+        entry.is_pinned = true;
+
+        allFilteredPinnedAssistants.push(entry);
+      } else {
+        allFilteredNotPinnedAssistants.push(entry);
+      }
+    }
+
+    const reArrangedUsersAssistants = allFilteredPinnedAssistants.concat(allFilteredNotPinnedAssistants)
+    const uniqueAssistantIds = Array.from(new Set(getUsersPinnedAssistant.map(entry => entry.assistantId)));
+    const assistantIdToIndexMap = new Map(uniqueAssistantIds.map((id, index) => [id, index]));
+
+    reArrangedUsersAssistants.sort((a, b) => {
+      const indexA = assistantIdToIndexMap.has(a.assistant_id) ? assistantIdToIndexMap.get(a.assistant_id) : Infinity;
+      const indexB = assistantIdToIndexMap.has(b.assistant_id) ? assistantIdToIndexMap.get(b.assistant_id) : Infinity;
+      return indexA - indexB;
+    });
+    const assistantList = reArrangedUsersAssistants.slice((currentPage - 1) * pageSize, pageSize * currentPage);
     return res.status(StatusCodes.OK).json({
-      assistants,
+      assistantList,
       totalPages,
       message: AssistantMessages.ASSISTANT_FETCHED_SUCCESSFULLY,
     });
@@ -722,7 +814,6 @@ export const getChatPerAssistant = async (req, res, next) => {
     }).lean();
 
     if (existingThread) {
-      console.log(existingThread);
       const openai = await getOpenAIInstance();
 
       const threadMessages = await openai.beta.threads.messages.list(
@@ -766,6 +857,7 @@ export const getChatPerAssistant = async (req, res, next) => {
       }
     }
 
+    const updatedMessages = updateChatPrompts(messages); 
     res.status(StatusCodes.OK).json({ messages: messages, metadata });
   } catch (error) {
     console.log(error);
@@ -789,31 +881,39 @@ export const downloadAssistantFile = async (req, res, next) => {
   try {
     const { file_id } = req.params;
 
-    // Retrieve the file metadata to get the filename
-    const fileMetadata = await retrieveOpenAIFileObject(file_id);
+    const openai = await getOpenAIInstance();
+    const isFileExist = await isOpenAIFileObjectExist(openai, file_id);
+    if (isFileExist) {
+      // Retrieve the file metadata to get the filename
+      const fileMetadata = await retrieveOpenAIFileObject(file_id);
+      // Retrieve the file content
+      const fileContentResponse = await retrieveOpenAIFile(file_id);
+      if (fileContentResponse) {
+        const buffer = await fileContentResponse.arrayBuffer();
+        const bufferData = Buffer.from(buffer);
+        const filename = fileMetadata.filename || "download.pdf";
+        const mimeType = mime.lookup(filename) || "application/octet-stream";
+        res.writeHead(StatusCodes.OK, {
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Content-Type": mimeType,
+          "Access-Control-Expose-Headers": "Content-Disposition",
+        });
 
-    // Retrieve the file content
-    const fileContentResponse = await retrieveOpenAIFile(file_id);
+        res.end(bufferData);
+      } else {
+        // Incase fileContentResponse doesn't have data
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .send(AssistantMessages.ASSISTANT_FILE_NOT_FOUND_MESSAGE);
+      }
 
-    if (fileContentResponse) {
-      const buffer = await fileContentResponse.arrayBuffer();
-      const bufferData = Buffer.from(buffer);
-      const filename = fileMetadata.filename || "download.pdf";
-      const mimeType = mime.lookup(filename) || "application/octet-stream";
-
-      res.writeHead(StatusCodes.OK, {
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Type": mimeType,
-        "Access-Control-Expose-Headers": "Content-Disposition",
-      });
-
-      res.end(bufferData);
     } else {
-      // Incase fileContentResponse doesn't have data
       return res
         .status(StatusCodes.NOT_FOUND)
         .send(AssistantMessages.ASSISTANT_FILE_NOT_FOUND_MESSAGE);
     }
+
+
   } catch (error) {
     console.error(error);
     if (!res.headersSent) {
@@ -859,9 +959,9 @@ export const updateAssistantFiles = async (req, res, next) => {
     if (fileIds.length === 20 || fileIds.length + files.length >= 20) {
       return next(BadRequest(AssistantMessages.FILES_AND_PROPERTIES_UPDATED));
     }
-
+    let assistantInformation = [];
     if (files) {
-      const filePromises = files.map(file => createOpenAIFileObject(openai, file,"assistants").then(uploadedFile => uploadedFile.id));
+      const filePromises = files.map(file => createOpenAIFileObject(openai, file, "assistants", assistantInformation).then(uploadedFile => uploadedFile.id));
 
       fileIds = [...fileIds, ...(await Promise.all(filePromises))];
 
@@ -880,6 +980,8 @@ export const updateAssistantFiles = async (req, res, next) => {
     if (myUpdatedAssistant) {
       existingAssistant.file_ids = fileIds;
       existingAssistant.save();
+      const storeKnowledgebaseReference = await storeKnowledgeBaseAssistantsReference(myUpdatedAssistant._id, myAssistant.id, fileNameListParsed, assistantInformation, knowledgeSource,editMode = true);
+
     }
 
     res.status(StatusCodes.CREATED).json({
@@ -938,9 +1040,8 @@ export const assignTeamToAssistant = async (req, res, next) => {
  * @returns {Response} 200 - Returns success message and result of the operation
  */
 export const updateAssistant = async (req, res, next) => {
-	const { assistant_id } = req.params;
-	const { name, model, is_active = null, is_public = null, is_featured = null ,is_pinned = null } = req.body; // add more value as per the requirements
-
+  const { assistant_id } = req.params;
+  const { name, model, is_active = null, is_public = null, is_featured = null, is_pinned = null } = req.body; // add more value as per the requirements
   try {
     const isExistingAssistant = await getAssistantByObjectID(assistant_id);
 
@@ -950,28 +1051,28 @@ export const updateAssistant = async (req, res, next) => {
       isExistingAssistant.is_active =
         is_active !== null ? is_active : isExistingAssistant.is_active;
 
-			isExistingAssistant.is_public =
-				is_public !== null ? is_public : isExistingAssistant.is_public;
+      isExistingAssistant.is_public =
+        is_public !== null ? is_public : isExistingAssistant.is_public;
 
-			isExistingAssistant.is_featured =
-				is_featured !== null ? is_featured : isExistingAssistant.is_featured;
+      isExistingAssistant.is_featured =
+        is_featured !== null ? is_featured : isExistingAssistant.is_featured;
       isExistingAssistant.is_pinned =
         is_pinned !== null ? is_pinned : isExistingAssistant.is_pinned;
-      if(is_active === false){
-          isExistingAssistant.is_public = false;
-          isExistingAssistant.is_featured = false;
-          const deletedDocument = await deletePublicAssistantService(isExistingAssistant.assistant_id);
-          if (deletedDocument) {
-            const findFromFavourite = await getSingleFavouriteAssistantService(isExistingAssistant.assistant_id);
-    
-            if (findFromFavourite != null && findFromFavourite) {
-              const deleteFromFavourite = await deleteManyFavouriteAssistantService(assistant_id);
-            }
+      if (is_active === false) {
+        isExistingAssistant.is_public = false;
+        isExistingAssistant.is_featured = false;
+        const deletedDocument = await deletePublicAssistantService(isExistingAssistant.assistant_id);
+        if (deletedDocument) {
+          const findFromFavourite = await getSingleFavouriteAssistantService(isExistingAssistant.assistant_id);
+
+          if (findFromFavourite != null && findFromFavourite) {
+            const deleteFromFavourite = await deleteManyFavouriteAssistantService(assistant_id);
           }
-  
         }
 
-			const result = await isExistingAssistant.save();
+      }
+
+      const result = await isExistingAssistant.save();
 
       res.status(StatusCodes.OK).json({
         result,
@@ -1011,6 +1112,7 @@ export const deleteAssistant = async (req, res, next) => {
     }
 
     await hardDeleteAssistant(assistant_id, existingAssistant);
+    // await softDeleteAssistant(existingAssistant);
 
     res.status(StatusCodes.OK).json({
       message: errorMessage.ASSISTANT_DELETED_SUCCESSFULLY,
@@ -1039,20 +1141,81 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       name,
       instructions,
       model,
-      tools: toolsString,
+      tools: toolsString = '',
       teamId,
+      userId,
       staticQuestions,
       category,
-      deleted_files,
+      deleted_files = [],
       description,
       regenerateWithDalle,
-      assistantTypes
-    } = req.body;
+      assistantTypes,
+      functionsArray,
+      fileNameList = [],
+      assistantBase,
+      knowledgeSource,
+      deletedFileList=[],
 
+    } = req.body;
     const files = req.files['files'] ?? [];
     const avatarFiles = req.files['avatar'] ?? [];
     const avatar = avatarFiles.length > 0 ? avatarFiles[0] : null;
     let image_url = null;
+    const fileNameListParsed = fileNameList !== 'undefined' && fileNameList.length > 0 ? JSON.parse(fileNameList) : [];
+    let filePath = "";
+    if(fileNameListParsed.length === 0 && (knowledgeSource === "true" || knowledgeSource === true) ){
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: KnowledgeBaseMessages.SELECT_ANY_FILE_FROM_KNOWLEDGE_BASE,
+      });
+    }
+    const isKnowledgeBaseExists = await checkKnowledgeBasedAssistants(assistant_id);
+    let ragFiles =[];
+    if (fileNameListParsed.length > 0) {
+      let newFileNameLists = fileNameListParsed;
+      if(isKnowledgeBaseExists && isKnowledgeBaseExists?.length > 0){
+        for(let info of isKnowledgeBaseExists[0]?.knowledgeBaseId){
+          newFileNameLists = newFileNameLists?.filter((file)=>file?.key!== info?._id?.toString());
+        }
+
+      }
+
+      filePath = await findFileFromDBandDownload(newFileNameLists, files,ragFiles,knowledgeSource);
+      if(knowledgeSource === "true" || knowledgeSource === true){
+        await preprocessFilesForRAG(ragFiles,userId);
+      }
+    }
+
+    const s3UploadResponse = files?.map(async file => {
+      const uploadDir = 'docs';
+      const relativeFilePath = file.path?.split(uploadDir)[1]?.substring(1)?.replace(/\\/g, '/');
+      const { resultFileName, replacedIndices } = replaceCharacters(relativeFilePath);
+      const filenameWithoutSpace = resultFileName;
+      const fileType = getFileExtension(file.path);
+      const s3_link = 'knowledgeBase/' + userId + '/' + filenameWithoutSpace
+      const unlinkFlag = false;
+      const path = file.path;
+
+    })
+
+
+    const tools = toolsString && JSON.parse(toolsString);
+    const parsedTools = tools && tools.map((tool) => (tool !== "function" ? { type: tool } : null)).filter(Boolean);
+    let parsedToolsWithFunctions = [...parsedTools];
+    if (functionsArray) {
+      let parsedFunctions = JSON.parse(functionsArray);
+
+      const parsedFunctionsList = parsedFunctions.map(func => {
+        return {
+          type: "function",
+          function: {
+            name: func.name,
+            description: func.description,
+            parameters: func.parameters
+          }
+        };
+      }).filter(Boolean);
+      parsedToolsWithFunctions = [...parsedFunctionsList, ...parsedTools];
+    }
 
     const dallEModel = await getOpenAiConfig("dallEModel");
     const dallEQuality = (await getOpenAiConfig("dallEQuality")).toLowerCase();
@@ -1067,19 +1230,47 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       });
     }
 
+    if (!existingAssistant?.vectorStoreId) {
+      const vectorStore = await createOpenAiVectorStoreWithFileIds(openai, name, []);
+      existingAssistant.vectorStoreId = vectorStore.id;
+      await existingAssistant.save();
+    }
+    const updatedVectorStore = await updateOpenAiVectorStoreName(openai, existingAssistant?.vectorStoreId, name);
+    if (updatedVectorStore.success === false) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: VectorStoreMessages.VECTOR_STORE_NOT_FOUND,
+      });
+    }
     const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
-
-    let fileIds = [...myAssistant.file_ids];
-
-    if (deleted_files) {
+    let fileIds = [...existingAssistant.file_ids];
+    if (deletedFileList.length > 0 && (knowledgeSource === false || knowledgeSource === 'false')) {
+      fileIds = await deleteAssistantFilesAndFilterIds(
+        openai,
+        assistant_id,
+        fileIds,
+        JSON.parse(deletedFileList)
+      );
+      const result = await deleteFilesFromVectorStoreUtils(
+        openai, 
+        existingAssistant?.vectorStoreId, 
+        JSON.parse(deletedFileList)
+        // deletedFileList, 
+      )
+    }
+    if (deleted_files.length > 0 && (knowledgeSource === false || knowledgeSource === 'false')) {
       fileIds = await deleteAssistantFilesAndFilterIds(
         openai,
         assistant_id,
         fileIds,
         JSON.parse(deleted_files)
       );
+      const result = await deleteFilesFromVectorStoreUtils(
+        openai, 
+        existingAssistant?.vectorStoreId, 
+        JSON.parse(deleted_files)
+      )
     }
-
+    
     if (
       fileIds.length === 20 ||
       (files && fileIds.length + files.length >= 20)
@@ -1090,26 +1281,51 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
     }
 
     if (avatar) {
-      image_url = await uploadImageToS3(avatar.path,'image')
+      image_url = await uploadImageToS3(avatar.path, 'image')
       files.push(avatar);
     } else if (regenerateWithDalle && regenerateWithDalle?.toLowerCase() == 'true') {
-      const imageResponse = await dalleGeneratedImage(name,dallEModel,dallEQuality,dallEResolution) // Based on the assistant name and model it will generate an image
-      image_url= await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
+      const imageResponse = await dalleGeneratedImage(name, dallEModel, dallEQuality, dallEResolution) // Based on the assistant name and model it will generate an image
+      image_url = await uploadImageToS3(imageResponse.data[0].b64_json, 'base64')
     } else {
       image_url = null;
     }
+    let assistantInformation = [];
+    if(isKnowledgeBaseExists?.length > 0){
+      for(const info of isKnowledgeBaseExists[0]?.file_ids){
+        assistantInformation?.push(info);
 
-    if (files) {
-      fileIds = [...fileIds, ...(await uploadFiles(openai, files))];
-      Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
+      }
+
     }
 
+    if (files) {
+      const newFileIds = await uploadFiles(openai, files, assistantInformation);
+      const  uploadedFilesToVectorStore = await uploadFilesToVectorStore(openai, existingAssistant?.vectorStoreId, newFileIds)
+      fileIds = [...fileIds, ...newFileIds];
+      Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
+    }
+    const existingFileIds = [];
+    for(const fileId of fileIds){
+      const isFileExist = await isOpenAIFileObjectExist(openai,fileId);
+      if(isFileExist){
+        existingFileIds.push(fileId);
+      }
+    }
+    
     const updateData = {
-      file_ids: fileIds,
+      // file_ids: fileIds,
       name,
       instructions,
       model,
-      tools: toolsString ? parseTools(toolsString) : [],
+      tools: toolsString ? parsedToolsWithFunctions : [],
+      tool_resources: {
+        "code_interpreter": {
+          "file_ids": fileIds
+        },
+        "file_search": {
+          "vector_store_ids": [existingAssistant?.vectorStoreId]
+        }
+      }
     };
 
     const myUpdatedAssistant = await updateAssistantProperties(
@@ -1117,7 +1333,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       assistant_id,
       updateData
     );
-
+    const getAssistantTypeId = await getAssistantIdByName(assistantTypes);
     if (myUpdatedAssistant) {
       const updatedAssistantFieldsObject = {
         file_ids: fileIds,
@@ -1125,13 +1341,14 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
         instructions: myUpdatedAssistant.instructions,
         model: myUpdatedAssistant.model,
         tools: updateData.tools,
-        static_questions: staticQuestions
+        static_questions: staticQuestions && staticQuestions !==undefined
           ? parseStaticQuestions(staticQuestions)
           : [],
         category,
         description,
         image_url,
-        assistantTypes : assistantTypes
+        assistantTypes: assistantTypes,
+        assistantTypeId: getAssistantTypeId,
 
       };
 
@@ -1140,6 +1357,9 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       Object.assign(existingAssistant, updatedAssistantFieldsObject);
 
       await existingAssistant.save();
+      const editMode = true;
+      const storeKnowledgebaseReference = await storeKnowledgeBaseAssistantsReference(existingAssistant._id, existingAssistant.assistant_id, fileNameListParsed, assistantInformation, knowledgeSource,editMode);
+    
     }
 
     res.status(StatusCodes.CREATED).json({
@@ -1149,7 +1369,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
   } catch (error) {
     console.log("Error:", error)
     if (error instanceof OpenAI.APIError) {
-      
+
       const customOpenAIError = handleOpenAIError(error);
       return next(customOpenAIError);
     }
@@ -1397,6 +1617,7 @@ export const getFunctionCallingAssistantsByPagination = async (req, res) => {
  * @returns {Response} 201 - Returns the newly created assistant instance
  * @throws {Error} Will throw an error if an assistant with the same name already exists, or if there is an issue during creation
  */
+
 export const createAssistantWithFunctionCalling = async (req, res) => {
   try {
     const {
@@ -1480,14 +1701,120 @@ export const createAssistantWithFunctionCalling = async (req, res) => {
  * @returns {Response} 200 - Returns detailed information about the assistant
  * @throws {Error} Will throw an error if the assistant is not found or if there is an issue with the request
  */
-export const getAssistantInfo = async (req, res) => {
+export const getAssistantInfo = async (req, res,next) => {
   try {
     const { assistant_id } = req.params;
 
     const openai = await getOpenAIInstance();
+    const isExistingAssistantInOpenAI = await doesAssistantExist(openai,assistant_id); 
+    if(isExistingAssistantInOpenAI === false){
+      return res.status(StatusCodes.NOT_FOUND).json({ success : false, message: AssistantMessages.ASSISTANT_NOT_FOUND });
 
-    const myAssistant = await retrieveAssistantFromOpenAI(openai, assistant_id);
-    res.status(StatusCodes.OK).send(myAssistant);
+    }
+    const assistantInfoFromOpenAI = await retrieveAssistantFromOpenAI(openai, assistant_id);
+    const assistantInfoFromOurDB = await Assistant.findOne({ assistant_id });
+    if (!assistantInfoFromOurDB) {
+      return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+    }
+    const myAssistant = { ...assistantInfoFromOurDB?._doc, ...assistantInfoFromOpenAI }
+    
+    let existingFileIds = [];
+    for(const fileId of myAssistant?.file_ids){
+      const isFileExist = await isOpenAIFileObjectExist(openai,fileId);
+      if(isFileExist){
+        existingFileIds.push(fileId);
+      }
+    }
+    myAssistant.file_ids = existingFileIds;
+
+    let fileNames = await Promise.all(
+      myAssistant?.file_ids?.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo?.filename))
+    );
+    let fileIds = myAssistant?.file_ids || [];
+    const restoreFileName = true;
+    const editMode = true;
+    const isKnowledgeBaseExists = await checkKnowledgeBasedAssistants(assistant_id,restoreFileName,editMode);
+    let knowledgeBaseFilesOfRAG = [];
+    let knowledgeBaseFilesOfOpenAI = [];
+    let knowledgeBaseFileIdsAndKysOfOpenAI = [];
+    let knowledgeBaseFileIds = [];
+    let deviceBaseFileIds = [];
+    const knowledgeSource = false;
+    if (isKnowledgeBaseExists?.length > 0 && isKnowledgeBaseExists[0]?.knowledgeSource === true) {
+      for (let file of isKnowledgeBaseExists[0]?.knowledgeBaseId) {
+        knowledgeBaseFilesOfRAG.push(file._id);
+      }
+
+    }
+    if (isKnowledgeBaseExists?.length > 0 && isKnowledgeBaseExists[0]?.knowledgeSource === false) {
+      for (let file of isKnowledgeBaseExists[0]?.knowledgeBaseId) {
+        knowledgeBaseFilesOfOpenAI.push(file?._id?.toString());
+
+      }
+      for (let file of isKnowledgeBaseExists[0]?.file_ids) {
+        knowledgeBaseFileIdsAndKysOfOpenAI.push(file);
+        knowledgeBaseFileIds.push(file.file_id);
+      }
+      for (let assistantFileId of myAssistant?.file_ids) {
+        if (!knowledgeBaseFileIds.includes(assistantFileId)) {
+          deviceBaseFileIds.push(assistantFileId);
+        }
+
+      }
+    }
+    if (myAssistant?.tools?.length === 0 && myAssistant?.file_ids) {
+      const tool = [ { type: 'code_interpreter' }, { type: 'file_search' } ];
+      myAssistant.tools = tool;
+
+    }
+
+    let knowledgeBaseInfo = [];
+    if (isKnowledgeBaseExists?.length > 0) {
+      for (let file of isKnowledgeBaseExists[0]?.knowledgeBaseId) {
+        const title = file.name.split('/').pop();
+        let fileIds= "-";
+        for(const fileId of isKnowledgeBaseExists[0]?.file_ids){
+          if(fileId.key === file._id.toString()){
+            fileIds = fileId.file_id;
+          }
+        }
+        knowledgeBaseInfo.push({ key: file?._id, title: title, originalName: file?.name, owner: file?.owner,fileId :fileIds});
+      }
+    }
+    let fileIdsWithName = fileIds
+      ?.map((fileId, index) => ({
+        file_id: fileId,
+        filename: fileNames[index],
+      }))
+      .filter(file =>
+        !knowledgeBaseInfo.some(knowledgeFile => knowledgeFile?.fileId === file?.file_id)
+      );
+
+
+    if (myAssistant?.tools?.length === 0) {
+      const tool = [ { type: 'code_interpreter' }, { type: 'file_search' } ];
+      myAssistant.tools = tool;
+
+    }
+    const names = [];
+
+    for (let info of knowledgeBaseInfo) {
+      names?.push(info?.title);
+      fileNames = fileNames?.filter((name) => name !== info?.title);
+    }
+    let filteredFiles = fileIdsWithName?.filter(file =>
+      knowledgeBaseInfo.some(knowledgeFile => knowledgeFile?.key === file?.file_id)
+    );
+    myAssistant.fileNames = fileNames;
+    myAssistant.knowledgeBaseFilesOfRAG = knowledgeBaseFilesOfRAG;
+    myAssistant.knowledgeBaseFilesOfOpenAI = knowledgeBaseFilesOfOpenAI;
+    myAssistant.knowledgeBaseFileIdsAndKysOfOpenAI = knowledgeBaseFileIdsAndKysOfOpenAI;
+    myAssistant.knowledgeBaseFileIds = knowledgeBaseFileIds;
+    myAssistant.deviceBaseFileIds = deviceBaseFileIds;
+    myAssistant.knowledgeBaseInfo = knowledgeBaseInfo;
+    myAssistant.knowledgeSource = isKnowledgeBaseExists?.length > 0 ? isKnowledgeBaseExists[0]?.knowledgeSource : knowledgeSource;
+    myAssistant.fileIdsWithName = fileIds.length > 0 ? fileIdsWithName : [];
+    res.status(StatusCodes.OK).send(myAssistant);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
   } catch (err) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err });
   }
@@ -1600,3 +1927,216 @@ export const getAllFunctionDefinitions = async (req, res) => {
       .json({ message: error.message });
   }
 };
+
+/**
+ * @async
+ * @function assistantClone
+ * @description clones the assistant which id it is given
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @returns {Response} 200 - return a success message
+ * @throws {Error} Will throw an error if there are issues during the retrieval process
+ */
+
+export const assistantClone = async (req, res) => {
+  try {
+    const {assistantId,userId} = req.body;
+    const openai = await getOpenAIInstance();
+
+    const assistantSettings = await getSingleAssistantByIdService(assistantId);
+    const isExistingOpenAIAssistant = await doesAssistantExist(openai,assistantId);
+    let parsedFunctionsList = [];
+    const assistantInfoFromOpenAI = isExistingOpenAIAssistant?await retrieveAssistantFromOpenAI(openai, assistantId) : null;
+    const newFileIds = isExistingOpenAIAssistant? assistantSettings.file_ids:[];
+    const tools = isExistingOpenAIAssistant ? assistantSettings.tools:[];
+    let parsedTools = tools && tools.map((tool) => (tool.type !== "function" ? { type: tool.type } : null)).filter(Boolean);
+    parsedFunctionsList = isExistingOpenAIAssistant && assistantInfoFromOpenAI !== null?assistantInfoFromOpenAI?.tools?.map(func =>func).filter(Boolean) || [] : [];
+    let parsedToolsWithFunctions = [...parsedFunctionsList,...parsedTools];
+    parsedToolsWithFunctions = parsedToolsWithFunctions.filter((item, index, self) =>
+      item.type === 'function' ||
+      index === self?.findIndex((t) => t?.type === item?.type));
+
+    let myAssistant = null;
+    let newAssistantInstance = null;
+    const image_url =null;
+    const assistantName = "Copy of " + assistantSettings?.name;
+    const restoreFileName = false;
+    const isKnowledgeBaseExists = await checkKnowledgeBasedAssistants(assistantId,restoreFileName);
+    const knowledgeSource = isKnowledgeBaseExists?.length > 0 ? isKnowledgeBaseExists[0]?.knowledgeSource : false;
+    const fileInfo = await Promise.all(
+      newFileIds.map(fileId => retrieveOpenAIFileObject(fileId))
+    );
+    let file_search_Ids = [];
+    let code_interpreter_Ids = [];
+
+    for (const file of fileInfo) {
+      const filename = file.filename;
+      if (filename.includes('.')) {
+        let extension = filename.split('.').pop();
+        extension = "."+extension;
+
+        if (fileSearchFileTypes.includes(extension)) {
+          file_search_Ids.push(file.id);
+        } else {
+          code_interpreter_Ids.push(file.id);
+        }
+      } else {
+        code_interpreter_Ids.push(file.id);
+      }
+    }
+
+
+    const vectorStore = await createOpenAiVectorStoreWithFileIds(openai, assistantName, file_search_Ids);
+    myAssistant = await createAssistantInOpenAIv2(openai,assistantName,assistantSettings?.instructions,parsedToolsWithFunctions,assistantSettings?.model,newFileIds, vectorStore?.id);
+
+    if (myAssistant) {
+      const isFunctionCalling = tools?.map(tool => tool?.type === 'function').filter(Boolean);
+      assistantSettings.category = "PERSONAL";
+      assistantSettings.static_questions=  JSON.stringify(assistantSettings?.static_questions);
+      newAssistantInstance = await createAssistantInstanceV2(myAssistant, userId, assistantSettings?.category, assistantSettings?.description, image_url, isFunctionCalling[0], assistantSettings?.static_questions, assistantSettings?.model, assistantSettings?.assistantTypes);
+
+      const editMode = false;
+      const clone = true;
+      if(isKnowledgeBaseExists[0]?.knowledgeBaseId.length > 0){
+        const knowledgeBaseFileIds =isExistingOpenAIAssistant? isKnowledgeBaseExists[0]?.file_ids :[];
+        const storeKnowledgebaseReference = await storeKnowledgeBaseAssistantsReference(newAssistantInstance?._id, myAssistant?.id, isKnowledgeBaseExists[0]?.knowledgeBaseId,knowledgeBaseFileIds, knowledgeSource,editMode,clone);
+      }
+    }
+      if (newAssistantInstance) {
+          return res.status(StatusCodes.CREATED).json({
+            message: AssistantMessages.ASSISTANT_CLONED_SUCCESSFULLY,
+          });
+      } else {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: AssistantMessages.ASSISTANT_CLONING_FAILED,
+        });
+      }
+  } catch (error) {
+    console.log(error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: error.message });
+  }
+};
+
+
+
+
+
+/**
+ * ------------ Script to migrate assistant from v1 to v2 -----------
+ * 
+ */
+
+
+
+export const migrateAssistantsFromV1toV2 = async (req, res) => {
+  const openai = await getOpenAIInstance();
+  try {
+    // const allAssistantFromDB = await Assistant.find({}) // this is for all assistant
+    const singleAssistant = await Assistant.find({assistant_id: "asst_0jgdn4T8ahUbm05by2oAzxxC"}) // this is for first time testing with single assistant
+    const allAssistantFromDB = singleAssistant;
+    let count = 0;
+
+    for (const assistant of allAssistantFromDB) {
+      // console.log("assistant", assistant)
+      // console.log("allAssistantFromDB", allAssistantFromDB)
+      try {
+        const isAssistantExistOnOpenAiPlatform = await doesAssistantExist(openai, assistant?.assistant_id);
+        console.log("isAssistantExistOnOpenAiPlatform :", isAssistantExistOnOpenAiPlatform);
+        if (!isAssistantExistOnOpenAiPlatform) {
+          continue
+        }
+
+        if (isAssistantExistOnOpenAiPlatform) {
+          
+          const assistantInfoFromOpenAI = await retrieveAssistantFromOpenAI(openai, assistant?.assistant_id);
+          const attachedVectorStoreId = assistantInfoFromOpenAI?.tool_resources?.file_search?.vector_store_ids?.[0]
+          
+          // console.log("assistantInfoFromOpenAI ❤️", assistantInfoFromOpenAI)
+          // console.log("attachedVectorStoreId 👌", attachedVectorStoreId)
+      
+          // step 3 & 4: Update 'retrieval' to 'file_search' and need to add vector store id in our DB
+            await Assistant.updateOne(
+              { _id: assistant._id, "tools.type": "retrieval" }, // Find the document with 'retrieval' in tools
+              { 
+                $set: { 
+                  "tools.$[elem].type": "file_search", // Update 'retrieval' to 'file_search'
+                  vectorStoreId: attachedVectorStoreId
+                } 
+              },
+              {
+                arrayFilters: [{ "elem.type": "retrieval" }]
+              }
+            );
+          count++;
+        }
+      } catch (error) {
+        console.log("Error while checking isAssistantExistOnOpenAiPlatform :", error);
+        continue
+      }
+    }
+
+    console.log("Count of assistants where isAssistantExistOnOpenAiPlatform is true:", count);
+    
+     res.status(StatusCodes.OK).json({
+      platformDataCount: count,
+      dataCount: allAssistantFromDB?.length,
+      allAssistantFromDB,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
+export const createVectorStoreForAllAssistantWhereStoreNotExist = async (req, res) => {
+  const openai = await getOpenAIInstance();
+  try {
+    // const allAssistantWhereStoreNotExist = await Assistant.find({ vectorStoreId: { $exists: false } }) // this is for all assistant
+    const singleAssistant = await Assistant.find({assistant_id: "asst_K7YeDHXVYQ6h7e2jkBQz4YWM"}) // this is for first time testing with single assistant
+    const allAssistantWhereStoreNotExist = singleAssistant;
+    let count = 0;
+
+    for (const assistant of allAssistantWhereStoreNotExist) {
+      // console.log("assistant", assistant)
+      // console.log("allAssistantFromDB", allAssistantFromDB)
+      try {
+        const createdVectorStore = await createOpenAiVectorStore(openai, assistant?.name);
+        console.log("createdVectorStore :", createdVectorStore?.store?.id);
+        if (createdVectorStore.success === true) {
+          await Assistant.updateOne(
+            { _id: assistant._id, },
+            { 
+              $set: { 
+                vectorStoreId: createdVectorStore?.store?.id
+              } 
+            },
+          );
+
+          count++;
+          console.log("Count : ", count)
+        }
+
+        
+      } catch (error) {
+        console.log("Error while creating vector store for assistant :", error);
+        continue
+      }
+    }
+
+    console.log("Count of assistants where new store created:", count);
+    
+    return res.status(StatusCodes.OK).json({
+      createdVectorStoreDataCount: count,
+      dataCount: allAssistantWhereStoreNotExist?.length,
+      allAssistantWhereStoreNotExist,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+

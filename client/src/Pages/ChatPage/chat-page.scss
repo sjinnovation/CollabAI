@@ -16,6 +16,8 @@
 
 .bot-response-control-container {
   display: flex;
+  padding-top: 0;
+  margin-top: 0;
 }
 
 .copy-icon,
@@ -40,8 +42,10 @@
 .bot-response-share-btn {
   display: flex;
   height: 28px;
-  margin-top: 4px;
+  margin-top: 0px;
 }
+
+
 
 .floating-title {
   position: absolute;

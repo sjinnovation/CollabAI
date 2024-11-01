@@ -416,10 +416,10 @@ export const getConfigurations = async (req, res, next) => {
             'openaiPresence',
             'geminiTopP',
             'geminiTopK',
+			'personalizeAssistant'
             
 		];
 		const configValues = await config.find({ key: { $in: keysToFetch } });
-
 		if (!configValues || configValues.length === 0) {
 			return res.status(StatusCodes.NOT_FOUND).json({
 				message: ConfigMessages.CONFIG_VALUES_NOT_FOUND,
@@ -431,7 +431,7 @@ export const getConfigurations = async (req, res, next) => {
 			return acc;
 		}, {});
 
-		res.status(StatusCodes.OK).json({
+		return res.status(StatusCodes.OK).json({
 			configValues: formattedValues,
 			message: ConfigMessages.CONFIGURATIONS_FETCHED,
 		});
@@ -440,6 +440,23 @@ export const getConfigurations = async (req, res, next) => {
 	}
 };
 
+export const getPersonalizeAssistantSetting = async (req, res, next) => {
+	try {
+		const keysToFetch = 'personalizeAssistant';
+		const configValues = await config.findOne({ key: keysToFetch });
+		if (!configValues || configValues.length === 0) {
+			return res.status(StatusCodes.NOT_FOUND).json({
+				message: ConfigMessages.CONFIG_VALUES_NOT_FOUND,
+			});
+		}
+		return res.status(StatusCodes.OK).json({
+			personalizeAssistant: configValues.value,
+			message: ConfigMessages.CONFIGURATIONS_FETCHED,
+		});
+	} catch (error) {
+		return next(InternalServer(error.message));
+	}
+};
 export const updateConfigurations = async (req, res, next) => {
 	const { _id: userId } = req.user;
 	const {
@@ -464,7 +481,8 @@ export const updateConfigurations = async (req, res, next) => {
             openaiPresence,
             geminiTopP,
             geminiTopK,
-            geminiMaxToken
+            geminiMaxToken,
+			personalizeAssistant,
 		},
 	} = req;
 
@@ -678,6 +696,27 @@ export const updateConfigurations = async (req, res, next) => {
 				ConfigMessages.MAX_TOKEN_UPDATED,
 				ConfigMessages.MAX_TOKEN_SAVED
 			);
+		} 
+		// Update gemini max token 
+		if (personalizeAssistant !== undefined) {
+			await updateConfiguration(
+				'personalizeAssistant',
+				personalizeAssistant,
+				ConfigMessages.PERSONALIZED_ASSISTANT_ENABLED,
+				ConfigMessages.PERSONALIZED_ASSISTANT_SAVED
+			);
+			if(personalizeAssistant === true){
+				return res.status(StatusCodes.OK).json({
+					message: ConfigMessages.PERSONALIZED_ASSISTANT_ENABLED,
+				});
+			}
+			else if(personalizeAssistant === false){
+				return res.status(StatusCodes.OK).json({
+					message: ConfigMessages.PERSONALIZED_ASSISTANT_DISABLED,
+				});
+
+			}
+
 		}
 
 		res.status(StatusCodes.OK).json({

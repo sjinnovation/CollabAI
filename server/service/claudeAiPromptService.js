@@ -86,14 +86,14 @@ export const generateClaudeAIStreamResponse = async (payload) => {
  * @function generateClaudeHttpResponse
  * @description Creates a stream of responses from claude based on dialogue context and a user prompt.
  * @param {Object} payload - An object containing the userPrompt and userId
- * @param {string} payload.userPrompt - The user's input to the model.
+ * @param {string} payload.modifiedPrompt - The user's input to the model.
  * @param {string} payload.userId - The userId to get user saved details
  * @returns {Promise<Object>} A promise that resolves with the OpenAI stream response object.
  * @throws {Error} Will throw an error if the streaming response cannot be generated.
  */
 
 export const generateClaudeHttpResponse = async (payload) => {
-	const { userPrompt, userId } = payload;
+	const { modifiedPrompt, userId } = payload;
 
 	try {
 		const anthropic = await getClaudeAIInstance();
@@ -107,7 +107,7 @@ export const generateClaudeHttpResponse = async (payload) => {
 			temperature: userPreferences?.claudeAiTemperature ? userPreferences?.claudeAiTemperature : temperature,
 			stream: false,
 			system:"Respond in short and clear sentences.",
-			messages: [{ content: userPrompt, role: 'user' }],
+			messages: [{ content: modifiedPrompt, role: 'user' }],
 		});
 		
 		return{

@@ -29,6 +29,8 @@ import { updatePromptByID } from "../service/gptPromptService.js";
 import { updateMaxUserTokens ,checkMaxUserTokensExhausted } from "../service/userService.js";
 import { generateClaudeHttpResponse } from "../service/claudeAiPromptService.js";
 import mongoose from "mongoose";
+import { extractAllGoogleDriveLinks, extractFileOrFolderId, longFileContextToUsableFileContext, replaceGoogleDriveLinks } from '../utils/googleDriveHelperFunctions.js';
+import { downloadFilesFromGoogleDriveLink, getFileMetadata } from './googleAuth.js';
 
 export const getGptStreamResponse = async (req, res) => {
   try {
@@ -122,11 +124,30 @@ export const getGptPrompt = async (req, res, next) => {
     }
 //
     await checkMaxUserTokensExhausted(userid);
+    const links = extractAllGoogleDriveLinks(userPrompt);
+    let modifiedPrompt =  userPrompt;
+    if(links?.length > 0){
+      const fileIds = links.map(link => extractFileOrFolderId(link));
+      const { fileName, mimeType,fileSize } = await getFileMetadata(fileIds[0], userid);
+      let fileDataContext = [];
+      if(fileSize < 5000000){
+        fileDataContext = await downloadFilesFromGoogleDriveLink(links,userid);
+      }
+      const changedQuestionWithDataContext = replaceGoogleDriveLinks(userPrompt);
+      if(fileDataContext.length > 0){
+        const truncatedPrompt = await longFileContextToUsableFileContext(fileDataContext,botProvider);
+        modifiedPrompt =`Based on the following documents, answer the question: ${changedQuestionWithDataContext},ignore if there is any 'ENCODED_LINK' found in the question and do not try to access ENCODED_LINK.  \n\nDocuments:\n${truncatedPrompt}`;
+      }else{
+        modifiedPrompt = "show this message only 'File Size Exceeds 5MB,please download it and upload for great experience'  and do not write anything extra with it";
+
+      }
+
+    }
 
     switch (botProvider) {
       case "openai":
         botResponse = await generateOpenAIHttpResponse({
-          userPrompt,
+          modifiedPrompt,
           chatLog,
           userId: userid
         });
@@ -144,7 +165,7 @@ export const getGptPrompt = async (req, res, next) => {
 
       case "gemini":
         botResponse = await generateGeminiHttpResponse({
-          userPrompt,
+          modifiedPrompt,
           chatLog,
           userId: userid
         });
@@ -161,7 +182,7 @@ export const getGptPrompt = async (req, res, next) => {
 
       case "claude":
         botResponse = await generateClaudeHttpResponse({
-          userPrompt,
+          modifiedPrompt,
           userId: userid,
         });
 

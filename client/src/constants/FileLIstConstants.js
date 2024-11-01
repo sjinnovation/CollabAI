@@ -44,9 +44,9 @@ export const codeInterpreterFileTypes = [
   ".zip",
 ];
 
-export const ASSISTANT_FILE_CREATION_NOTE = `Before uploading a file, enable the "Retrieval" or "Code Interpreter" option.`;
+export const ASSISTANT_FILE_CREATION_NOTE = `Before uploading a file, enable the "file_search" or "Code Interpreter" option.`;
 
-export const ASSISTANT_RETRIEVAL_NOTE = `Retrieval option supports uploading ${retrievalFileTypes.join(
+export const ASSISTANT_RETRIEVAL_NOTE = `file_search option supports uploading ${retrievalFileTypes.join(
   ", "
 )}.`;
 

@@ -1,7 +1,7 @@
 import { Modal, Form, Input, Select, Row, Col, Button, message } from "antd";
 import { useEffect, useState } from "react";
 import AddCommandsCategoryModal from "./AddCommandsCategoryModal";
-import { createCategory,getCategories } from "../../../api/taskCommandsCategory.js";
+import { createCategory, getCategories } from "../../../api/taskCommandsCategory.js";
 const { Option } = Select;
 
 const TaskCommandModal = ({ propsData }) => {
@@ -18,6 +18,7 @@ const TaskCommandModal = ({ propsData }) => {
       form.setFieldsValue({
         label: data?.commands?.label,
         icon: data?.commands?.icon,
+        description: data?.commands?.description,
         commandsCategoryName: data?.commandsCategoryName,
       });
     }
@@ -69,20 +70,21 @@ const TaskCommandModal = ({ propsData }) => {
           const initialValues = {
             label: data?.commands?.label,
             icon: data?.commands?.icon,
+            description: data?.commands?.description,
             commandsCategoryName: data?.commandsCategoryName,
           };
-  
+
           if (JSON.stringify(initialValues) === JSON.stringify(values)) {
             message.info(noChange);
             return;
           }
-  
+
           const selectedCategory = categories.find(category => category.commandsCategoryName === values.commandsCategoryName);
-  
+
           if (selectedCategory) {
             values.commandsCategoryName = selectedCategory._id;
           }
-  
+
           actions.handleTaskCommandEdit(values);
         } else {
           actions.handleCreateTaskCommand(values);
@@ -143,6 +145,21 @@ const TaskCommandModal = ({ propsData }) => {
                 ]}
               >
                 <Input placeholder="Enter task command icon" />
+              </Form.Item>
+            </Col>
+
+            <Col span={24}>
+              <Form.Item
+                label="Prompt"
+                name="description"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your task command prompt!",
+                  },
+                ]}
+              >
+                <Input.TextArea placeholder="Enter your task command prompt" />
               </Form.Item>
             </Col>
 

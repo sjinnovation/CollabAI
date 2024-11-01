@@ -42,9 +42,9 @@ export const getAllPinnedAssistant = async (req, res) => {
  * @returns {Response} 200 - Returns success message  and the assistant details. And 500 - returns internal server error . And 404 - if the assistant is not found
  */
 export const getSinglePinnedAssistant = async (req, res) => {
-	const { assistant_id } = req.params;
-	const data = await getAllPinnedAssistantService({ assistant_id });
-	return res.status(StatusCodes.OK).json({ message: PinnedAssistantMessages.PINNED_ASSISTANT_FETCHED_SUCCESSFULLY, data });
+	const { id } = req.params;
+	const data = await getSinglePinnedAssistantService({ id });
+	return res.status(StatusCodes.OK).json({ message: PinnedAssistantMessages.PINNED_ASSISTANT_FETCHED_SUCCESSFULLY, data :data });
 };
 
 
@@ -102,9 +102,31 @@ export const addPinnedAssistant = async (req, res, next) => {
  */
 export const deleteSinglePinnedAssistant = async (req, res) => {
 	try {
-		const { id } = req.params;
-		const deletedDocument = await deletePinnedAssistantService(id);
+		const { assistantId,userId } = req.params;
+		const deletedDocument = await deletePinnedAssistantService(assistantId,userId);
+		if (deletedDocument) {
+			return res.status(StatusCodes.OK).json({ message: PinnedAssistantMessages.DELETED_SUCCESSFULLY_FROM_PINNED_ASSISTANT_LIST });
+		}
+		return res.status(StatusCodes.OK).json({ message: PinnedAssistantMessages.ASSISTANT_WAS_NOT_PINNED });
 
+	} catch (error) {
+		next(InternalServer(CommonMessages.INTERNAL_SERVER_ERROR));
+	}
+};
+
+/**
+ * @async
+ * @function deleteManyPinnedAssistant
+ * @description DELETE all Pinned assistant with same assistantId
+ * @param {Object} req - The request do not have any body.But it will contain pinned assistant ID in the params.
+ * @param {Object} res - The response will be a message confirming the deletion 
+ * @throws {Error} Will throw an error if it fails to delete
+ * @returns {Response} 200 - Returns success message And 500 - returns internal server error . And 404 - if the assistant is not found
+ */
+export const deleteManyPinnedAssistant =async (req,res)=>{
+	try {
+		const { assistantId } = req.params;
+		const deletedDocument = await deleteManyPinnedAssistantService(assistantId);
 		if (deletedDocument) {
 			return res.status(StatusCodes.OK).json({ message: PinnedAssistantMessages.DELETED_SUCCESSFULLY_FROM_PINNED_ASSISTANT_LIST });
 		}

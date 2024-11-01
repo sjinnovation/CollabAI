@@ -10,9 +10,9 @@ export const getAssistants = async (page, setAssistants, setTotalPage, setLoadin
       setLoading(true);
       const { data } = await axiosSecureInstance.get(FETCH_ALL_ASSISTANTS(page,searchQuery ));
       if(searchQuery) {
-        setAssistants(() => [ ...data?.assistants ||[]]);
+        setAssistants(() => [ ...data?.assistantList ||[]]);
       } else {
-        setAssistants((prevAssistants) => [...prevAssistants, ...data?.assistants ||[]]);
+        setAssistants((prevAssistants) => [...prevAssistants, ...data?.assistantList ||[]]);
       }
       setTotalPage(data?.totalPages);
       return { success: true, data };
@@ -28,9 +28,9 @@ export const getAssistants = async (page, setAssistants, setTotalPage, setLoadin
       setLoading(true);
       const { data } = await axiosSecureInstance.get(FETCH_ALL_ASSISTANTS(page,searchQuery ));
       if(searchQuery) {
-        setAssistants(() => [ ...data?.assistants ||[]]);
+        setAssistants(() => [ ...data?.assistantList ||[]]);
       } else {
-        setAssistants((prevAssistants) => [...prevAssistants, ...data?.assistants ||[]]);
+        setAssistants((prevAssistants) => [...prevAssistants, ...data?.assistantList ||[]]);
       }
       setTotalPage(data?.totalPages);
       return { success: true, data };

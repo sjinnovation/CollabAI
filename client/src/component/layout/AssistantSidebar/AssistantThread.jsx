@@ -64,7 +64,7 @@ const AssistantThread = ({
     const handleLinkClick = (e) => {
         e.stopPropagation();
         navigate(
-            `/assistants/${assistant_name}/${currentAssistantId}/${thread_id}`
+            `/agents/${assistant_name}/${currentAssistantId}/${thread_id}`
         );
         
     };

@@ -63,7 +63,8 @@ export const getAllAssistantUsageMonthly = async (req, res) => {
         $group: {
           _id: "$assistantId",
           totalUsageCount: { $sum: "$usageCount" },
-          uniqueUsers: { $addToSet: "$userId" }
+          uniqueUsers: { $addToSet: "$userId" },
+          createdAt: { $first: "$createdAt" }
         }
       },
       {
@@ -71,7 +72,8 @@ export const getAllAssistantUsageMonthly = async (req, res) => {
           assistantId: "$_id",
           _id: 0,
           totalUsageCount: 1,
-          uniqueUserCount: { $size: "$uniqueUsers" }
+          uniqueUserCount: { $size: "$uniqueUsers" },
+          createdAt: 1
         }
       },
       {
@@ -91,17 +93,36 @@ export const getAllAssistantUsageMonthly = async (req, res) => {
           totalUsageCount: 1,
           uniqueUserCount: 1,
           assistantName: "$assistant.name",
-          assistantDescription: "$assistant.description"
-        }
+          createdAt: 1
+          }
       },
       { $sort: { totalUsageCount: -1 } },
       { $skip: (Number(page) - 1) * Number(limit) },
       { $limit: Number(limit) }
     ]);
 
+    const totalCountPipeline = [
+      {
+        $match: filter
+      },
+      {
+        $group: {
+          _id: "$assistantId"
+        }
+      },
+      {
+        $count: "totalCount"
+      }
+    ];
+
+    const totalDataCountResult = await AssistantUsage.aggregate(totalCountPipeline);
+    const totalDataCount = totalDataCountResult.length > 0 ? totalDataCountResult[0].totalCount : 0;
+
+
     res.status(200).json({
       message: AssistantTrackUsage.ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY,
       assistantUsageSummary,
+      totalDataCount
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

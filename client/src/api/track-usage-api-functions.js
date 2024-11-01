@@ -39,13 +39,16 @@ export const getDailyUsageReport = async(userid, dateString)=>{
   }
 }
 
-export const getAssistantMonthlyUsageReport = async(selectedMonth)=>{
+export const getAssistantMonthlyUsageReport = async(selectedMonth, page)=>{
+  const limit = 10;
   try {
-      const response = await axiosSecureInstance.get(FETCH_MONTHLY_ASSISTANT_USAGE_REPORT(selectedMonth));
+      const response = await axiosSecureInstance.get(FETCH_MONTHLY_ASSISTANT_USAGE_REPORT(selectedMonth, page, limit));
       const allReport = response.data?.assistantUsageSummary;
+      const totalDataCount = response.data?.totalDataCount;
       return {
         success: true,
-        data: allReport
+        data: allReport,
+        totalDataCount
       }
     } catch (error) {
       return { success: false, message: error?.response?.data?.message };

@@ -64,7 +64,7 @@ export const calculateTokenAndCost = async (input_token, output_token, model_use
     } else if(botProvider == 'gemini'){
         totalInputToken = inputTokens.totalTokens;
         totalOutputToken = outputTokens.totalTokens;
-        totalCost = (Number(totalInputToken) * inputTokenPrice) + (Number(totalOutputToken) * outputTokenPrice);
+        totalCost = (Number(totalInputToken) * inputTokenPrice) + (Number(totalOutputToken) * outputTokenPrice)  / 1000;
     }else if(botProvider == 'claude'){
         //For now since we don't have any  api or  method to calculate  the cost we are setting it to zero  this can be considered  in future scope 
         totalInputToken = 0;
@@ -84,17 +84,17 @@ export const calculateTokenAndCost = async (input_token, output_token, model_use
     };
 };
 
-export const calculateCostFromTokenCounts = (inputTokenCount, outputTokenCount, modelUsed, botProvider='openai') => {
+export const calculateCostFromTokenCounts = (inputTokenCount = 100, outputTokenCount= 150, modelUsed, botProvider='openai') => {
     const { input: inputTokenPrice, output: outputTokenPrice } = tokenPrices[modelUsed] || { input: 0.01, output: 0.01 };
     
     let totalCost = 0;
 
     if (botProvider === 'openai') {
         // If the botProvider is 'openai', divide the total by 1000 (assuming this is a pricing rule for 'openai')
-        totalCost = (Number(inputTokenCount) * inputTokenPrice + Number(outputTokenCount) * outputTokenPrice) / 1000;
+        totalCost = (Number(inputTokenCount) * inputTokenPrice + Number(outputTokenCount) * Number(outputTokenPrice)) / 1000;
     } else if (botProvider === 'gemini') {
         // If the botProvider is 'gemini', sum up the costs without division
-        totalCost = (Number(inputTokenCount) * inputTokenPrice) + (Number(outputTokenCount) * outputTokenPrice);
+        totalCost = (Number(inputTokenCount) * inputTokenPrice) + (Number(outputTokenCount) * outputTokenPrice) / 1000;
     }
 
     return {

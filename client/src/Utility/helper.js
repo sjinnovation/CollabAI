@@ -1,3 +1,5 @@
+import { marked } from "marked";
+import { pageTitle } from "../component/layout/Header/Utilities/pageTitleInfo";
 /*
 @desc: this function is responsible for filtering data per the given date field and returns in fraction of times
 */
@@ -23,11 +25,19 @@ export function categorizeThreads(threads, dateField) {
 
     if (comparableDateField.toDateString() === today.toDateString()) {
       todayPrompts.push(thread);
-    } else if (comparableDateField.toDateString() === yesterday.toDateString()) {
+    } else if (
+      comparableDateField.toDateString() === yesterday.toDateString()
+    ) {
       yesterdayPrompts.push(thread);
-    } else if (comparableDateField >= sevenDaysAgo && comparableDateField < yesterday) {
+    } else if (
+      comparableDateField >= sevenDaysAgo &&
+      comparableDateField < yesterday
+    ) {
       prev7DaysPrompts.push(thread);
-    } else if (comparableDateField >= thirtyDaysAgo && comparableDateField < sevenDaysAgo) {
+    } else if (
+      comparableDateField >= thirtyDaysAgo &&
+      comparableDateField < sevenDaysAgo
+    ) {
       prev30DaysPrompts.push(thread);
     } else {
       const monthYear = comparableDateField.toLocaleString("en-US", {
@@ -153,26 +163,67 @@ const convertDate = (args) => {
   }
 };
 
-export const copyToClipboard = (textToCopy) => {
+export const copyToClipboard = async (textToCopy) => {
+  const htmlContent = marked(textToCopy);
+
+  const tempElement = document.createElement("div");
+  tempElement.innerHTML = htmlContent;
+
   if (navigator.clipboard && window.isSecureContext) {
-    // Navigator clipboard api method'
-    navigator.clipboard.writeText(textToCopy);
-    return true;
-  } else {
-    let textArea = document.createElement("textarea");
-    textArea.value = textToCopy;
-    textArea.style.position = "fixed";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
     try {
-      document.execCommand('copy');
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/plain": new Blob([textToCopy], { type: "text/plain" }),
+          "text/html": new Blob([tempElement.innerHTML], { type: "text/html" }),
+        }),
+      ]);
+      return true;
     } catch (err) {
-      console.error('Unable to copy to clipboard', err);
+      console.error("Unable to copy to clipboard", err);
+      return false;
     }
-    document.body.removeChild(textArea);
-    return true;
+  } else {
+    tempElement.style.position = "fixed";
+    tempElement.style.left = "-9999px";
+    document.body.appendChild(tempElement);
+
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(tempElement);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    try {
+      const successful = document.execCommand("copy");
+      document.body.removeChild(tempElement);
+      return successful;
+    } catch (err) {
+      console.error("Unable to copy to clipboard", err);
+      document.body.removeChild(tempElement);
+      return false;
+    } finally {
+      selection.removeAllRanges();
+    }
   }
 };
+
+export function getPageTitle(pathname) {
+  const chatRegex = /^\/chat(\/.*)?/; 
+  const agentsRegex = /^\/agents(\/.*)?/; 
+
+  if (pageTitle[pathname]) {
+    return pageTitle[pathname];
+  }
+
+  if (chatRegex.test(pathname)) {
+    return pageTitle["/chat"];
+  }
+
+  if(agentsRegex.test(pathname)) {
+    return pageTitle["/agents"];
+  }
+
+  return "";
+}
 
 export { convertDate };

@@ -11,6 +11,10 @@ const TaskCommandsSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      description: {
+        type: String,
+        required: true,
+      },
     },
     commandsCategoryName: {
       type: mongoose.Schema.Types.ObjectId,

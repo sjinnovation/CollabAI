@@ -18,8 +18,9 @@ body {
 
 body {
   font-family: map.get($theme-fonts, "primary-font");
-  background-color: var(--chat-box-bg-color) !important;
+  // background-color: var(--chat-box-bg-color) !important;
   color: var(--chat-box-text-color) !important;
+  
 }
 
 h1 {
@@ -43,26 +44,29 @@ h1 {
   color: red;
 }
 
-/* width */
+/* adding custom scrollbar */
+
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
+  background: transparent;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
+  border-radius: 10px;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
-  background: rgb(159, 159, 159);
+  background: #888;
+  border-radius: 10px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(132, 132, 132);
+  background: #666;
 }
+
+/* ----------------------------- */
 
 .form-switch {
   position: relative;

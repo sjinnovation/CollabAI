@@ -11,8 +11,52 @@ export const getAllFavouriteAssistantService = async () => {
 export const getSingleFavouriteAssistantService = async (assistant_id) => {
     return await FavouriteAssistant.findOne({ assistant_id: assistant_id });
 };
-export const getSingleFavouriteAssistantByIdOrUserIdService = async (id) => {
-    return await FavouriteAssistant.find({ $or: [{ _id: id }, { user_id: id }] });
+export const getSingleFavouriteAssistantByIdOrUserIdService = async (id, skip, limit, query) => {
+    if (Object.keys(query).length > 0) {
+        const results = await FavouriteAssistant.aggregate([
+            {
+                $lookup: {
+                    from: "assistants",
+                    localField: "assistant_id",
+                    foreignField: "assistant_id",
+                    as: "assistantInfo",
+                },
+            },
+            {
+                $unwind: "$assistantInfo",
+            },
+            {
+                $match: {
+                    "assistantInfo.name": query.name,
+                    "assistantInfo.is_public": true
+                },
+            },
+            {
+                $project: {
+                    assistant_id: 1,
+                    user_id: 1,
+                    "assistantInfo.name": 1,
+                },
+            },
+            {
+                $match: {
+                    assistant_id: { $exists: true },
+                },
+            },
+        ]);
+        const totalCount = results.length;
+        return { favoriteAssistantById: results, totalCount };
+
+    }
+    const [favoriteAssistantById, totalCount] = await Promise.all([
+        FavouriteAssistant.find({ $or: [{ _id: id }, { user_id: id }] })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        FavouriteAssistant.countDocuments({ $or: [{ _id: id }, { user_id: id }] }),
+    ]);
+    return { favoriteAssistantById, totalCount };
 };
 
 export const getFavouriteAssistantByAssistantIdAndUserIdService = async (assistant_id, user_id) => {

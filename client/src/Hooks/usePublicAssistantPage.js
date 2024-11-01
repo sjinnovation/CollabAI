@@ -55,8 +55,8 @@ export const usePublicAssistant = () => {
         } finally {
             updateLoader({ ASSISTANT_UPDATING: !checked });
         }
-        handleFetchUserCreatedAssistants();
-        handleFetchAllAssistants(1);
+        await handleFetchUserCreatedAssistants();        
+        await handleFetchAllAssistants(1);
     };
 
 
@@ -64,7 +64,7 @@ export const usePublicAssistant = () => {
 
         const del = await deleteSinglePublicAssistant(assistantId);
 
-        handleUpdateAssistant(record._id, {
+        await handleUpdateAssistant(record, {
             is_public: false,
             is_featured : false,
         });

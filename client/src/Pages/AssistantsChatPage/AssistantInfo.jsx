@@ -20,8 +20,9 @@ const AssistantInfo = ({dataProps}) => {
         fetchAssistantData()
     },[assistant_id])
    
+    //style={{ height: "100vh", }}
     return (
-        <div style={{ height: "100vh", }}>
+        <div>
             <div className="assistant-info-container-on-chat-page">
                 <div className="assistant-img">
                     <div>

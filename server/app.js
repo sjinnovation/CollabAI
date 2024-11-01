@@ -32,6 +32,12 @@ import favoriteRouter from "./routers/favouriteAssistantRoute.js";
 import assistantTypesRoute from "./routers/assistantTypesRoutes.js";
 import pinnedRouter from "./routers/pinnedAssistantRoutes.js";
 import assistantUsageRoute from "./routers/assistantUsageRoutes.js";
+import knowledgeBaseRouter from "./routers/knowledgeBase.js";
+import ragRouter from "./routers/ragWithKnowledgeBase.js";
+import googleDriveRouter from "./routers/googleDriveRouters.js";
+import vectorStoreRouter from "./routers/vectorStoreRoutes.js";
+import workBoardRouter from "./routers/workBoardRoute.js";
+
 const app = express();
 const server = http.createServer(app);
 
@@ -45,6 +51,7 @@ app.use(morgan("tiny"));
 app.get("/", (req, res) => {
   res.send(" API is running ....");
 });
+
 
 app.post("/api/init", initSetup);
 app.use("/api/auth", router);
@@ -72,11 +79,18 @@ app.use("/api/usersPreference", userPreferenceRouter)
 
 app.use("/api/assistants/types",assistantTypesRoute);
 app.use("/api/assistants/usage",assistantUsageRoute);
+app.use("/api/knowledge-base",knowledgeBaseRouter);
+app.use("/api/rag/",ragRouter);
+app.use("/api/vectorStore",vectorStoreRouter);
 
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/image", imageRouter);
+app.use("/api/google-auth", googleDriveRouter);
+
+//WorkBoard-API
+app.use('/api/workboard', workBoardRouter);
 
 cron.schedule("0 0 5 * * *", () => {
   registeredCompanies();

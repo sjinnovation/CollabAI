@@ -50,8 +50,9 @@ const UsefulPromptDropdown = (props) => {
   }, [isVisible]);
 
   const handlePromptSelection = (e) => {
-    const keys = e.key;
-    onSelection({ label: keys });
+    const { item } = e;
+    const description = item.props.description;
+    onSelection({ label: description });
   };
 
   const renderIcon = (iconName) => {
@@ -85,6 +86,7 @@ const UsefulPromptDropdown = (props) => {
                   <Menu.Item
                     key={command.commands.label}
                     icon={renderIcon(command.commands.icon)}
+                    description={command.commands.description}
                   >
                     {command.commands.label}
                   </Menu.Item>

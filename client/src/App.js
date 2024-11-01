@@ -21,6 +21,7 @@ import {
   AssistantFileDownloadPage,
 } from "./Pages";
 
+
 import Layout from "./Pages/Layout";
 import AssistantLayout from "./Pages/Layout/AssistantLayout";
 import ConfigurationTabs from "./Pages/configration/index";
@@ -32,7 +33,12 @@ import TrackUsageComponent from "./Pages/SuperAdmin/TrackUsage/TrackUsageCompone
 import PublicAssistant from "./Pages/ExploreGPTs";
 import ProtectedRoutes from "./component/ProtectedRoute/ProtectedRoute";
 import AssistantTypeList from "./Pages/AssistantType/index";
-import TaskCommands from "./Pages/SuperAdmin/TaskCommands/TaskCommands";
+import TaskCommands from "./Pages/SuperAdmin/TaskCommands/TaskCommands";import KnowledgeBase from "./Pages/KnowledgeBase";
+import { IntegrateApplications } from "./component/IntegrateApplications/IntegrateApplications";
+// import { IntegrateApplications } from "./component/Assistant/IntegrateApplications/IntegrateApplications";
+
+import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboard";
+
 function App() {
   // Hook to get the current location
   const location = useLocation();
@@ -48,34 +54,44 @@ function App() {
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
 
+  
+   {/* For connecting workboard */}
+      <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
+ 
+
+
       <Route path="/" element={<Layout />}>
         <Route path="config/" element={<ConfigurationTabs />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="usersassistantlist" element={<UsersAssistant />} />
+        <Route path="/users-agents" element={<UsersAssistant />} />
 
         <Route path="chat" element={<ChatPage />} />
         <Route path="chat/:thread_id" element={<ChatPage />} />
         <Route path="promptlist/" element={<PromptList />} />
         <Route path="promptlistview/:id" element={<PromptList />} />
         <Route path="promptuserview" element={<PrompotUsersList />} />
+        <Route path="/knowledge-base" element={<KnowledgeBase />} /> 
+        <Route path="/integrate-apps" element={<IntegrateApplications/>} /> 
+
+
 
         <Route element={<ProtectedRoutes />}>
             <Route
-              path="assistants/:assistant_id"
+              path="agents/:assistant_id"
               element={<AssistantsChatPage />}
             />
             <Route
-              path="assistants/:assistant_id/:thread_id"
+              path="agents/:assistant_id/:thread_id"
               element={<AssistantsChatPage />}
             />
         </Route>
 
 
-        <Route path="/assistant-types" element={<AssistantTypeList />} />
+        <Route path="/agent-types" element={<AssistantTypeList />} />
 
 
         <Route path="/templates" element={<Templates />} />
-        <Route path="/public-assistant" element={<PublicAssistant />} />
+        <Route path="/public-agent" element={<PublicAssistant />} />
 
         {/* Protected Routes of SuperAdmin */}
         <Route element={<SuperAdminRoutes />}>
@@ -92,7 +108,7 @@ function App() {
           <Route path="/tags" element={<TagsComponent />} />
           <Route path="/teams" element={<TeamList />} />
 
-          <Route path="/assistantsList" element={<AssistantsList />} />
+          <Route path="/agentsList" element={<AssistantsList />} />
           <Route path="/trackUsage" element={<TrackUsageComponent />} />
           <Route path="/taskCommands" element={<TaskCommands />} />
         </Route>

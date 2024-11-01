@@ -87,7 +87,6 @@ export const sendGeminiAIStreamResponse = async (
 					const chunkText = part.text();
 					gptResponse += chunkText;
 					tokenCount += chunkText.length;
-
 					socket.emit(socketEvent, {
 						...finalResponseObject,
 						promptResponse: gptResponse,

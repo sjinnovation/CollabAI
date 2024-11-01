@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./Chat.css";
-import { ThemeContext } from "../../../src/contexts/themeConfig";
+import { ThemeContext } from "../../contexts/themeConfig";
 
 // libraries
 import { HiCheck, HiOutlineClipboard, HiShare } from "react-icons/hi2";
@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 
 const BotResponse = ({ chatPrompt, response }) => {
   const { theme } = useContext(ThemeContext);
+  console.log("Current Theme:",theme)
   const [formattedResponseArray, setFormattedResponseArray] = useState();
   const [showTick, setShowTick] = useState(false);
 
@@ -31,8 +32,6 @@ const BotResponse = ({ chatPrompt, response }) => {
       const language = match[1].toLowerCase();
       const code = match[2].trim();
       const precedingText = text.substring(lastIndex, match.index);
-
-      // Add preceding text as a text object
       if (precedingText) {
         result.push({ type: "text", content: precedingText });
       }
@@ -66,8 +65,8 @@ const BotResponse = ({ chatPrompt, response }) => {
   }, [response]);
 
   const getMarkedContent = (content) => {
-    // Sanitize the content to prevent XSS
-    const sanitizedContent = DOMPurify.sanitize(content);
+    const result = content.replace(/【.*?】/g, "").replace(/\[0\]/g, "").replace(/<div class="citations-container">.*?<\/div>/g, "");
+    const sanitizedContent = DOMPurify.sanitize(result);
     const tableHtml = { __html: marked(sanitizedContent) };
 
     return (
@@ -89,7 +88,8 @@ const BotResponse = ({ chatPrompt, response }) => {
   };
 
   const handleCopyContent = (textToCopy) => {
-    const isCopied = copyToClipboard(textToCopy);
+    const result = textToCopy.replace(/【.*?】/g, "").replace(/\[0\]/g, "").replace(/<div class="citations-container">.*?<\/div>/g, "");
+    const isCopied = copyToClipboard(result);
     if (isCopied) onShowTick();
   };
 
@@ -101,19 +101,15 @@ const BotResponse = ({ chatPrompt, response }) => {
       const encodedTitle = encodeURIComponent(truncate(chatPrompt));
       const encodedBody = encodeURIComponent(textToShare);
 
-      // Use the correct environment variable REACT_APP_GMAIL_DRAFT_URL_TEMPLATE
       const draftUrlTemplate = process.env.REACT_APP_GMAIL_DRAFT_URL_TEMPLATE;
       const draftUrl = `${draftUrlTemplate}su=${encodedTitle}&body=${encodedBody}`;
 
-      // Call the function to display the message with the link
       displayDraftUrlMessage(draftUrl);
     } catch (error) {
       console.error(error);
     }
   };
 
-
-  // Function to display a message with draft email URL
   const displayDraftUrlMessage = (draftUrl) => {
     if (draftUrl) {
       // Create a message with a link to the draft email
@@ -167,59 +163,59 @@ const BotResponse = ({ chatPrompt, response }) => {
         })}
       </div>
 
-      {/* response-control-container */}
-      <div className="bot-response-control-container">
-        {/* Share option */}
-        <div className="bot-response-share-btn">
-          <ShareDropdown
-            handleShareContent={handleShareContent}
-            chatPrompt={chatPrompt}
-            response={response}
-          />
-        </div>
+      <div className="botMessageWrapper">
+        <div className="bot-response-control-container">
+          <div className="bot-response-share-btn">
+            <ShareDropdown
+              handleShareContent={handleShareContent}
+              chatPrompt={chatPrompt}
+              response={response}
+            />
+          </div>
 
-        {/* copy btn */}
-        <div className="bot-response-copy-btn">
-          <button
-            onClick={() => handleCopyContent(response)}
-            className="copy-icon"
-          >
-            {showTick ? (
-              <>
-                <HiCheck
-                  size={18}
-                  color={theme === "light" ? "#000" : "#fff"}
-                />
-                <span
-                  className="copy-text"
-                  style={
-                    theme === "light" ? { color: "#000" } : { color: "#fff" }
-                  }
-                >
-                  Copied!
-                </span>
-              </>
-            ) : (
-              <>
-                <HiOutlineClipboard
-                  size={18}
-                  color={theme === "light" ? "#000" : "#fff"}
-                />
-                <span
-                  className="copy-text"
-                  style={
-                    theme === "light" ? { color: "#000" } : { color: "#fff" }
-                  }
-                >
-                  Copy
-                </span>
-              </>
-            )}
-          </button>
+          <div className="bot-response-copy-btn">
+            <button
+              onClick={() => handleCopyContent(response)}
+              className="copy-icon"
+            >
+              {showTick ? (
+                <>
+                  <HiCheck
+                    size={18}
+                    color={theme === "light" ? "#000" : "#fff"}
+                  />
+                  <span
+                    className="copy-text"
+                    style={
+                      theme === "light" ? { color: "#000" } : { color: "#fff" }
+                    }
+                  >
+                    Copied!
+                  </span>
+                </>
+              ) : (
+                <>
+                  <HiOutlineClipboard
+                    size={18}
+                    color={theme === "light" ? "#000" : "#fff"}
+                  />
+                  <span
+                    className="copy-text"
+                    style={
+                      theme === "light" ? { color: "#000" } : { color: "#fff" }
+                    }
+                  >
+                    Copy
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default BotResponse;

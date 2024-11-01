@@ -16,6 +16,6 @@ const meetingTypeSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-const MeetingType = mongoose.model("meetingType", meetingTypeSchema);
+const MeetingType = mongoose.model("meetingType", meetingTypeSchema); 
 
 export default MeetingType;

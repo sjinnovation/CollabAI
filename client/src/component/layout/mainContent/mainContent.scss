@@ -4,9 +4,75 @@ main {
   max-height: 100vh;
   overflow-x: auto;
   overflow-y: hidden;
+  background-color: var(--main-bg-color);
 }
 
 .sidebar {
   width: 280px;
-  transition: all .3s ease-in;
+  transition: all 0.5s ease-in;
+}
+
+.thread-sidebar {
+  max-width: 16rem;
+  width: 100%;
+  background-color: var(--thread-bar-bg-2) !important;
+  height: calc(100vh - 56.64px);
+  border-right: 1px solid var(--border-color);
+  z-index: -100;
+  position: fixed;
+  transform: translateX(-32rem);
+  transition: all .8s ease;
+  &.open-sidebar {
+    transform: translateX(0rem);
+  }
+}
+
+.thread-sidebar::-webkit-scrollbar {
+  width: 8px; 
+}
+
+.thread-sidebar::-webkit-scrollbar-track {
+  background: #e0e0e0;
+}
+
+.thread-sidebar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px; 
+}
+
+.thread-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+ }
+
+.thread-search {
+  background-color: var(--chat-box-bg-color);
+  color: var(--chat-box-text-color) !important;
+  border: none;
+  border-radius: 6px;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  font-size: 13px !important;
+  border: 1px solid var(--sidebar-border-color);
+}
+.thread-search:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: var(--chat-box-bg-color);
+  border: 1px solid var(--sidebar-border-color);
+}
+.thread-search::placeholder {
+  background-color: var(--chat-box-bg-color);
+  color: gray !important;
+  border: none;
+}
+
+.main-chat-area-section {
+  width: 100%;
+  margin-left: 0;
+  transition: all .8s ease;
+  &.move-main-layout {
+    margin-left: 16rem;
+    width: calc(100% - 16rem);
+  }
 }

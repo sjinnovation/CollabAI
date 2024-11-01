@@ -2,14 +2,22 @@ import React, { useState } from 'react'
 import { Button, Table } from 'antd';
 
 const AssistantUsageTable = ({ dataProps }) => {
-  const { data, loading, actions } = dataProps;
+  const { data, loading, actions, totalDataCount } = dataProps;
   const [pageSize, setPageSize] = useState(10);
 
-  const handlePageSizeChange = (current, size) => {
-    setPageSize(size);
-  };
-
   const columns = [
+    {
+      title: "Month",
+      dataIndex: "monthName",
+      width: '20%',
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: 'center',
+          }
+        };
+      },
+    },
     {
       title: "Assistant Name",
       dataIndex: "assistantName",
@@ -89,9 +97,10 @@ const AssistantUsageTable = ({ dataProps }) => {
         responsive
         pagination={{
           pageSize: pageSize,
-          showSizeChanger: true,
-          pageSizeOptions: ['10', '20', '30', '40', '50'],
-          onShowSizeChange: handlePageSizeChange,
+          total: totalDataCount,
+          onChange: (page) => {
+            actions.handleFetchAssistantMonthlyReport(page)
+          }
         }}
       />
     </div>

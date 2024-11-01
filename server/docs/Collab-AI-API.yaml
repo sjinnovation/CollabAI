@@ -4158,3 +4158,922 @@ paths:
                   message:
                     type: string
                     example: "Internal server error"
+
+  /api/knowledge-base/65c37def47de339bad473823:
+    post:
+      tags:
+        - "knowledge-base"
+      summary: "Fetch Knowledge Base"
+      description: "This endpoint fetches the knowledge base for a given role."
+      operationId: "fetchKnowledgeBase"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Role of the user"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "role"
+            properties:
+              role:
+                type: "string"
+                example: "superadmin"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    _id:
+                      type: "string"
+                      example: "6686aac874e02d968e59c03e"
+                    name:
+                      type: "string"
+                      example: "10_Ways_to_Build_and_Develop_Resilience.pdf"
+                    size:
+                      type: "number"
+                      format: "float"
+                      example: 0.05
+                    owner:
+                      type: "string"
+                      example: "Alauddin Rezvi"
+                    s3_link:
+                      type: "string"
+                      example: "knowledgeBase/65c37def47de339bad473823/10_Ways_to_Build_and_Develop_Resilience.pdf"
+                    createdAt:
+                      type: "string"
+                      format: "date-time"
+                      example: "2024-07-04T13:59:36.560Z"
+                    updatedAt:
+                      type: "string"
+                      format: "date-time"
+                      example: "2024-07-04T13:59:36.560Z"
+                    __v:
+                      type: "integer"
+                      example: 0
+                    timeDifference:
+                      type: "string"
+                      example: "21 hours"
+              allUserData:
+                type: "array"
+                items:
+                  type: "object"
+              message:
+                type: "string"
+                example: "KnowledgeBase fetched successfully"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+  /api/knowledge-base:
+    post:
+      tags:
+        - "knowledge-base"
+      summary: "Add to Knowledge Base"
+      description: "This endpoint adds a file to the knowledge base."
+      operationId: "addToKnowledgeBase"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Details of the file to be added"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "fileDetails"
+              - "owner"
+            properties:
+              fileDetails:
+                type: "array"
+                items:
+                  type: "object"
+                  required:
+                    - "name"
+                    - "size"
+                    - "base64"
+                  properties:
+                    name:
+                      type: "string"
+                      example: "EOS.pdf"
+                    size:
+                      type: "integer"
+                      example: 35345
+                    base64:
+                      type: "string"
+                      example: "ANY BASE64 OF FILE"
+              owner:
+                type: "string"
+                example: "65c37def47de339bad473823"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "KnowledgeBase Added Successfully"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+  /api/rag/create-vector:
+    post:
+      tags:
+        - "rag"
+      summary: "Create Vector from File"
+      description: "This endpoint creates a vector from a file."
+      operationId: "createVectorFromFile"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Details of the file to create vector from"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "fileDetails"
+              - "userId"
+            properties:
+              fileDetails:
+                type: "array"
+                items:
+                  type: "object"
+                  required:
+                    - "name"
+                    - "base64"
+                  properties:
+                    name:
+                      type: "string"
+                      example: "medicalperacytology.pdf"
+                    base64:
+                      type: "string"
+                      example: "ANY BASE64"
+              userId:
+                type: "string"
+                example: "856859869609614"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Vector from File Created Successfully"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+
+  /api/rag:
+    post:
+      tags:
+        - "rag"
+      summary: "Get Answer to Query"
+      description: "This endpoint processes a query and returns an answer."
+      operationId: "getQueryAnswer"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Details of the query and user ID"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "query"
+              - "userId"
+            properties:
+              query:
+                type: "string"
+                example: "an question as prompt"
+              userId:
+                type: "string"
+                example: "856859869609614"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              answer:
+                type: "string"
+                example: "this will be the prompt answer"
+              message:
+                type: "string"
+                example: "Query Result GOT SUCCESSFULLY"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+  /api/all/{userId}:
+    delete:
+      tags:
+        - "knowledge-base"
+      summary: "Remove Knowledge Base"
+      description: "This endpoint removes the knowledge base for a given user ID."
+      operationId: "removeKnowledgeBase"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "userId"
+          in: "path"
+          description: "ID of the user"
+          required: true
+          type: "string"
+          example: "856859869609614"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "KnowledgeBase Removed"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+  /api/{id}:
+    delete:
+      tags:
+        - "knowledge-base"
+      summary: "Remove Knowledge Base"
+      description: "This endpoint removes the knowledge base for a given user ID and knowledge base ID."
+      operationId: "removeKnowledgeBase"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of the knowledge base"
+          required: true
+          type: "string"
+          example: "65c37def47de339bad473823"
+        - name: "userid"
+          in: "query"
+          description: "ID of the user"
+          required: true
+          type: "string"
+          example: "856859869609614"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "KnowledgeBase Removed"
+        400:
+          description: "Invalid input"
+        500:
+          description: "Internal server error"
+
+
+
+  /api/assistants/clone-assistant:
+    post:
+      summary: Clone an assistant
+      description: Clones an assistant based on the given assistant ID.
+      operationId: assistantClone
+      tags:
+        - Assistants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - assistantId
+                - userId
+              properties:
+                assistantId:
+                  type: string
+                  description: ID of the assistant to clone.
+                  example: "123456"
+                userId:
+                  type: string
+                  description: ID of the user initiating the clone.
+                  example: "user789"
+      responses:
+        '201':
+          description: Assistant cloned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Assistant cloned successfully.
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: An error occurred during cloning.
+
+        
+
+
+
+
+  /api/config/settings/personalize-assistant:
+    get:
+      summary: Get personalized assistant settings
+      description: Fetches personalized assistant settings from the configuration.
+      operationId: getPersonalizeAssistantSetting
+      tags:
+        - Assistants
+      responses:
+        '200':
+          description: Personalized assistant settings fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  personalizeAssistant:
+                    type: string
+                    description: The value of the personalized assistant settings.
+                    example: '{"theme": "dark", "language": "en"}'
+                  message:
+                    type: string
+                    example: Configurations fetched successfully.
+        '404':
+          description: Configuration values not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Configuration values not found.
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: An internal error occurred while fetching configurations.
+#------workboard integration---------------------
+  /api/workboard/workboard-auth:
+    post:
+      summary: Retrieve WorkBoard Access Token
+      description: This endpoint retrieves the WorkBoard access token and refresh token by exchanging an authorization code and redirect URI.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Authorization code received from OAuth.
+                  example: "26042d179889ecf282d33612987cbf787af31c88"
+                redirectUri:
+                  type: string
+                  description: Redirect URI used in the OAuth process.
+                  example: "http://localhost:4000/ConnectionWithWorkboard"
+      responses:
+        '200':
+          description: Access and refresh tokens successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    description: The access token to be used for authenticated requests.
+                    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJXT1JLQk9..."
+                  refreshToken:
+                    type: string
+                    description: The refresh token used to get a new access token.
+                    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJXT1JLQk9..."
+                  scope:
+                    type: string
+                    description: The scope of the access token.
+                    example: "all"
+                  tokenType:
+                    type: string
+                    description: The type of the token, usually bearer.
+                    example: "bearer"
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "WorkBoard access token fetched successfully"
+        '400':
+          description: Invalid request, failed to get access token
+        '500':
+          description: Error occurred while fetching access token
+
+
+
+
+  /api/workboard/workboard-user:
+    post:
+      summary: Retrieve WorkBoard User Information
+      description: This endpoint retrieves the user information from WorkBoard using an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token retrieved from OAuth.
+                  example: "xyz"
+      responses:
+        '200':
+          description: User information successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Status of the request.
+                    example: true
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "User information fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: Total number of users.
+                        example: 1
+                      user:
+                        type: object
+                        properties:
+                          user_id:
+                            type: string
+                            description: The ID of the user.
+                            example: "123456"
+                          user_name:
+                            type: string
+                            description: Username of the user.
+                            example: "johndoe"
+                          email:
+                            type: string
+                            description: The email of the user.
+                            example: "user@example.com"
+                          first_name:
+                            type: string
+                            description: First name of the user.
+                            example: "John"
+                          last_name:
+                            type: string
+                            description: Last name of the user.
+                            example: "Doe"
+                          
+        '400':
+          description: Invalid request, failed to get user information
+        '500':
+          description: Error occurred while fetching user information
+
+
+
+  /api/workboard/workboard-goal:
+    post:
+      summary: Retrieve WorkBoard Goal Information
+      description: This endpoint retrieves goal information from WorkBoard using an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token retrieved from OAuth.
+                  example: "xyz"
+      responses:
+        '200':
+          description: Goal information successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Status of the request.
+                    example: true
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "Goal information fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: Total number of goals.
+                        example: 6
+                      goal:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            user_id:
+                              type: integer
+                              description: The ID of the user.
+                              example: 123456
+                            user_email:
+                              type: string
+                              description: Email of the user.
+                              example: "user@example.com"
+                            user_first_name:
+                              type: string
+                              description: First name of the user.
+                              example: "John"
+                            user_last_name:
+                              type: string
+                              description: Last name of the user.
+                              example: "Doe"
+        '400':
+          description: Invalid request, failed to get goal information
+        '500':
+          description: Error occurred while fetching goal information
+
+
+
+  /api/workboard/workboard-activity:
+    post:
+      summary: Retrieve WorkBoard Activity Information
+      description: This endpoint retrieves activity information from WorkBoard using an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token retrieved from OAuth.
+                  example: "xyz"
+      responses:
+        '200':
+          description: Activity information successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Status of the request.
+                    example: true
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "Activity information fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: Total number of activities.
+                        example: 5
+                      activity:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            ai_id:
+                              type: string
+                              description: The ID of the activity.
+                              example: "12617419"
+                            ai_description:
+                              type: string
+                              description: Description of the activity.
+                              example: "Really want to thank John for his help."
+                            ai_created_at:
+                              type: string
+                              description: Timestamp when the activity was created.
+                              example: "1688625283"
+                            ai_state:
+                              type: string
+                              description: Current state of the activity.
+                              example: "doing"
+                            ai_rating:
+                              type: string
+                              description: Rating of the activity.
+                              example: "green"
+                            ai_priority:
+                              type: string
+                              description: Priority level of the activity.
+                              example: "low"
+                            ai_effort:
+                              type: string
+                              description: Effort level required for the activity.
+                              example: "easy"
+                            ai_note:
+                              type: string
+                              description: Additional note related to the activity.
+                              example: "Added from a meeting"
+                            ai_files:
+                              type: array
+                              description: List of associated files (if any).
+                              items:
+                                type: string
+                            ai_sub_actions:
+                              type: array
+                              description: List of sub-actions (if any).
+                              items:
+                                type: string
+        '400':
+          description: Invalid request, failed to get activity information
+        '500':
+          description: Error occurred while fetching activity information
+
+
+  /api/workboard/workboard-team:
+    post:
+      summary: Retrieve WorkBoard Team Information
+      description: This endpoint retrieves team information from WorkBoard using an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token retrieved from OAuth.
+                  example: "xyz"
+      responses:
+        '200':
+          description: Team information successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Status of the request.
+                    example: true
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "Team information fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: Total number of teams.
+                        example: 2
+                      team:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            team_id:
+                              type: string
+                              description: The ID of the team.
+                              example: "173559"
+                            external_id:
+                              type: string
+                              description: External ID associated with the team (if any).
+                              example: ""
+                            parent_team_id:
+                              type: string
+                              description: Parent team ID, if applicable.
+                              example: ""
+                            dotted_team_ids:
+                              type: array
+                              description: List of dotted team IDs associated with this team.
+                              items:
+                                type: string
+                            team_name:
+                              type: string
+                              description: Name of the team.
+                              example: "Avengers"
+                            team_owner:
+                              type: string
+                              description: ID of the team owner.
+                              example: "379"
+                            team_type:
+                              type: string
+                              description: Type of the team.
+                              example: "working_group"
+                            level:
+                              type: string
+                              description: Level of the team, if applicable.
+                              example: null
+                            created_from:
+                              type: string
+                              description: Source from which the team was created.
+                              example: "in_app"
+                            created_at:
+                              type: string
+                              description: Timestamp when the team was created.
+                              example: "1608707221"
+                            updated_at:
+                              type: string
+                              description: Timestamp when the team was last updated.
+                              example: "1706009010"
+                            team_state:
+                              type: string
+                              description: Current state of the team.
+                              example: "1"
+        '400':
+          description: Invalid request, failed to get team information
+        '500':
+          description: Error occurred while fetching team information
+
+
+
+  /api/workboard/workboard-user-goal:
+    post:
+      summary: Retrieve WorkBoard User Goal Information
+      description: This endpoint retrieves the goals of a specific user from WorkBoard using an access token and user ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token retrieved from OAuth.
+                  example: "xyz"
+                userId:
+                  type: string
+                  description: ID of the user whose goals are to be retrieved.
+                  example: "217859"
+      responses:
+        '200':
+          description: User goal information successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Status of the request.
+                    example: true
+                  message:
+                    type: string
+                    description: Status message indicating success.
+                    example: "User goal information fetched successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalCount:
+                        type: integer
+                        description: Total number of user goals.
+                        example: 1
+                      user:
+                        type: object
+                        properties:
+                          user_id:
+                            type: string
+                            description: The ID of the user.
+                            example: "217859"
+                          user_name:
+                            type: string
+                            description: Username of the user.
+                            example: ""
+                          email:
+                            type: string
+                            description: Email of the user.
+                            example: "example@domain.com"
+                          first_name:
+                            type: string
+                            description: First name of the user.
+                            example: "John"
+                          last_name:
+                            type: string
+                            description: Last name of the user.
+                            example: "Doe"
+                          wb_email:
+                            type: string
+                            description: WorkBoard email of the user.
+                            example: "john.doe"
+                          cell_num:
+                            type: string
+                            description: Cell number of the user.
+                            example: ""
+                          create_at:
+                            type: integer
+                            description: Timestamp of user account creation.
+                            example: 1583173752
+                          last_visited_at:
+                            type: string
+                            description: Last visited timestamp of the user.
+                            example: "1727445642"
+                          picture:
+                            type: string
+                            description: Profile picture URL of the user.
+                            example: "https://files-workboard-prod.s3.amazonaws.com/profile.png"
+                          time_zone:
+                            type: string
+                            description: User's time zone.
+                            example: "UTC"
+                          external_id:
+                            type: string
+                            description: External ID associated with the user.
+                            example: null
+                          created_from:
+                            type: string
+                            description: Source from which the user was created.
+                            example: "in_app"
+                          org_id:
+                            type: string
+                            description: Organization ID of the user.
+                            example: "13"
+                          status:
+                            type: string
+                            description: User status.
+                            example: "active"
+                          manager:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                user_id:
+                                  type: string
+                                  description: The manager's user ID.
+                                  example: "376"
+                                email:
+                                  type: string
+                                  description: Manager's email.
+                                  example: "manager@domain.com"
+                                first_name:
+                                  type: string
+                                  description: Manager's first name.
+                                  example: "Jane"
+                                last_name:
+                                  type: string
+                                  description: Manager's last name.
+                                  example: "Smith"
+                                picture:
+                                  type: string
+                                  description: Manager's profile picture URL.
+                                  example: "https://example.com/profile.png"
+                                external_id:
+                                  type: string
+                                  description: Manager's external ID.
+                                  example: null
+                                role:
+                                  type: string
+                                  description: Manager's role.
+                                  example: "1"
+        '400':
+          description: Invalid request, failed to get user goals
+        '500':
+          description: Error occurred while fetching user goals

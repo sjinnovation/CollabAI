@@ -1,46 +1,66 @@
-import darkLogo from "../../../assests/images/NewLogo-dark.png";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { BiMoon, BiSun } from "react-icons/bi";
 import { ThemeContext } from "../../../contexts/themeConfig";
-import { useNavigate } from "react-router-dom";
-import logo from "../../../assests/images/NewLogo.png";
+import { useLocation } from "react-router-dom";
+import "./Header.scss";
+import { Typography } from "antd";
+import { pageTitle } from "./Utilities/pageTitleInfo";
+import { SidebarContext } from "../../../contexts/SidebarContext";
+import {
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarRightCollapse,
+} from "react-icons/tb";
+import { getPageTitle } from "../../../Utility/helper";
+import { PageTitleContext } from "../../../contexts/TitleContext";
+import NewChatWithSameAssistant from "../../Prompt/NewChatWithSameAssistant";
+import DarkModeToggler from "../../common/DarkModeToggler/DarkModeToggler";
+// import logo from "../../../assests/images/Collab AI Logo White.png";
 
 const Header = () => {
-  const { theme, toggleTheme } = useContext(ThemeContext);
-  const navigate = useNavigate();
-
+  const { theme, toggleTheme, themeIsChecked, setThemeIsChecked } = useContext(ThemeContext);
+  const { setShowMenu, showMenu } = useContext(SidebarContext);
+  const { pageTitle, setPageTitle } = useContext(PageTitleContext);
+  let location = useLocation();
+  const isChatPath = /^\/chat\/.*$/.test(location.pathname);
   return (
-    <>
-      <nav
-        className="navbar navbar-expand sticky-top pt-3"
-        aria-label="Second navbar example"
-      >
-        <div className="container-fluid CustomFlex">
-          <div className="d-flex w-100 position-relative">
-            <img
+    <nav
+      className="navbar navbar-expand sticky-top nav-bar w-100"
+      aria-label="Second navbar example"
+      style={
+        theme === "light"
+          ? { backgroundColor: "#eef3ff" }
+          : { backgroundColor: "#212121" }
+      }
+    >
+      <div className="container-fluid CustomFlex">
+        <div className="d-flex align-items-center gap-2">
+          {(location?.pathname === "/public-assistant" ||
+            location.pathname === "/chat" ||
+            location.pathname.startsWith("/chat/") ||
+            location.pathname.startsWith("/agents/")) ? (
+            <button
+              className="toggle-sidebar"
               onClick={() => {
-                navigate("/chat", { replace: true });
+                setShowMenu((prevState) => !prevState);
               }}
-              alt="brand logo"
-              src={theme === "light" ? darkLogo : logo}
-              width="250"
-              height="auto"
-            />
-          </div>
-          <button
-            onClick={toggleTheme}
-            className="btn btn-outline"
-            style={{ borderColor: theme === "light" ? "#000" : "#fff" }}
-          >
-            {theme === "light" ? (
-              <BiMoon style={{ color: "#000" }} />
-            ) : (
-              <BiSun style={{ color: "#fff" }} />
-            )}
-          </button>
+            >
+              {showMenu ? (
+                <TbLayoutSidebarLeftCollapse className="thread-bar-open-icon" />
+              ) : (
+                <TbLayoutSidebarRightCollapse className="thread-bar-close-icon" />
+              )}
+            </button>
+          ): <></>}
+          <Typography.Title level={5} className="rounded m-0">
+            {getPageTitle(location.pathname)}
+              {pageTitle[location.pathname] && (
+                <NewChatWithSameAssistant assistantId={location.pathname.split("/")[2]} assistantName={pageTitle[location.pathname]} />
+              )}
+          </Typography.Title>
         </div>
-      </nav>
-    </>
+        <DarkModeToggler theme={theme} toggleTheme={toggleTheme} themeIsChecked={themeIsChecked} setThemeIsChecked={setThemeIsChecked}/>
+      </div>
+    </nav>
   );
 };
 

@@ -1,0 +1,30 @@
+.background-color-card {
+    position: fixed;
+    bottom: 2%;
+    right: 2%;
+    z-index: 1;
+}
+
+.card-title {
+    padding: 14px 0;
+}
+
+.card-container {
+    transition:
+        transform 0.5s ease-in-out,
+        opacity 0.5s ease-in-out;
+}
+
+.card-container.slide-out {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+.card-container.slide-in {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.progress-bar {
+    margin-bottom: 10px;
+}

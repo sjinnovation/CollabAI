@@ -15,6 +15,7 @@ import {
 	getConfigurations,
 	setDallEConfig,
 	getDallEConfig,
+	getPersonalizeAssistantSetting,
 } from '../controllers/configController.js';
 import { authenticateSuperAdmin } from '../middlewares/superadminAuth.js';
 
@@ -55,5 +56,6 @@ configRouter.post('/set-openai-model/:userid', authenticateSuperAdmin, setOpenai
 configRouter.get('/openai-model', authenticateSuperAdmin, getOpenaiModel);
 
 configRouter.get('/settings', authenticateSuperAdmin, getConfigurations).patch('/settings',authenticateSuperAdmin, updateConfigurations);
+configRouter.get('/settings/personalize-assistant',getPersonalizeAssistantSetting);
 
 export default configRouter;

@@ -21,7 +21,8 @@ import { getUserID } from "../../Utility/service";
 import { handleSwitchChange, showDeleteConfirm, showRemoveConfirm } from "../../Utility/showModalHelper";
 import "./Assistant.css";
 import { handleCheckAssistantActive } from "../../Utility/addPublicAssistantHelper";
-
+import { FileContext } from "../../contexts/FileContext";
+import { useContext } from "react";
 const { confirm } = Modal;
 
 const AdminAssistantList = ({ data }) => {
@@ -38,17 +39,20 @@ const AdminAssistantList = ({ data }) => {
     searchPersonalAssistants,
     personalAssistantSearchQuery,
     setPersonalAssistantSearchQuery,
-    handlePublicAssistantAdd
+    handlePublicAssistantAdd,
+    getAssistantInfo
+
   } = data;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
 
 
   const redirectToAssistant = (record) => {
 
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantId}`;
+    const url = `/agents/${assistantId}`;
     window.open(url, "_blank");
   };
 
@@ -56,7 +60,7 @@ const AdminAssistantList = ({ data }) => {
 
   const showDeleteConfirm = (assistantId, assistantName) => {
     confirm({
-      title: 'Are you sure delete this Assistant?',
+      title: 'Are you sure delete this Agent?',
       content: `You are deleting ${assistantName}.`,
       okText: 'Yes',
       okType: 'danger',
@@ -72,7 +76,7 @@ const AdminAssistantList = ({ data }) => {
 
   const columns = [
     {
-      title: "Assistant",
+      title: "Agent",
       dataIndex: "name",
       key: "name",
       align: "center",
@@ -113,18 +117,27 @@ const AdminAssistantList = ({ data }) => {
           ></Button>
 
           <Button
-            onClick={() => showEditModalHandler(record)}
-            icon={<AiOutlineEdit />}
+            onClick={async() => {
+              setIsEditPageLoading(true);
+              const isExisting = await getAssistantInfo(record?.assistant_id);
+              if(isExisting){
+                await showEditModalHandler(record);
+              }else{
+                setIsEditPageLoading(false);
 
+              }
+            
+            }}
+            icon={<AiOutlineEdit /> } 
           >
 
           </Button>
           <Tooltip title="Activate or Deactivate">
             <Switch
               checked={record?.is_active}
-              onChange={(checked) =>
+              onChange={async (checked) =>
 
-                handleSwitchChange(record, checked, handleUpdateAssistant)
+                await handleSwitchChange(record, checked, handleUpdateAssistant)
 
               }
               loading={
@@ -167,12 +180,12 @@ const AdminAssistantList = ({ data }) => {
           data={{
             search: personalAssistantSearchQuery,
             setSearch: setPersonalAssistantSearchQuery,
-            placeholder: "Search assistants",
+            placeholder: "Search agents",
           }}
         />
       </div>
       <Table
-        loading={loader.ASSISTANT_LOADING}
+        loading={loader.ASSISTANT_LOADING || isEditPageLoading}
         bordered={true}
         columns={columns}
         dataSource={adminUserAssistants}

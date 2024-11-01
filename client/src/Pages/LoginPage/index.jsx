@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BiArrowBack } from 'react-icons/bi';
 import Cookies from 'js-cookie';
 import { Spin, message } from 'antd';
-import NewLogo from '../../assests/images/NewLogo.png';
+import NewLogo from '../../assests/images/Temporary Logo White.png';
 import { handleLogin, handleForgotPassword } from '../../api/auth';
 import useAuth from '../../Hooks/useAuth';
 import FormComponent from '../../component/common/FormComponent';

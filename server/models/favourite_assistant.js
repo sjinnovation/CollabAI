@@ -3,7 +3,8 @@ import mongoose, { Schema } from "mongoose";
 const favouriteAssistant = new Schema({
     assistant_id: {
         type: String,
-        required: true
+        ref: 'Assistant',
+        required: true,
     },
     user_id: {
         type: Schema.Types.ObjectId,

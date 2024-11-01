@@ -1,14 +1,17 @@
 import { FaGraduationCap } from "react-icons/fa";
-
+import NavLinks from "../../Prompt/NavLink";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../../Hooks/useAuth";
 import { logout } from "../../../Utility/service";
 import React, { useContext } from "react";
 import { ThemeContext } from "../../../contexts/themeConfig";
+import GoogleFilePicker from "../../KnowledgeBase/importFromGoogle";
+import { CgProfile } from "react-icons/cg";
+import { FaSync } from "react-icons/fa";
+import { RiBug2Fill, RiGraduationCapFill, RiLogoutCircleLine } from "react-icons/ri";
 
 const TUTORIAL_LEADSLIFT_URL =
-  "https://app.leadslift.io/v2/preview/xMSsbHd2lmnOHaZXBadB?notrack=true";
-
+  "https://tutorials.buildyourai.consulting/";
 const CommonNavLinks = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
@@ -23,67 +26,39 @@ const CommonNavLinks = () => {
     navigate("/login", { replace: true });
   };
   return (
-    <div>
+    <div className="sidebar-bottom-section">
+{/* 
+      <NavLinks
+        svg={<FaSync size={22}  />
+      }
+        text="Sync Applications"
+        link="/integrate-apps"
+      /> */}
+
       <a
         href={TUTORIAL_LEADSLIFT_URL}
         className="text-decoration-none"
         target="_blank"
       >
-        <div className="navPrompt small">
-          <FaGraduationCap
-            size={25}
-            color={theme === "light" ? "#000" : "#fff"}
+         <div className="navPrompt small sidebar-item">
+          <RiGraduationCapFill
+            className="sidebar-icon"
           />
-          <p>Tutorial </p>
+          <p className="sidebar-text">Tutorial </p>
         </div>
       </a>
       <a
-        href="https://connect.sjinnovation.us/widget/form/4URspcWxEmhPBoUEz7Q7 "
+        href="https://docs.google.com/forms/d/e/1FAIpQLSeWtj0L3SYvLmQNETh19dJgrezPlL-ibsQRJLWuiLpZGBv86g/viewform"
         className="text-decoration-none"
         target="_blank"
       >
-        <div className="navPrompt small">
-          <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            width={25}
-            height={25}
-          >
-            <path
-              stroke={theme === "light" ? "#000" : "#fff"}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6H7a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-5m-6 0 7.5-7.5M15 3h6v6"
-            />
-          </svg>
-          <p>
-            Submit Feedback <i className="bi bi-heart-fill"></i>
+        <div className="navPrompt small sidebar-item">
+          <RiBug2Fill  className="sidebar-icon" />
+          <p className="sidebar-text">
+            Submit An Issue  <i className="bi bi-shield-exclamation"></i>
           </p>
         </div>
       </a>
-
-      <Link className="text-decoration-none" onClick={handleLogout}>
-        <div className="navPrompt small">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            width={22}
-            height={22}
-          >
-            <path
-              d="m16 17 5-5m0 0-5-5m5 5H9m0-9H7.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C3 5.28 3 6.12 3 7.8v8.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C5.28 21 6.12 21 7.8 21H9"
-              stroke={theme === "light" ? "#000" : "#fff"}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <p>Log Out</p>
-        </div>
-      </Link>
     </div>
   );
 };

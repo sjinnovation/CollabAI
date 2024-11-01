@@ -80,3 +80,18 @@ export const checkMaxUserTokensExhausted = async (userId, next) => {
     throw new Error(error.message);
   }
 };
+
+
+export const getUserDetails = async (userId) => {
+  try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+  
+      return user;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+}

@@ -32,6 +32,7 @@ const CustomizeChat = () => {
     let response = await updateUserPreference(userId, data);
     if (response.status == 200) {
       getDetails();
+      window.dispatchEvent(new Event('userDataChanged'));
     }
   };
 

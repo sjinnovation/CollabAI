@@ -2,7 +2,7 @@ export const  FETCH_MONTHLY_USAGE_REPORT = (userid, selectedMonth) => `/api/usag
 
 export const  FETCH_DAILY_USAGE_REPORT = (userid, dateString) => `/api/usage/get-all-track-usage-daily?userid=${userid ? userid : ''}&dateString=${dateString ? dateString : ''}`;
 
-export const  FETCH_MONTHLY_ASSISTANT_USAGE_REPORT = (selectedMonth) => `/api/assistants/usage/get-assistant-usage-monthly?dateString=${selectedMonth ? selectedMonth : ""}`;
+export const  FETCH_MONTHLY_ASSISTANT_USAGE_REPORT = (selectedMonth, page, limit) => `/api/assistants/usage/get-assistant-usage-monthly?dateString=${selectedMonth ? selectedMonth : ""}&page=${page}&limit=${limit}`;
 
 export const  FETCH_ALL_USER_LIST_FOR_AN_ASSISTANT = (assistantId) => `/api/assistants/usage/${assistantId}`;
 

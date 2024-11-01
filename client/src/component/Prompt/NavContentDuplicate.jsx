@@ -1,4 +1,11 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import NavLinksContainer from "./NavLinksContainer";
 import NavPrompt from "./NavPrompt";
 import NewChat from "./NewChat";
@@ -11,25 +18,30 @@ import { getChatThread } from "../../api/threadApiFunctions";
 import { AssistantContext } from "../../contexts/AssistantContext";
 import AssistantList from "../layout/NewSidebar/AssistantList";
 import { useNavigate, useParams } from "react-router-dom";
-import debounce from 'lodash/debounce';
+import debounce from "lodash/debounce";
 import { LuLayers } from "react-icons/lu";
-import "./exploreAssistant.css"
+import "./exploreAssistant.css";
 import { getSingleAssistant } from "../../api/assistantChatPageApi";
 import "./NavBar.css";
 import "./NavContentDuplicate.css";
+import { FolderOpenOutlined } from "@ant-design/icons";
 import { AiOutlineAntDesign } from "react-icons/ai";
+import logo from "../../assests/images/NewLogo.png";
+import darkLogo from "../../assests/images/NewLogo-dark.png";
+import whiteLogo from "../../assests/images/collab_ai_logo_white.svg";
+import { ThemeContext } from "../../contexts/themeConfig";
+import { FaFolderOpen } from "react-icons/fa6";
+import { BsFillLayersFill } from "react-icons/bs";
+import CommonNavLinks from "../layout/NewSidebar/CommonNavLinks";
+
 const NavContentDuplicate = ({
   setChatLog,
   chatLog,
   setShowMenu,
   triggerUpdate,
 }) => {
-  const [chatThread, setChatThread] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [assistantSelected, setAssistantSelected] = useState(false);
-  const [assistantIdLinked, setAssistantIdLinked] = useState('');
-  const [addAssistantName, setAddAssistantName] = useState('');
   const userid = getUserID();
+  const [chatThread, setChatThread] = useState([]);
   const {
     assistants,
     setAssistants,
@@ -45,327 +57,144 @@ const NavContentDuplicate = ({
     setSearchQuery,
     deletedAssistantThreadId,
     triggerUpdateThreads,
-    setTriggerUpdateThreads
+    setTriggerUpdateThreads,
+    assistantSelected,
+    setAssistantSelected,
+    assistantIdLinked,
+    setAssistantIdLinked,
+    addAssistantName,
+    setAddAssistantName,
   } = useContext(AssistantContext);
-
-  // context values
-  const { removeThreadId, setRemoveThreadId } = useContext(SidebarContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const { assistant_id } = useParams();
-
+  // const [assistantSelected, setAssistantSelected] = useState(false);
+  // const [assistantIdLinked, setAssistantIdLinked] = useState("");
+  // const [addAssistantName, setAddAssistantName] = useState("");
   useEffect(() => {
-
     if (assistant_id) {
       setAssistantSelected(true);
       setAssistantIdLinked(assistant_id);
     } else {
       setAssistantSelected(false);
-      setAssistantIdLinked('');
+      setAssistantIdLinked("");
     }
-
-
-    const fetchData = async () => {
-      const res = await getSingleAssistant(assistantIdLinked);
-      if (res?.assistant?.name) {
-        setAddAssistantName(res.assistant.name);
-      }
+    if (assistantIdLinked) {
+      const fetchData = async () => {
+        const res = await getSingleAssistant(assistantIdLinked);
+        if (res?.assistant?.name) {
+          setAddAssistantName(res.assistant.name);
+        }
+      };
+      fetchData();
     }
-
-    fetchData();
-
-  }, [assistantIdLinked, window.location.pathname])
-
-
+  }, [assistantIdLinked, window.location.pathname]);
   const handleClick = () => {
-    navigate('/public-assistant');
+    navigate('/public-agent');
   };
-
-  const handleGetChatThread = async () => {
-
-    try {
-      const { success, data, error } = await getChatThread(
-        userid,
-        setChatThread
-      );
-
-      if (success) {
-        setChatThread(data);
-      } else {
-        setChatThread([]);
-        console.error("Error fetching chat thread:", error);
-      }
-    } finally {
-      setTriggerUpdateThreads(false);
-    }
+  const retrievingUniqueAssistant = assistants.filter(
+    (assistant, index, self) =>
+      index ===
+      self.findIndex((anyAssistant) => anyAssistant.name === assistant.name)
+  );
+  const handleClickOnKnowledgeBase = () => {
+    navigate("/knowledge-base");
   };
-
-  const handleRemoveThread = (threadId) => {
-    if (chatThread.length && threadId) {
-      setChatThread((prevThreads) =>
-        prevThreads.filter((thread) => thread.threadid !== threadId)
-      );
-      setRemoveThreadId(false);
-    }
-  };
-
-  useEffect(() => {
-    handleGetChatThread();
-  }, [triggerUpdate, triggerUpdateThreads, deletedAssistantThreadId]);
-
-  useEffect(() => {
-    if (removeThreadId) {
-      handleRemoveThread(removeThreadId);
-    }
-    if (deletedAssistantThreadId) {
-      navigate('/chat');
-    }
-  }, [removeThreadId, deletedAssistantThreadId]);
-
-  const renderMonthlyPrompts = (monthlyPrompts) => {
-    return Object.entries(monthlyPrompts).map(([monthYear, prompts]) => (
-      <div key={monthYear} className="mb-4">
-        <small
-          style={{
-            fontSize: "0.75rem",
-            lineHeight: "1rem",
-            padding: "0.5rem",
-          }}
-          className="d-block text-capitalize text-secondary"
-        >
-          {monthYear}
-        </small>
-        {prompts.map(
-          (data, index) =>
-            data.promptresponse && (
-              <NavPrompt
-                key={data.threadid}
-                chatPrompt={data.description}
-                threadId={data.threadid}
-                threadIndex={index}
-                assistantId={data.assistant_id}
-                assistantThreadId={data.thread_id}
-                assistantName={data.name}
-                chatLog={chatThread}
-                setChatLog={setChatThread}
-              />
-            )
-        )}
-      </div>
-    ));
-  };
-
-  const renderPromptsByCategory = (prompts, category) => {
-    if (category === "monthly") {
-      return renderMonthlyPrompts(prompts);
-    } else {
-      return (
-        <div key={category} className="mb-4">
-          <small
-            style={{
-              fontSize: "0.75rem",
-              lineHeight: "1rem",
-              padding: "0.5rem",
-            }}
-            className="d-block text-capitalize text-secondary"
-          >
-            {category}
-          </small>
-          {prompts.map(
-            (data, index) =>
-              (data.promptresponse || data.description) && (
-                <NavPrompt
-                  key={data.threadid}
-                  chatPrompt={data.description}
-                  threadId={data.threadid}
-                  threadIndex={index}
-                  assistantId={data.assistant_id}
-                  assistantThreadId={data.thread_id}
-                  assistantName={data.name}
-                  chatLog={chatThread}
-                  setChatLog={setChatThread}
-                  thread_mongo_id={data._id}
-                />
-              )
-          )}
-        </div>
-      );
-    }
-  };
-
-  // Function to handle search term change
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
   const handleAssistantSearch = useCallback(
-    debounce(value => {
+    debounce((value) => {
       setSearchQuery(value);
       setPage(1);
     }, 600),
-    []);
-
-  // Filter data based on search term
-  const filteredData = (assistantSelected == false) ? (chatThread?.filter((thread) => {
-    if (thread.prompttitle) {
-      return thread?.prompttitle
-        ?.toLowerCase()
-        ?.includes(searchTerm?.toLowerCase());
-    } else {
-      return thread?.description
-        ?.toLowerCase()
-        ?.includes(searchTerm?.toLowerCase());
-    }
-  })) : (chatThread?.filter((thread) => {
-    if (assistantIdLinked == thread.assistant_id) {
-      if (thread.prompttitle) {
-        return thread?.prompttitle
-          ?.toLowerCase()
-          ?.includes(searchTerm?.toLowerCase());
-      } else {
-        return thread?.description
-          ?.toLowerCase()
-          ?.includes(searchTerm?.toLowerCase());
-      }
-    }
-
-  }));
-
-
-  const categorizedChatThreads = useMemo(() => {
-    if (filteredData?.length) {
-      const chats = categorizePrompts(filteredData);
-      return chats;
-    } else return {};
-  }, [filteredData]);
-
-const retrievingUniqueAssistant = assistants.filter((assistant, index, self) =>
-  index === self.findIndex((anyAssistant) => (
-    anyAssistant.name === assistant.name
-  ))
-);
-
-
-
+    []
+  );
+  // Main sidebar end
   return (
-    <>
-      <div style={{ padding: "0.875rem", paddingBottom: 0 }}>
-        <NewChat />
-      </div>
-      <div onClick={handleClick} className="glyphicon glyphicon-th-large">
-        <p className="fw-bold custom-size-for-explore-text "><LuLayers className="fs-5 me-2"/> Explore Assistants</p>
-      </div>
-      <div style={{ padding: "0.875rem", paddingTop: 0 }}>
-        <div className="input-group input-group-sm mb-1">
-          <span className="input-group-text thread-search" id="basic-addon1">
-            <FaSearch />
-          </span>
-          <input
-            type="text"
-            className="form-control thread-search"
-            placeholder="Search Assistant"
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-            // value={searchQuery}
-            onChange={(e) => handleAssistantSearch(e.target.value)}
-          />
-        </div>
-
-
-
-        <AssistantList
-          propsData={{
-            assistants ,
-            setAssistants,
-            page,
-            totalPage,
-            loading,
-            actions: {
-              setPage,
-            },
-            setAssistantSelected,
-            setAssistantIdLinked,
-            handleFetchAssistants,
+    <div className="w-100 h-100 d-flex flex-column justify-content-between">
+      <div className="w-100 logo-wrapper" style={{ padding: "0.875rem" }}>
+        <img
+          onClick={() => {
+            navigate("/chat", { replace: true });
           }}
+          alt="brand logo"
+          // src={theme === "light" ? darkLogo : logo}
+          src={whiteLogo}
+          width="250"
+          height="60"
         />
       </div>
-      <>
-        <div className="add-assistant-name-container mx-4">  <p>{assistantIdLinked ? `${addAssistantName}'s thread` : "Assistant and Multi-provider threads"}</p> </div>
-
-        <div class="input-group input-group-sm mb-1 px-3">
-
-
-          <span class="input-group-text thread-search" id="basic-addon1">
-            <FaSearch />
-          </span>
-          <input
-            type="text"
-            class="form-control thread-search"
-            placeholder="Search Thread"
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-            value={searchTerm}
-            onChange={handleSearch}
+      <div className="h-100 w-100">
+        <div style={{ padding: "0.875rem", paddingBottom: 0 }}>
+          <NewChat />
+        </div>
+        <div
+          onClick={handleClickOnKnowledgeBase}
+          className="glyphicon glyphicon-th-large sidebar-item"
+        >
+          <p className="custom-size-for-explore-text fw-bold sidebar-text">
+            <FaFolderOpen className="fs-5 me-2 sidebar-icon" /> 
+            Knowledge Base
+          </p>
+        </div>
+        <div
+          onClick={handleClick}
+          className="glyphicon glyphicon-th-large sidebar-item"
+        >
+          <p className="fw-bold custom-size-for-explore-text sidebar-text">
+            <BsFillLayersFill className="fs-5 me-2 sidebar-icon" />
+            Explore Agents
+          </p>
+        </div>
+        <div style={{ padding: "0.875rem", paddingTop: 0 }}>
+          {/* <div className="input-group input-group-sm mb-1">
+            <span className="input-group-text sidebar-search" id="basic-addon1">
+              <FaSearch />
+            </span>
+            <input
+              type="text"
+              className="form-control sidebar-search"
+              placeholder="Search Agent"
+              aria-label="Username"
+              aria-describedby="basic-addon1"
+              // value={searchQuery}
+              onChange={(e) => handleAssistantSearch(e.target.value)}
+            />
+          </div> */}
+          <div className="d-flex w-100 align-items-center">
+            <hr className="sidebar-hr" style={{ width: "50%" }} />
+            <small
+              style={{
+                fontSize: "0.75rem",
+                lineHeight: "1rem",
+                padding: "0.5rem",
+                whiteSpace: "nowrap",
+              }}
+              className="text-capitalize text-secondary"
+            >
+              Frequently Used Agents
+            </small>
+            <hr className="sidebar-hr" style={{ width: "50%" }} />
+          </div>
+          <AssistantList
+            propsData={{
+              assistants,
+              setAssistants,
+              page,
+              totalPage,
+              loading,
+              actions: {
+                setPage,
+              },
+              setAssistantSelected,
+              setAssistantIdLinked,
+              handleFetchAssistants,
+            }}
           />
         </div>
-        <Scrollbars
-          autoHide
-          autoHideTimeout={1000}
-          autoHideDuration={200}
-          style={{ width: "260px", height: "78vh", border: "none" }}
-          renderThumbVertical={({ style, ...props }) => (
-            <div
-              {...props}
-              style={{
-                ...style,
-                cursor: "pointer",
-                backgroundColor: "rgba(255,255,255,.25)",
-              }}
-            />
-          )}
-        >
-          <div
-            style={{
-              padding: "0.875rem",
-              paddingTop: 0,
-              width: "100%",
-              border: "none",
-            }}
-          >
-
-            {
-              (Object.keys(categorizedChatThreads).length === 0) ? (
-                <>
-                  <br /><br /><br /><br />
-                  <pre className="thread-no-data">No threads have been generated yet</pre>
-
-                </>
-
-              ) : (
-                <>
-
-                  {Object.entries(categorizedChatThreads).map(([category, prompts]) =>
-                    (Array.isArray(prompts) && prompts.length) ||
-                      (typeof prompts === "object" && Object.keys(prompts).length)
-                      ? renderPromptsByCategory(prompts, category)
-                      : null
-                  )}
-
-
-                </>
-              )
-
-            }
-
-
-
-
-          </div>
-        </Scrollbars>
-      </>
-
+        {/* <div className="single-border"></div> */}
+      </div>
+      <CommonNavLinks />
       <NavLinksContainer chatLog={chatThread} setChatLog={setChatThread} />
-    </>
+    </div>
   );
 };
-
 export default NavContentDuplicate;

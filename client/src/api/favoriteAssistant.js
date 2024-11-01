@@ -4,12 +4,14 @@ import { axiosSecureInstance } from "./axios";
 import { getUserID } from "../Utility/service";
 import { message, Spin } from "antd";
 
-export const fetchSingleFavoriteAssistant = async (setFavoriteAssistant,setIsLoading) => {
+export const fetchSingleFavoriteAssistant = async (setFavoriteAssistant,setIsLoading,setTotalCount,page,searchQuery) => {
   setIsLoading(true);
   try {
+    const pageSize = 10;
 
-    const response = await axiosSecureInstance.get(SINGLE_FAVORITE_ASSISTANT_DETAILS(getUserID()));
+    const response = await axiosSecureInstance.get(SINGLE_FAVORITE_ASSISTANT_DETAILS(getUserID(),page,pageSize,searchQuery));
     const data = response.data.result;
+    setTotalCount(response.data.totalCount);
     setFavoriteAssistant(data)
     return { success: true, data: data }
   } catch (error) {

@@ -6,12 +6,14 @@ import {
   codeInterpreterFileTypes,
 } from "../constants/FileLIstConstants";
 
+import { FileContext } from "../contexts/FileContext";
+import { useContext } from "react";
 const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [countTotalFile, setCountTotalFile] = useState(0)
   const [totalFileList,setTotalFileList] = useState([]);
-
+  const {  deletedFileList,setDeletedFileList} = useContext(FileContext);
   useEffect(() => {
     const initialFiles = getInitialFiles();
     const fileListFormatted = initialFiles.map((file, index) => ({
@@ -44,6 +46,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
       message.error(error?.response?.data?.message || error.message);
       return false;
     } finally {
+      setDeletedFileList([])
       setUploading(false);
     }
   };
@@ -54,6 +57,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
 
     setFileList(newFileList);
     setTotalFileList(newTotalFileList);
+    setDeletedFileList((prev)=>[...prev,file.uid]);
 
     if (file.uid.startsWith("existing")) {
       const index = parseInt(file.uid.split("-")[1], 10);
@@ -75,7 +79,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     if (flatSelectedTools.includes("code_interpreter")) {
       allowedFileTypes = [...allowedFileTypes, ...codeInterpreterFileTypes];
     }
-    if (flatSelectedTools.includes("retrieval")) {
+    if (flatSelectedTools.includes("file_search")) {
       allowedFileTypes = [...allowedFileTypes, ...retrievalFileTypes];
     }
 
@@ -113,7 +117,9 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     setFileList,
     isUploading,
     setCountTotalFile,
-    countTotalFile
+    countTotalFile,
+    totalFileList,
+    setTotalFileList
   };
 };
 

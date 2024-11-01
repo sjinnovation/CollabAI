@@ -19,7 +19,7 @@ import {
   Spin,
   message,
 } from "antd";
-import { AiOutlineDelete, AiOutlineEdit,AiOutlineArrowUp } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineEdit, AiOutlineArrowUp } from "react-icons/ai";
 //Component imports
 
 //hooke
@@ -69,7 +69,25 @@ const IconComponent = ({ label }) => {
 };
 
 const SingleUserAssistants = ({ data }) => {
-  const { showEditModalHandler } = data
+  const { 
+
+    adminUserAssistants,
+    loader,
+    handleDeleteAssistant,
+    handleUpdateAssistant,
+    showEditModalHandler,
+    handleFetchUserCreatedAssistants,
+    handlePublicAssistantAdd,
+    handleDeleteFavoriteAssistant,
+    getAssistantInfo,
+    isLoading, 
+    setIsLoading,
+    totalCount,
+
+   } = data
+
+
+
   const { confirm } = Modal;
   //-----States ------//
   const [showModal, setShowModal] = useState(false);
@@ -79,8 +97,6 @@ const SingleUserAssistants = ({ data }) => {
     ...initialAssistantState,
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-
 
   //------Side Effects ---------//
   useEffect(() => {
@@ -91,16 +107,6 @@ const SingleUserAssistants = ({ data }) => {
   }, []);
 
   //----------Hooks--------------//
-  const {
-    adminUserAssistants,
-    loader,
-    handleDeleteAssistant,
-    handleUpdateAssistant,
-
-    handleFetchUserCreatedAssistants,
-    handlePublicAssistantAdd,
-
-  } = useAssistantPage();
   const { getFavoriteAssistant } = useFavoriteAssistant();
 
 
@@ -130,10 +136,9 @@ const SingleUserAssistants = ({ data }) => {
 
     return itemName.includes(query);
   });
-
   const openAssistantNewPage = (assistant_id, name) => {
 
-    navigate(`/assistants/${assistant_id}`);
+    navigate(`/agents/${assistant_id}`);
 
   };
 
@@ -141,7 +146,7 @@ const SingleUserAssistants = ({ data }) => {
 
   const columns = [
     {
-      title: "Assistant",
+      title: "Agent",
       dataIndex: "name",
       key: "name",
       align: "center",
@@ -152,7 +157,7 @@ const SingleUserAssistants = ({ data }) => {
           ) : (
             <BsRobot className="fs-4" />
           )}
-         <span className="ms-2 text-start">{name}</span>
+          <span className="ms-2 text-start">{name}</span>
         </Space>
       ),
     },
@@ -174,12 +179,21 @@ const SingleUserAssistants = ({ data }) => {
       align: "center",
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="Chat with Assistant">
-            <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><AiOutlineArrowUp/></Button>
+          <Tooltip title="Chat with Agent">
+            <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><AiOutlineArrowUp /></Button>
           </Tooltip>
 
           <Button
-            onClick={() => showEditModalHandler(record)}
+            onClick={async () => {
+              setIsLoading(true);
+              const isExisting = await getAssistantInfo(record?.assistant_id);
+              if (isExisting) {
+                await showEditModalHandler(record);
+              }else{
+                setIsLoading(false);
+
+              }
+            }}
             icon={<AiOutlineEdit />}
           ></Button>
           <Tooltip title="Activate or Deactivate">
@@ -199,7 +213,7 @@ const SingleUserAssistants = ({ data }) => {
           <Tooltip title="Public or Private">
             <Switch
               checked={record?.is_public}
-              onChange={(checked) =>{handleCheckAssistantActive(checked, record, handlePublicAssistantAdd)}
+              onChange={(checked) => { handleCheckAssistantActive(checked, record, handlePublicAssistantAdd) }
 
               }
 
@@ -223,21 +237,25 @@ const SingleUserAssistants = ({ data }) => {
             data={{
               search: searchQuery,
               setSearch: setSearchQuery,
-              placeholder: "Search Assistant",
+              placeholder: "Search Agent",
             }}
           />
         </div>
-          <Table
-            loading={isLoading}
-            bordered={true}
-            columns={columns}
-            dataSource={filteredData}
-            scroll={{ y: '50vh' }}
-            pagination={{
-              pageSize: 10,
-              total: filteredData?.length,
-            }}
-          />
+        <Table
+          loading={loader.ASSISTANT_LOADING || isLoading}
+          bordered={true}
+          columns={columns}
+          dataSource={filteredData}
+          scroll={{ y: '50vh' }}
+          pagination={{
+            pageSize: 10,
+            total: totalCount,
+            onChange: (page, pageSize) => {
+              handleFetchUserCreatedAssistants(page);
+            },
+            showSizeChanger: false,
+          }} 
+        />
 
       </div>
     </>

@@ -12,6 +12,8 @@ export const assistantGptModels = [
     "gpt-3.5-turbo-1106",
     // "gpt-3.5-turbo",
     // "gpt-3.5-turbo-0613",
-    // Add more models as needed
+    // Add more models as needed,
+    "gpt-4o",
+    "gpt-4o-mini"
   ];
   

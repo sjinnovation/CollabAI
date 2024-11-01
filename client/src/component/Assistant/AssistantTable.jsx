@@ -22,9 +22,8 @@ import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/Debounced
 import { handleSwitchChange, showRemoveConfirm } from "../../Utility/showModalHelper";
 import { AssistantNeedToActiveFirst } from "../../constants/PublicAndPrivateAssistantMessages";
 import { handleCheckAssistantActive } from "../../Utility/addPublicAssistantHelper";
-
-
-
+import { useContext } from "react";
+import { FileContext } from "../../contexts/FileContext";
 const AssistantTable = ({ data }) => {
   const {
     assistants,
@@ -40,11 +39,12 @@ const AssistantTable = ({ data }) => {
     searchOrganizationalAssistants,
     orgAssistantSearchQuery,
     setOrgAssistantSearchQuery,
-    handlePublicAssistantAdd
+    handlePublicAssistantAdd,
+    getAssistantInfo
   } = data;
   const [selectedAssistant, setSelectedAssistant] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [fromOrganizationalPage,setFromOrganizationalPage] = useState(true);
+  const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
 
   //Local function 
   const handleViewTeams = (team) => {
@@ -53,14 +53,14 @@ const AssistantTable = ({ data }) => {
 
   const redirectToAssistant = (record) => {
     const assistantId = record.assistant_id;
-    const url = `/assistants/${assistantId}`;
+    const url = `/agents/${assistantId}`;
     window.open(url, "_blank");
   };
 
   //column 
   const columns = [
     {
-      title: "Assistant",
+      title: "Agent",
       dataIndex: "name",
       key: "name",
       align: "center",
@@ -129,9 +129,9 @@ const AssistantTable = ({ data }) => {
           <Tooltip title="Activate or Deactivate">
             <Switch
               checked={record?.is_active}
-              onChange={(checked) =>{
+              onChange={async (checked) =>{
                 let fromOrganizationalPage = true
-                handleSwitchChange(record, checked, handleUpdateAssistant,fromOrganizationalPage)
+                await handleSwitchChange(record, checked, handleUpdateAssistant,fromOrganizationalPage)
                 fromOrganizationalPage = false
 
               }}
@@ -142,7 +142,15 @@ const AssistantTable = ({ data }) => {
             />
           </Tooltip>
           <Button
-            onClick={() => showEditModalHandler(record)}
+            onClick={async () =>{
+              setIsEditPageLoading(true);
+              const isExisting = await getAssistantInfo(record?.assistant_id);
+              if(isExisting){
+                await showEditModalHandler(record);
+              }else{
+                setIsEditPageLoading(false);
+              }
+            }}
             icon={<AiOutlineEdit />}
 
           >
@@ -200,12 +208,12 @@ return (
           data={{
             search: orgAssistantSearchQuery,
             setSearch: setOrgAssistantSearchQuery,
-            placeholder: "Search Organizational Assistants",
+            placeholder: "Search Organizational Agents",
           }}
         />
       </div>
       <Table
-        loading={loader.ALL_ASSISTANT_LOADING}
+        loading={loader.ALL_ASSISTANT_LOADING || isEditPageLoading}
         bordered={true}
         columns={columns}
         dataSource={assistants.assistants}

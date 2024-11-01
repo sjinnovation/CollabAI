@@ -1,19 +1,48 @@
-.burger-menu {
-  color: $color-white;
-  cursor: pointer;
-  font-size: 25px;
-  width: 40px;
-}
+// .burger-menu {
+//   color: $color-white;
+//   cursor: pointer;
+//   font-size: 25px;
+//   width: 40px;
+// }
 
-.CustomFlex{
+.CustomFlex {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0;
 }
-.capital{
+
+.toggle-sidebar {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-size: 25px !important;
+  transition: all 0.5s ease;
+  padding: 0;
+  &:active {
+    transform: scale(0.9);
+  }
+  &:hover {
+    background-color: transparent;
+  }
+}
+.capital {
   color: #ffffff;
-    font-size: 14px;
+  font-size: 14px;
   text-transform: capitalize;
   margin-right: 12px;
   width: 244px;
+}
+
+.nav-bar {
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 0.8rem 1rem;
+  // background-color: ;
+  background-color: var(--header-bg) !important;
+
+  .thread-bar-open-icon,
+  .thread-bar-close-icon {
+    color: var(--light-dark);
+    padding: 0 !important;
+  }
 }

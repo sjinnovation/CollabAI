@@ -9,7 +9,7 @@ const Cards = ({ title,description,model, id, assistantType,usersId, createdBy, 
     const navigate = useNavigate();
 
     const openAssistantNewPage = (id, title) => {
-        navigate(`/assistants/${id}`);
+        navigate(`/agents/${id}`);
     };
     return (
 

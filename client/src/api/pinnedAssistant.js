@@ -15,19 +15,19 @@ export const fetchSinglePinnedAssistant = async (setPinnedAssistant) => {
   };
 
 };
-export const deletePinnedAssistant = async (assistantId, id, userId, updatePinStatus,fromOrganizationalPage = false) => {
+export const deletePinnedAssistant = async (assistantId, id, userId, updatePinStatus,fromOrganizationalPage = false,fromModal = false) => {
   try {
     const checkPinnedAssistantAvailability = await axiosSecureInstance.get(GET_SINGLE_PINNED_ASSISTANT(assistantId));
-    if (checkPinnedAssistantAvailability.data !==null ) {
-      const endPoint = (fromOrganizationalPage == true)?DELETE_MANY_PINNED_ASSISTANT(assistantId) : DELETE_SINGLE_PINNED_ASSISTANT(assistantId,userId)
+    if (checkPinnedAssistantAvailability && checkPinnedAssistantAvailability?.data !== null ) {
+      const endPoint = (fromOrganizationalPage == true)?DELETE_MANY_PINNED_ASSISTANT(assistantId) : DELETE_SINGLE_PINNED_ASSISTANT(assistantId,userId);
       const resp = await axiosSecureInstance.delete(endPoint);
-      if(fromOrganizationalPage == false){
+      if(fromOrganizationalPage === false && fromModal === false){
         message.success(resp.data.message);
 
       }
     }
 
-    return { success: true }
+    return { success: true,message : 'unpinned' }
 
   } catch (error) {
     return { success: false, message: error?.response?.data?.message };

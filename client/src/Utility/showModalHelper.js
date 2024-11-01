@@ -14,11 +14,12 @@ import { AssistantAddedToFeaturedList, AssistantRemovedFromFeaturedList } from "
 import { deletePinnedAssistant } from "../api/pinnedAssistant";
 import { getUserID } from "./service";
 const { confirm } = Modal;
+const userId = getUserID();
 
 export const handleSwitchChange = async (record, checked, handleUpdateAssistant,fromOrganizationalPage = false) => {
 
-    if (checked == false && record.is_public == true) {
-        const resp = await getFavoriteCount(record.assistant_id);
+    if (checked == false && record?.is_public == true) {
+        const resp = await getFavoriteCount(record?.assistant_id);
         const count = resp.data;
 
         confirm({
@@ -28,27 +29,38 @@ export const handleSwitchChange = async (record, checked, handleUpdateAssistant,
             okType: 'danger',
             cancelText: 'No',
             async onOk() {
-                handleUpdateAssistant(record._id, {
-                    is_active: checked,
-                    is_public: false,
-                    is_featured: false
-                });
-                const responseOfPublicAssistantDeleteAPI = await deleteSinglePublicAssistant(record.assistant_id);
-                const responseOfPinnedAssistantDeleteAPI = await deletePinnedAssistant(record?.assistant_id, record?._id, getUserID(), false,fromOrganizationalPage);
+                try {
+                   const updateAssistantResponse =  await handleUpdateAssistant(record, {
+                        is_active: checked,
+                        is_public: false,
+                        is_featured: false
+                    });
 
-            },
+                    const responseOfPublicAssistantDeleteAPI = await deleteSinglePublicAssistant(record?.assistant_id);
+                    const fromModal = true;
+                    const responseOfPinnedAssistantDeleteAPI = await deletePinnedAssistant(record?.assistant_id, record?._id, userId, false, fromOrganizationalPage,fromModal);
+                } catch (error) {
+                    console.error('Error in deactivation:', error);
+                } finally {
+                    Modal.destroyAll();
+                }
+            }
+            ,
             onCancel() {
                 console.log('Cancel');
             },
         });
 
 
+
+
     } else {
-        handleUpdateAssistant(record._id, {
+        const fromModal = true;
+        await handleUpdateAssistant(record, {
             is_active: checked,
         });
         if (checked === false) {
-            const responseOfPinnedAssistantDeleteAPI = await deletePinnedAssistant(record?.assistant_id, record?._id, getUserID(), false,fromOrganizationalPage);
+            const responseOfPinnedAssistantDeleteAPI = await deletePinnedAssistant(record?.assistant_id, record?._id, userId, false,fromOrganizationalPage,fromModal);
         }
 
     }
@@ -87,8 +99,8 @@ export const showDeletePublicConfirm = async (record, handleDeletePublicAssistan
         okText: 'Yes',
         okType: 'danger',
         cancelText: 'No',
-        onOk() {
-            handleDeletePublicAssistant(record?.assistant_id, record, handleUpdateAssistant, publicAssistant, setPublicAssistant);
+       async onOk() {
+            await handleDeletePublicAssistant(record?.assistant_id, record, handleUpdateAssistant, publicAssistant, setPublicAssistant);
         },
         onCancel() {
             console.log('Cancel');
@@ -135,12 +147,12 @@ export const showDeleteFavConfirm = (record, handleDeleteFavoriteAssistant, favo
 };
 
 
-const handleUpdateAssistantWrapper = async (id, data, originalHandleUpdateAssistant) => {
+const handleUpdateAssistantWrapper = async (record, data, originalHandleUpdateAssistant) => {
     const originalMessageSuccess = message.success;
     message.success = () => { };
 
     try {
-        await originalHandleUpdateAssistant(id, data);
+        await originalHandleUpdateAssistant(record, data);
     } finally {
         message.success = originalMessageSuccess;
     }
@@ -157,10 +169,11 @@ export const handleCheckboxChange = async (record, checked, publicAssistant, set
         } else {
             message.success(AssistantRemovedFromFeaturedList);
         }
-        await handleUpdateAssistantWrapper(record._id, { is_featured: checked }, handleUpdateAssistant);
+        await handleUpdateAssistantWrapper(record, { is_featured: checked }, handleUpdateAssistant);
 
         const updatedAssist = publicAssistant.map(assist => {
-            if (assist._id === record._id) {
+
+            if (assist && assist?._id === record?._id ) {
                 return { ...assist, is_featured: checked };
             }
             return assist;

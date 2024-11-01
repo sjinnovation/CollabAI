@@ -9,8 +9,23 @@ import { MdAppSettingsAlt } from "react-icons/md";
 import Usage from "./Usage";
 import CustomizeChat from "./CustomizeChat";
 import AdvanceAiParameters from "./AdvanceAiParameters";
+import { IntegrateApplications } from "../../component/IntegrateApplications/IntegrateApplications";
+import googleDriveIcon from '../../assests/images/google-drive-icon.png';
+import { TbPlugConnectedX } from "react-icons/tb"; 
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const Profile = () => {
+  const location = useLocation();
+  const [activeKey, setActiveKey] = useState('1');
+
+  useEffect(() => {
+    if (location.state?.activeTabKey) {
+      setActiveKey(location.state.activeTabKey);
+    }
+  }, [location]);
+
+
 
   const items = [
     {
@@ -43,6 +58,14 @@ const Profile = () => {
         children: <AdvanceAiParameters/>,
         icon: <FaMoneyBillTrendUp />
       },
+    {
+        key: '6',
+        label: 'Connect Apps',
+        children: <IntegrateApplications/>,
+        icon: <TbPlugConnectedX className="large-icon lg" />
+
+        //  <img src={googleDriveIcon} alt="Google Drive Icon" style={{ width: 20, height: 20 }} /> 
+      },
   ];
 
   return (
@@ -50,7 +73,8 @@ const Profile = () => {
       <Row className='p-5'>
         <Col span={24}>
           <Tabs 
-            defaultActiveKey="1" 
+            activeKey={activeKey}
+            onChange={setActiveKey}
             items={items}
             className="mb-3 custom-tab"
             tabBarStyle={{ justifyContent: 'space-around' }}

@@ -5,7 +5,7 @@ import debounce from 'lodash/debounce';
 const { Search } = Input;
 
 const DebouncedSearchInput = ({ data }) => {
-  const { search, setSearch, loading ,placeholder, customStyle  } = data;
+  const { search, setSearch, loading ,placeholder, customStyle ,size="default"  } = data;
 
   const handleSearch = useCallback(
     debounce(value => {
@@ -17,12 +17,14 @@ const DebouncedSearchInput = ({ data }) => {
   return (
     <Search
       placeholder={placeholder}
+      size = {size}
       allowClear
       onChange={e => handleSearch(e.target.value)}
       onSearch={value => setSearch(value)}
       style={{
         maxWidth : customStyle?.width | 370,
-        height :50
+        maxHeight : customStyle?.maxHeight |50,
+        height : customStyle?.height |50,
       }}
       loading={loading}
     />

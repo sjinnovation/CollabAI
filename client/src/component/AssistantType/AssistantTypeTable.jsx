@@ -9,7 +9,7 @@ const AssistantTypeTable = ({ dataProps }) => {
 
   const columns = [
     {
-      title: 'Assistant Types',
+      title: 'Agent Types',
       dataIndex: 'name',
       align:'center'
     },
@@ -64,7 +64,7 @@ const AssistantTypeTable = ({ dataProps }) => {
           data={{
             search: searchQuery,
             setSearch: setSearchQuery,
-            placeholder: "Search Assistant Type",
+            placeholder: "Search Agent Type",
           }}
         />
       </div>

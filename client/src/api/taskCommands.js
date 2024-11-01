@@ -24,12 +24,13 @@ export const getTaskCommands = async (currentPage, limit) => {
 };
 
 export const createTaskCommand = async (reqBody) => {
-  const { label, icon, commandsCategoryName } = reqBody;
+  const { label, icon, description, commandsCategoryName } = reqBody;
 
   try {
     const response = await axiosSecureInstance.post(createATaskCommandSlug(), {
       label,
       icon,
+      description,
       commandsCategoryName,
     });
     
@@ -68,12 +69,13 @@ export const getTaskCommandToEdit = async (id) => {
 };
 
 export const editTaskCommand = async (taskCommandIdToEdit, updatedData) => {
-  const { label, icon, commandsCategoryName } = updatedData;
+  const { label, icon, description, commandsCategoryName } = updatedData;
 
   try {
     const response = await axiosSecureInstance.patch(editATaskCommandSlug(taskCommandIdToEdit), {
       label,
       icon,
+      description,
       commandsCategoryName,
     });
     const successMessage = response.data.message;

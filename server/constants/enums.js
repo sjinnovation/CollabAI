@@ -149,7 +149,7 @@ export const CommandsCategoryMessages = {
 };
 
 export const TaskCommandMessages = {
-	COMMANDS_REQUIRED: 'Label and icon are required for the task command',
+	COMMANDS_REQUIRED: 'Label, icon, and description are required for the task command',
 	COMMANDS_CATEGORY_NAME_REQUIRED: 'Category name is required for the task command',
 	COMMAND_ALREADY_EXISTS: 'Task command already exists',
 	CATEGORY_NOT_FOUND: 'Commands category not found',
@@ -158,7 +158,7 @@ export const TaskCommandMessages = {
 	TASK_COMMAND_UPDATED_SUCCESSFULLY: 'Task command updated successfully',
 	TASK_COMMAND_DELETED_SUCCESSFULLY: 'Task command deleted successfully',
 	FETCH_SUCCESSFUL: 'Task commands fetched successfully',
-  };
+};  
 
 export const TeamMessages = {
 	TITLE_REQUIRED: 'Team Title is required',
@@ -263,6 +263,11 @@ export const ConfigMessages = {
 		'No configuration values found for the specified keys.',
 	CONFIGURATIONS_UPDATED: 'Configuration values updated successfully',
 	CONFIGURATIONS_FETCHED: 'Configuration values fetched successfully.',
+	PERSONALIZED_ASSISTANT_ENABLED :"Assistant Personalization Enabled",
+	PERSONALIZED_ASSISTANT_DISABLED :"Assistant Personalization Disabled",
+	PERSONALIZED_ASSISTANT_SAVED: ' Assistant Personalization state saved successfully',
+
+
 };
 
 export const AssistantMessages = {
@@ -298,6 +303,7 @@ export const AssistantMessages = {
 
 	ASSISTANT_TYPE_DELETE_SUCCESS: 'Assistant type Deleted successfully',
 	ASSISTANT_TYPE_DELETE_FAILED: 'Assistant type Deletion Failed',
+	ASSISTANT_TYPE_ICON_IN_THE_MID_OR_END : 'Do not put Icon in the middle or in the end of Assistant Type ',
 
 
 	ASSISTANT_NOT_FOUND_ON_OPENAI:
@@ -305,6 +311,9 @@ export const AssistantMessages = {
 	ASSISTANT_FILE_NOT_FOUND_MESSAGE: 'File not found in openai.',
 	ASSISTANT_FILE_DOWNLOAD_ERROR_MESSAGE:
 		'Error downloading file, please try again later.',
+	ASSISTANT_CLONED_SUCCESSFULLY: 'Assistant successfully cloned and you will find it under your personal Assistant list',
+	ASSISTANT_CLONING_FAILED: 'Assistant Personalization Failed'
+
 };
 export const AssistantThreadMessages = {
 	ASSISTANT_THREAD_NOT_FROUND: 'Assistant thread not found.',
@@ -322,6 +331,7 @@ export const PublicAssistantMessages = {
 	ADDED_SUCCESSFULLY: 'Assistant Added Successfully into Public List',
 	PUBLIC_ASSISTANT_FETCH_SUCCESSFULLY: 'Public Assistant  fetched successfully',
 	PUBLIC_ASSISTANT_UPDATED_SUCCESSFULLY: 'Updated Public Assistant',
+	PUBLIC_ASSISTANT_SYNCED_SUCCESSFULLY :'Public Assistant Synced'
 
 
 };
@@ -339,6 +349,25 @@ export const PinnedAssistantMessages = {
 	ADDED_IN_PINNED_ASSISTANT_LIST_SUCCESSFULLY: 'Assistant added into Pinned List',
 	PINNED_ASSISTANT_FETCHED_SUCCESSFULLY: 'Pinned Assistant fetched successfully',
 	PINNED_ASSISTANT_UPDATED_SUCCESSFULLY: 'Updated Pinned Assistant',
+	ASSISTANT_WAS_NOT_PINNED : 'Assistant Pin Status Updated'
+};
+export const KnowledgeBaseMessages = {
+	ALREADY_EXIST_IN_FILE_LIST_OF_USER: 'KnowledgeBase already exists',
+	FILE_ADDED_SUCCESSFULLY : "KnowledgeBase Added Successfully",
+	FOLDER_ADDED_SUCCESSFULLY : "KnowledgeBase Folder Created Successfully",
+	DELETED_SUCCESSFULLY_FROM_FILE_LIST : 'KnowledgeBase deleted Successfully',
+	ADDED_IN_FILE_LIST_SUCCESSFULLY: 'Added into KnowledgeBase List',
+	FILE_FETCHED_SUCCESSFULLY: 'KnowledgeBase fetched successfully',
+	FILE_FETCHING_FAILED: 'KnowledgeBase fetching failed',
+	FILE_UPDATED_SUCCESSFULLY: 'Updated KnowledgeBase Details',
+	ACTION_FAILED : "Action Failed",
+	MESSAGE_SUCCESS : "Query Result Got Successfully",
+	FILE_TYPE_SHOULD_BE_PDF : "File Type Should Be .pdf , .docx, .txt, .csv , .xlsx or .pptx",
+	RESOURCE_MADE_PUBLIC : "Resource Made Public",
+	RESOURCE_MADE_PRIVATE : "Resource Made Private",
+	SELECT_ANY_FILE_FROM_KNOWLEDGE_BASE : "Select Any File From The RAG Tree",
+	FILE_TYPE_SHOULD_BE_PDF : "File Type Should Be .pdf , .docx, .txt, .csv , .xlsx or .pptx",
+
 
 };
 
@@ -354,7 +383,9 @@ export const TrackUsageMessage = {
 	TRACK_USAGE_FETCHED_SUCCESSFULLY:
 		'All track usage data fetched successfully.',
 };
-
+export const RAGMessages ={
+	VECTOR_CREATED_SUCCESSFULLY : 'Vector from File Created Succesfully',
+}
 /*
  [TODO]: these values should be made dynamic by adding them into config collection to be applied as default configs
  [** concern : default max token was set to 200, which is too low, caused users to face issues with the response]
@@ -386,4 +417,37 @@ export const AssistantTrackUsage = {
 	ASSISTANT_USAGE_CREATED_SUCCESSFULLY: "Assistant usage successfully added",
 	ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY: "Assistant track usage data fetched successfully.",
 	ALL_USERS_FETCHED_FOR_ASSISTANT: "All user fetched for an assistant"
+}
+
+export const GoogleDriveMessages ={
+	AUTH_CODE_IS_REQUIRED :"Authorization code is required",
+	AUTHENTICATION_FAILED :"Failed to authenticate with Google",
+	GOOGLE_DRIVE_SYNCED_SUCCESSFULLY : "Google Drive Synced Successfully",
+	GOOGLE_DRIVE_SYNC_FAILED :"Google Drive Sync Failed",
+	GOOGLE_DRIVE_CREDENTIALS_FETCHED_SUCCESSFULLY : "Google Auth Credentials Fetch Successfully",
+	GOOGLE_DRIVE_CREDENTIALS_DELETED_SUCCESSFULLY : "Google Auth Credentials Deleted Successfully ",
+	NO_FILE_IS_SENT :"No file is sent",
+	CONNECT_GOOGLE_DRIVE :"Please,Connect your Google Drive from 'Connect Apps'",
+	FILE_COULD_NOT_DOWNLOAD:"File could not imported from Google Drive,Please download and upload in Knowledge Base"
+
+}
+
+export const WorkBoardMessages = {
+	WORKBOARD_FETCHED_SUCCESSFULLY: 'WorkBoard access token fetched successfully',
+	FAILED_TO_FETCH_WORKBOARD_ACCESS_TOKEN: 'Failed to get workboard access token',
+	USER_INFO_FETCHED_SUCCESSFULLY: 'Workboard user information fetched successfully',
+	FETCH_USER_INFO_FAILED: 'Failed to retrieve workboard user information',
+	FETCH_USER_INFO_ERROR: 'Error fetching workboard user information',
+	FETCH_GOAL_INFO_FAILED: 'Failed to retrieve workboard goal information',
+	FETCH_GOAL_INFO_ERROR: 'Error fetching workboard goal information',
+	FETCH_ACTIVITY_INFO_FAILED: 'Failed to retrieve workboard activity information',
+	FETCH_ACTIVITY_INFO_ERROR: 'Error fetching workboard activity information',
+	FETCH_TEAM_INFO_FAILED: 'Failed to retrieve workboard team information',
+	FETCH_TEAM_INFO_ERROR: 'Error fetching workboard team information',
+	FETCH_USER_GOALS_FAILED: 'Failed to retrieve workboard user goal information',
+	FETCH_USER_GOALS_ERROR: 'Error fetching workboard user goal information',
+  };
+
+export const VectorStoreMessages ={
+	VECTOR_STORE_NOT_FOUND :"No vector store found with provided id"
 }

@@ -107,7 +107,6 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       };
 
       const response = await getAssistantChatsPerThread(asstArguments);
-
       if (response.messages) {
         setChatLog((prevChatLog) => {
           if (prevChatLog.length) {
@@ -198,6 +197,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       msg_id,
       thread_id: ast_thread_id,
       isCompleted,
+      assistant_id
     } = response;
     console.log("🚀 ~ onChatCreatedEvent ~ response:", response)
 
@@ -207,7 +207,8 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
      		response: promptResponse,
       	msg_id,
 				thread_id: ast_thread_id,
-				codeInterpreterOutput
+				codeInterpreterOutput,
+        assistant_id
       };
 
       appendBotResponseToChat(chat);
@@ -252,7 +253,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
   const handleFirstThreadMessage = (chat) => {
     setIsFirstMessage(true);
     setTriggerUpdateThreads(true);
-    navigate(`${chat.thread_id}`);
+    navigate(`/agents/${chat.assistant_id}/${chat.thread_id}`, { replace: true });
   };
 
   // [POST] - @desc: handles uploading files to the assistant

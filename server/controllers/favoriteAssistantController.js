@@ -107,26 +107,34 @@ export const getSingleFavouriteAssistant = async (req, res) => {
 
 export const getSingleUsersFavAssistWithDetails = async (req, res, next) => {
 	try {
+		const { page = 1, pageSize = 10 ,searchQuery = "" } = req.query;
+		const skip = (Number(page) - 1) * Number(pageSize);
+		const limit = parseInt(pageSize);
+		let query = {}
+
+		if (typeof searchQuery === "string" && searchQuery?.length) {
+			query = {
+				name: { $regex: new RegExp(searchQuery, "i") },
+			}
+		}
+
 		const { id } = req.params;
 
-		const singleFavouriteAssistantById = await getSingleFavouriteAssistantByIdOrUserIdService(id);
+		const {favoriteAssistantById, totalCount} = await getSingleFavouriteAssistantByIdOrUserIdService(id,skip,limit,query);
 
 		let result = [];
 
-		for (const favoriteAssistantData of singleFavouriteAssistantById) {
+		for (const favoriteAssistantData of favoriteAssistantById) {
 			const assistantId = favoriteAssistantData['assistant_id'];
 			const assistant = await getSingleAssistantByIdService(assistantId);
-
-			if (!assistant) {
-				return next(NotFound(AssistantMessages.ASSISTANT_NOT_FOUND));
+			if (!assistant || assistant === null) {
+				continue
 			}
 			result.push(assistant);
-
 		}
-
-		if (singleFavouriteAssistantById) {
+		if (favoriteAssistantById) {
 			return res.status(StatusCodes.OK).json({
-				result,
+				result,totalCount,
 				message: FavoriteAssistantMessages.FAVORITE_ASSISTANT_FETCH_SUCCESSFULLY,
 			});
 		} else {

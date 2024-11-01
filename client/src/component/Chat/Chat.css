@@ -1,48 +1,120 @@
 #table-response-container ol,
 #table-response-container ul {
-    margin: 0;
-    line-height: 0.5;
+  margin: 0;
+  line-height: 0.5;
 }
 
 #table-response-container li {
-    line-height: 1; 
-    margin: 0;
+  line-height: 1;
+  margin: 0;
 }
 
 #table-response-container li p,
 #table-response-container li {
-    line-height: 1.25; 
-    margin: 0;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.bot-response-markdown-container {
+  max-width: 800px;
+  margin: auto;
+  margin-right: 12px;
+  border-radius: 12px;
+  box-sizing: border-box; /* Ensure padding is included within the width */
+  overflow: hidden; /* Hide any overflow */
+}
+
+.bot-response-main-content {
+  padding: 0px 12px 0px;
+  white-space: pre-wrap; 
+  word-wrap: break-word; 
+  word-break: break-word;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .bot-response-markdown-container img {
   display: block;
-  width: 100%;       
-  height: auto;      
-  object-fit: cover; 
-  border-radius: 8px; 
-  margin-bottom: 1rem; 
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  background-color: rgb(0, 255, 0);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.botMessageWrapper:hover {
+  background-color: var(--chat-text-hover) ; 
 }
 
 
+
+/* .botMessageWrapper.dark-mode:hover {
+  background-color: inherit !important; 
+} */
+
+
+.bot-response-control-container {
+  display: flex;
+  align-items: center;
+  padding-top: 0 !important;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.bot-response-share-btn,
+.bot-response-copy-btn {
+  visibility: hidden;
+  margin-bottom:0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.bot-response-copy-btn button,
+.bot-response-share-btn button {
+  padding: 1px 8px; /* Adjust padding inside buttons if too large */
+}
+
+
+.botMessageWrapper:hover .bot-response-copy-btn,
+.botMessageWrapper:hover .bot-response-share-btn {
+  visibility: visible;
+  opacity: 1;
+  transition: none;
+}
+ 
+
+.copy-icon,
+.share-icon {
+  background: transparent; /* No background change */
+  border: none; /* No border change */
+  outline: none; /* No outline */
+  cursor: pointer;
+}
+
+.copy-icon:hover,
+.share-icon:hover {
+  background: transparent; /* Ensure hover doesn't change background */
+}
+
 .citations-container {
-    padding: 2rem;
-    backdrop-filter: blur(21px) saturate(121%);
-    -webkit-backdrop-filter: blur(21px) saturate(121%);
-    background-color: rgba(17, 25, 40, 0.21);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.125);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  padding: 2rem;
+  backdrop-filter: blur(21px) saturate(121%);
+  -webkit-backdrop-filter: blur(21px) saturate(121%);
+  background-color: rgba(17, 25, 40, 0.21);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .citation-download-link {
-    display: inline-block;
+  display: inline-block;
 }
 
 .userIcon {
-    min-width: 32px;
-    max-width: 32px;
-}  
-  
+  min-width: 32px;
+  max-width: 32px;
+}

@@ -1,15 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 //libraries
-import { Space, Table, Tag, Switch, message } from "antd";
+import { Space, Table, Tag, Switch, message, Button } from "antd";
 
 //--------api ------//
 import { updateAssistantAccessForTeam } from "../../api/assistant";
+import { getConfig, getPersonalizeAssistantSetting, updateConfig } from "../../api/settings";
+import { FileContext } from "../../contexts/FileContext";
+import { useContext } from "react";
 
 const AssistantSettings = ({ data }) => {
   const { loader, teamList, handleFetchTeams } = data;
+  const {enablePersonalize,setEnablePersonalize} = useContext(FileContext);
 
 
+  useEffect(() => {
+    getPersonalizeAssistantSetting().then(response =>{
+      let isPersonalizeAssistantEnabled= false;
+    if(response!== undefined){
+      isPersonalizeAssistantEnabled = JSON.parse(response?.personalizeAssistant);
+    }
+      setEnablePersonalize(isPersonalizeAssistantEnabled);
+    });
+
+  }, []);
   //------Api calls------//
   const handleToggleAssistantAccess = async (record) => {
     try {
@@ -64,9 +78,23 @@ const AssistantSettings = ({ data }) => {
       ),
     },
   ];
+const handleOnClickPersonalize =async ()=>{
+  setEnablePersonalize(!enablePersonalize);
+  const responseOfPersonalize = await updateConfig({personalizeAssistant : !enablePersonalize});
+  if(responseOfPersonalize){
+    message.success(responseOfPersonalize.message);
 
+  }
+};
   return (
     <>
+      <div className="mb-3">
+          Enable Personalized Agent &nbsp;&nbsp;&nbsp;
+          <Switch
+          onChange={handleOnClickPersonalize}
+              checked={enablePersonalize}
+            />
+         </div>
       <Table
         loading={loader.TEAM_LOADING}
         bordered={true}

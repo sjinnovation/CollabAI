@@ -48,7 +48,6 @@ export const createAssistantChatAndStream = async function (payload) {
       message: PromptMessages.CHAT_CREATION_SUCCESS,
       thread_id: thread_id ? thread_id : null,
     };
-
     const validationResult = validateUserPromptForAssistant({ question });
 
     if (validationResult.error) {
@@ -78,7 +77,7 @@ export const createAssistantChatAndStream = async function (payload) {
     const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
     // Step 2: now we have a threadId, create a message in the thread
-    await createMessageInThread(openai, result.thread_id, question);
+    await createMessageInThread(openai,assistant_id, result.thread_id, question,socket.user.userId);
     
     const triggerClientUpdate = () => {
       socket.emit(resSocketEvent, {

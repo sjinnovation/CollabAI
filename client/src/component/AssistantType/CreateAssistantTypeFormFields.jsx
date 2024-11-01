@@ -1,11 +1,11 @@
 export const AddAssistantTypeFormData = [
     {
-        label: "Assistant Type",
+        label: "Agent Type",
         name: "assistantType",
         rules: [
             {
                 required: true,
-                message: 'Please Input Assistant Type!',
+                message: 'Please Input Agent Type!',
             },
         ]
     }
