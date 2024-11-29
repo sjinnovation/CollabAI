@@ -7,7 +7,8 @@ import { HiCheck, HiOutlineClipboard, HiShare } from "react-icons/hi2";
 import { marked } from "marked";
 import CodeHighlighter from "../common/CodeHighlighter";
 import { copyToClipboard } from "../../Utility/helper";
-import * as DOMPurify from "dompurify";
+import DOMPurify from 'dompurify';
+
 import { Link } from "react-router-dom";
 
 // components

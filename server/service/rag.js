@@ -1,27 +1,22 @@
 import { Pinecone } from '@pinecone-database/pinecone'
 import { getOpenAIInstance } from '../config/openAI.js';
 import getOpenAiConfig from '../utils/openAiConfigHelper.js';
-
+import 'dotenv/config';
 const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
 const index = pc.index( process.env.PINECONE_INDEX_NAME);
-
 export const createEmbeddingWithLLM =async (model,payload)=>{
     const openai = await getOpenAIInstance();
     return await openai.embeddings.create({
         model: model, //"text-embedding-ada-002"
         input: payload,
       });
-
 }
 export const upsertVectorDB=async (namespace,upsertPayload)=>{
     return await index.namespace(namespace).upsert(upsertPayload);
-
 };
-
 export const deleteAllEmbeddingFromNameSpace = async (namespace) => {
     const results = await index.namespace(namespace).listPaginated();
     const ns = await index.namespace(namespace)
-
     for (const vector of results.vectors) {
         try {
             await ns.deleteOne(vector.id);
@@ -31,8 +26,6 @@ export const deleteAllEmbeddingFromNameSpace = async (namespace) => {
     }
     return true;
 };
-
-
 export const chatResponse = async ()=>{
     const openai = await getOpenAIInstance();
     const gptModel = await getOpenAiConfig('model');
