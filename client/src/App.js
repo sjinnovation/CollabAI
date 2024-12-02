@@ -21,6 +21,7 @@ import {
   AssistantFileDownloadPage,
 } from "./Pages";
 
+import PortfolioHome from "./Pages/PortfolioHome";
 
 import Layout from "./Pages/Layout";
 import AssistantLayout from "./Pages/Layout/AssistantLayout";
@@ -53,8 +54,7 @@ function App() {
       <Route path="login" element={<LoginForm />} />
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
-
-  
+      <Route path="/portfolio" element={<PortfolioHome />} />
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  
@@ -72,7 +72,7 @@ function App() {
         <Route path="promptuserview" element={<PrompotUsersList />} />
         <Route path="/knowledge-base" element={<KnowledgeBase />} /> 
         <Route path="/integrate-apps" element={<IntegrateApplications/>} /> 
-
+     
 
 
         <Route element={<ProtectedRoutes />}>

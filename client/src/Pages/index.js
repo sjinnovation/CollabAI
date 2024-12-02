@@ -18,7 +18,7 @@ import AssistantsList from './SuperAdmin/Assistant/AssistantsList';
 import ChatPage from "./ChatPage";
 import AssistantsChatPage from "./AssistantsChatPage";
 import AssistantFileDownloadPage from "./AssistantFileDownload";
-
+import PortfolioHome from "./PortfolioHome";
 export {
   LoginForm,
   PageNotFound,
@@ -37,5 +37,6 @@ export {
   AssistantsList,
   ChatPage,
   AssistantsChatPage,
-  AssistantFileDownloadPage
+  AssistantFileDownloadPage,
+  PortfolioHome
 };
