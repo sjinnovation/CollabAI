@@ -4,4 +4,7 @@ import Footer from "./layout/footer/footer";
 import Sidebar from "./layout/Sidebar/Sidebar";
 import NewNavbar from "./NewNavbar";
 import HeroBanner from "./HeroBanner";
-export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner };
+import ContentPage from "./ContentPage";
+import ProjectCard from "./ProjectCard";
+import Projects from "./Projects";
+export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects };

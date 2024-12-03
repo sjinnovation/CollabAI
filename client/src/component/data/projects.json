@@ -1,0 +1,85 @@
+{
+  "projects": [
+    {
+      "id": 1,
+      "title": "E-commerce Website",
+      "description": "A full-stack e-commerce platform built with React and Node.js",
+      "image": "https://images.unsplash.com/photo-1563013544-824ae1b704d3",
+      "technologies": ["React", "Node.js", "MongoDB"],
+      "github": "https://github.com/yourusername/ecommerce",
+      "live": "https://your-ecommerce.com"
+    },
+    {
+      "id": 2,
+      "title": "Weather App",
+      "description": "Real-time weather application using OpenWeather API",
+      "image": "https://images.unsplash.com/photo-1592210454359-9043f067919b",
+      "technologies": ["React", "API Integration", "CSS"],
+      "github": "https://github.com/yourusername/weather-app",
+      "live": "https://your-weather-app.com"
+    },
+    {
+      "id": 3,
+      "title": "Task Management System",
+      "description": "A collaborative task management platform with real-time updates",
+      "image": "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b",
+      "technologies": ["Vue.js", "Firebase", "Tailwind CSS"],
+      "github": "https://github.com/yourusername/task-manager",
+      "live": "https://your-taskmanager.com"
+    },
+    {
+      "id": 4,
+      "title": "Social Media Dashboard",
+      "description": "Analytics dashboard for social media metrics visualization",
+      "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
+      "technologies": ["React", "D3.js", "Material-UI"],
+      "github": "https://github.com/yourusername/social-dashboard",
+      "live": "https://your-dashboard.com"
+    },
+    {
+      "id": 5,
+      "title": "Recipe Finder App",
+      "description": "Mobile-responsive recipe search application with filtering options",
+      "image": "https://images.unsplash.com/photo-1466637574441-749b8f19452f",
+      "technologies": ["React Native", "Redux", "Spoonacular API"],
+      "github": "https://github.com/yourusername/recipe-finder",
+      "live": "https://your-recipe-app.com"
+    },
+    {
+      "id": 6,
+      "title": "Chat Application",
+      "description": "Real-time chat application with private messaging and group channels",
+      "image": "https://images.unsplash.com/photo-1611746872915-64382b5c76da",
+      "technologies": ["Socket.io", "Express.js", "MongoDB"],
+      "github": "https://github.com/yourusername/chat-app",
+      "live": "https://your-chat.com"
+    },
+    {
+      "id": 7,
+      "title": "Portfolio Website",
+      "description": "Personal portfolio website with dynamic content management",
+      "image": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8",
+      "technologies": ["Next.js", "Sanity.io", "Framer Motion"],
+      "github": "https://github.com/yourusername/portfolio",
+      "live": "https://your-portfolio.com"
+    },
+    {
+      "id": 8,
+      "title": "Budget Tracker",
+      "description": "Personal finance management application with data visualization",
+      "image": "https://images.unsplash.com/photo-1554224155-6726b3ff858f",
+      "technologies": ["Angular", "TypeScript", "Chart.js"],
+      "github": "https://github.com/yourusername/budget-tracker",
+      "live": "https://your-budget-app.com"
+    },
+    {
+      "id": 9,
+      "title": "Fitness Tracking App",
+      "description": "Workout planning and progress tracking application",
+      "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438",
+      "technologies": ["React", "Node.js", "PostgreSQL"],
+      "github": "https://github.com/yourusername/fitness-tracker",
+      "live": "https://your-fitness-app.com"
+    }
+  ]
+} 

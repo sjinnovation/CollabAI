@@ -1,7 +1,8 @@
 .hero-container {
     height: 100vh;
     width: 100%;
-    background-color: #0e0a0a;
+    background-color: #070707;
+    background: radial-gradient(closest-side at left,#0e0a0a,);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -12,12 +13,13 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 1200px;
-    gap:7rem;
+    max-width: 1350px;
+    gap: 4rem;
+    position: relative;
 }
 
 #typing {
-    font-size: 2rem;
+    font-size: 4rem;
     color: #ffffff;  
     min-height: 50px;  
     transition: all 0.4s ease;
@@ -28,13 +30,11 @@
 .carousel-container {
     width: 100%;
     overflow: hidden;
-
 }
 
 .carousel-wrapper {
     display: flex;
     transition: transform 0.5s ease-in-out;
-    
 }
 
 .carousel-slide {
@@ -67,3 +67,40 @@
     }
 }
 
+.typing-container {
+  display: flex;
+  align-items: center;
+}
+
+.cursor {
+  display: inline-block;
+  width: 4px;
+  height: 4rem;
+  background-color: white;
+  margin-left: 4px;
+  margin-bottom:25px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: white;
+  }
+}
+
+.oval-background {
+    width: 500px;
+    height: 500px;
+    background-color:rgb(56, 51, 83);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 50%;
+    position: absolute;
+    left:35%;
+    top:15%;
+    filter: blur(11.5rem);
+  }
+  

@@ -1,0 +1,14 @@
+.scroll-container {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  transition: scroll 0.5s ease-in-out;
+  scroll-behavior: smooth;
+}
+
+.scroll-section {
+
+  scroll-snap-align: start;
+}
+
+
