@@ -12,7 +12,7 @@
   height: 925px;
 }
 
-.container {
+.container1 {
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
@@ -784,7 +784,7 @@
     padding: 1.5rem;
   }
   
-  .project-content h3 {
+  .project-content1 h3 {
     margin: 0 0 1rem 0;
     color: #ffffff;
   }
@@ -825,7 +825,7 @@
   }
   
   /* List view styles */
-  .projects-container.list-view {
+  .projects-container1.list-view {
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -851,7 +851,7 @@
   }
   
   /* Keep existing card view styles */
-  .projects-container.card-view {
+  .projects-container1.card-view {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;

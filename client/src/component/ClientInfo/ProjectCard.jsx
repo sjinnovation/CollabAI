@@ -4,7 +4,7 @@ import { Cardss, CardContent, CardFooter } from './Cards';
 import Badge from './Badge';
 
 const ProjectCard = ({ project }) => (
-  <Cardss className="project-card">
+  <Cardss className="project-card1">
     <CardContent className="project-image-container">
       <div className="project-image-wrapper">
         <img

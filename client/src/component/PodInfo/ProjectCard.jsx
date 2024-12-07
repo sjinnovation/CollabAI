@@ -9,13 +9,13 @@ export const ProjectCard = ({ project }) => {
 
   return (
     
-      <div className={`project-card`}>
+      <div className={`project-card1`}>
         <img 
           src={project.imageUrl} 
           alt={project.name || "Project"} 
           className="project-image" 
         />
-        <div className="project-content">
+        <div className="project-content1">
           <h3><a
       href={`http://localhost:4000/portfolio-management/${project.id}`}
       target="_self"

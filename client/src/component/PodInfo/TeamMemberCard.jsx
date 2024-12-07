@@ -3,7 +3,7 @@ import '../../Pages/PortfolioManagement/PodInfo/PodInfo.scss'
 
 export function TeamMemberCard({ member }) {
   return (
-    <div className="project-card">
+    <div className="project-card1">
       <div className="imageContainer">
         <img src={member.imageUrl} alt={member.name} className="image" />
         <div className={`activeIndicator ${member.isActive ? 'active' : ''}`} />

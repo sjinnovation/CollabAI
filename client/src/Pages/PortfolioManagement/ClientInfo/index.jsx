@@ -237,7 +237,7 @@ const PortfolioPage = () => {
             handleSearchSubmit={handleSearchSubmit}
           />
           <div className="projects-carousel" ref={projectsEmblaRef}>
-            <div className="projects-container">
+            <div className="projects-container1">
               {currentProjects.map((project) => (
                 <div key={project.id} className="project-slide">
                   <ProjectCard project={project} />

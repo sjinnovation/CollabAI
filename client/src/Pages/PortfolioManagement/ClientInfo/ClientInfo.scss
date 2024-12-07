@@ -240,7 +240,7 @@
   overflow: hidden;
 }
 
-.projects-container {
+.projects-container1 {
   display: flex;
 }
 
@@ -250,7 +250,7 @@
   padding: 0 0.5rem;
 }
 
-.project-card {
+.project-card1 {
   overflow: hidden;
 }
 
@@ -269,7 +269,7 @@
   transition: transform 0.2s;
 }
 
-.project-card:hover .project-image {
+.project-card1:hover .project-image {
   transform: scale(1.05);
 }
 
@@ -281,7 +281,7 @@
   transition: opacity 0.2s;
 }
 
-.project-card:hover .project-image-overlay {
+.project-card1:hover .project-image-overlay {
   opacity: 1;
 }
 
