@@ -39,7 +39,8 @@ import { IntegrateApplications } from "./component/IntegrateApplications/Integra
 // import { IntegrateApplications } from "./component/Assistant/IntegrateApplications/IntegrateApplications";
 
 import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboard";
-
+import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
+import PodInfo from "./Pages/PortfolioManagement/PodInfo/Index";
 function App() {
   // Hook to get the current location
   const location = useLocation();
@@ -55,6 +56,8 @@ function App() {
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
       <Route path="/portfolio" element={<PortfolioHome />} />
+      <Route path="/portfolio-management/ClientInfo" element={<ClientInfo />} /> 
+      <Route path="/portfolio-management/PodInfo" element={<PodInfo />} />
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  
