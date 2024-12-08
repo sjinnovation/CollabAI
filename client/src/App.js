@@ -41,6 +41,7 @@ import { IntegrateApplications } from "./component/IntegrateApplications/Integra
 import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboard";
 import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
 import PodInfo from "./Pages/PortfolioManagement/PodInfo";
+
 function App() {
   // Hook to get the current location
   const location = useLocation();

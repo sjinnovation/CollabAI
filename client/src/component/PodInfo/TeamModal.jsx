@@ -131,7 +131,7 @@ export const TeamModal = ({ pod, onClose }) => {
                   />
                 </div>
               </div>
-              <div className="projectsGrid">
+              <div className="teamMembers">
                 {currentProjects.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}

@@ -8,7 +8,7 @@ const ProjectCard = ({ project }) => (
     <CardContent className="project-image-container">
       <div className="project-image-wrapper">
         <img
-          src={project.image}
+          src={project.imageUrl}
           alt={project.title}
           className="project-image"
         />
