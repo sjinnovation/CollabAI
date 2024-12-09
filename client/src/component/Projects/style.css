@@ -1,34 +1,63 @@
-.projects-container {
+.projects-area {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 2.5rem;
     background: transparent;
-    max-width:1350px
-  }
+    max-width: 1350px;
+}
 
-  .projects-container
-  {
+.projects-area {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem; 
-  }
+}
 
-  @media (max-width:1017px)
-  {
-    .projects-container{
-      grid-template-columns: repeat(2,1fr);
+@media (max-width: 1017px) {
+    .projects-area {
+        grid-template-columns: repeat(2, 1fr);
     }
-      
-  }
+}
 
-  @media (max-width:760px)
-  {
-    .projects-container{
-      grid-template-columns: repeat(1,1fr);
-      display: flex;
+@media (max-width: 760px) {
+    .projects-area {
+        grid-template-columns: repeat(1, 1fr);
+        display: flex;
+        justify-content: center;
+        flex-direction: row;
+    }
+}
+
+/* List view styles */
+.projects-area.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card-container.list-view {
+    display: flex;
+    width: 100%;
+}
+
+.card-container.list-view .image-style {
+    width: 200px;
+    height: 150px;
+}
+
+.card-container.list-view .content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Keep existing card view styles */
+.projects-area.card-view {
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    flex-direction: row;
-
-    }
-  }
+    gap: 1rem;
+}

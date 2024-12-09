@@ -17,6 +17,13 @@ const teamSchema = mongoose.Schema(
       default: false 
     }
   },
+  {
+    teamDescriptions:{
+      type: String,
+      default: ''
+    }
+  },
+  
   { timestamps: true }
 );
 

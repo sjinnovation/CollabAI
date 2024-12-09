@@ -11,7 +11,7 @@ const Projects = ({ viewType, filter, tags, projects }) => {
   });
 
   return (
-    <div className={`projects-container ${viewType}`}>
+    <div className={`projects-area ${viewType}`}>
       {filteredProjects.map((project) => (
         <ProjectCard key={project.id} project={project} />
       ))}

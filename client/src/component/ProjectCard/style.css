@@ -1,4 +1,4 @@
-.project-card {
+.card-container {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     overflow: hidden;
@@ -6,98 +6,96 @@
     margin: 1rem;
     max-width: 381px;
     border: 2px rgb(71 68 68) solid;
-  }
-  
+}
 
-  .project-card:hover {
+.card-container:hover {
     transform: translateY(-5px);
-  }
-  
-  .project-image {
+}
+
+.image-style {
     width: 100%;
     height: 200px;
     object-fit: cover;
-  }
-  
-  .project-content {
+}
+
+.content-area {
     padding: 1.5rem;
-  }
-  
-  .project-content h3 {
+}
+
+.content-area h3 {
     margin: 0 0 1rem 0;
     color: #ffffff;
-  }
-  
-  .project-content p {
+}
+
+.content-area p {
     color: #929292;
     margin-bottom: 1rem;
-  }
-  
-  .technologies {
+}
+
+.technologies {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 1rem;
-  }
-  
-  .tech-tag {
+}
+
+.technology-label {
     background: #383838;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.8rem;
     color: #ffffff;
-  }
-  
-  .project-links {
+}
+
+.links-section {
     display: flex;
     gap: 1rem;
-  }
-  
-  .project-links a {
+}
+
+.links-section a {
     text-decoration: none;
     color: #007bff;
     font-weight: 500;
-  }
-  
-  .project-links a:hover {
+}
+
+.links-section a:hover {
     text-decoration: underline;
-  }
-  
-  /* List view styles */
-  .projects-container.list-view {
+}
+
+/* List view styles */
+.projects-container.list-view {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     max-width: 1200px;
     margin: 0 auto;
-  }
-  
-  .project-card.list-view {
+}
+
+.card-container.list-view {
     display: flex;
     width: 100%;
-  }
-  
-  .project-card.list-view .project-image {
+}
+
+.card-container.list-view .image-style {
     width: 200px;
     height: 150px;
-  }
-  
-  .project-card.list-view .project-content {
+}
+
+.card-container.list-view .content-area {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-  }
-  
-  /* Keep existing card view styles */
-  .projects-container.card-view {
+}
+
+/* Keep existing card view styles */
+.projects-container.card-view {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
-  }
+}
 
-  @media (max-width: 768px) {
-    
-    
-  }
+@media (max-width: 768px) {
+    /* ... existing styles ... */
+}

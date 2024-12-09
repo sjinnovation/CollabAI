@@ -38,6 +38,10 @@ import googleDriveRouter from "./routers/googleDriveRouters.js";
 import vectorStoreRouter from "./routers/vectorStoreRoutes.js";
 import workBoardRouter from "./routers/workBoardRoute.js";
 import projectrouter from "./routers/projectRoutes.js";
+import clientRouter from "./routers/clientRouter.js";
+import reviewsRoutes from "./routers/reviewsRoutes.js";
+import techStackRoute from "./routers/techStackRoute.js";
+
 const app = express();
 const server = http.createServer(app);
 
@@ -83,6 +87,9 @@ app.use("/api/knowledge-base",knowledgeBaseRouter);
 app.use("/api/rag/",ragRouter);
 app.use("/api/vectorStore",vectorStoreRouter);
 app.use('/api/projects', projectrouter);
+app.use("/api/clients", clientRouter);
+app.use('/api/techStacks',techStackRoute);
+app.use('/api/reviews', reviewsRoutes);
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
