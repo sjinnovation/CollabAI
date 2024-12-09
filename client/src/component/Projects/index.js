@@ -1,12 +1,18 @@
 import React from 'react';
 import ProjectCard from '../ProjectCard';
-import projectsData from '../data/projects.json';  // This path should now work
 import './style.css';
 
-const Projects = () => {
+const Projects = ({ viewType, filter, tags, projects }) => {
+  const filteredProjects = projects.filter(project => {
+    const projectName = project.name ? project.name.toLowerCase() : '';
+    const matchesFilter = projectName.includes(filter.toLowerCase());
+    const matchesTags = tags.length === 0 || tags.some(tag => project.tags && project.tags.includes(tag));
+    return matchesFilter && matchesTags;
+  });
+
   return (
-    <div className="projects-container">
-      {projectsData.projects.map((project) => (
+    <div className={`projects-container ${viewType}`}>
+      {filteredProjects.map((project) => (
         <ProjectCard key={project.id} project={project} />
       ))}
     </div>

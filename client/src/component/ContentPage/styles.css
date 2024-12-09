@@ -1,16 +1,44 @@
 .container{
     height : 100%;
-    max-width:1350px;
     padding:35px 0;
-
+    margin: 0 0;
+    width:100%;
+    
+}
+.container h1{
+  color:white;
+  font-weight:500;
 }
 
 .panel{
     display:flex;
-    margin-top:100px;
     gap:3rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
 }
-/* The switch - the box around the slider */
+
+.filterbar
+{
+  display: flex;
+  gap:2rem;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.filterbar input {
+  color:white;
+  background-color: #000000;
+  padding-inline:15px;
+  border-radius: 8px;
+  border:1px #86858b solid;
+}
+
+a{
+  font-size: 1.2rem;
+}
+
 .switch {
     position: relative;
     display: inline-block;
@@ -18,7 +46,6 @@
     height: 34px;
   }
   
-  /* Hide default HTML checkbox */
   .switch input {
     opacity: 0;
     width: 0;
@@ -33,7 +60,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: rgba(112, 109, 109, 0.801);
     -webkit-transition: .4s;
     transition: .4s;
   }
@@ -72,3 +99,101 @@
   .slider.round:before {
     border-radius: 50%;
   }
+
+  .modal {
+    display: flex;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Darker overlay for better contrast */
+}
+
+.modal-content {
+    background-color: #434343;
+    margin: 10% auto; /* Center the modal */
+    padding: 30px; /* Increased padding for better spacing */
+    border: 1px solid #888;
+    width: 40%; /* Adjusted width for a more compact look */
+    border-radius: 10px; /* Rounded corners for the modal */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+    color: rgb(255, 255, 255);
+
+}
+
+.close {
+    color: #000000;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #ff0000; /* Change color on hover for better visibility */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+h2 {
+    margin-bottom: 20px; /* Space below the heading */
+}
+
+label {
+    display: block; /* Stack labels vertically */
+    margin: 10px 0; /* Space between labels */
+}
+
+/* Style for the filter button */
+button {
+    background-color: #2196F3;
+    color: white; 
+    border: none;
+    border-radius: 5px; 
+    padding: 10px 15px; 
+    cursor: pointer;
+    transition: background-color 0.3s; 
+}
+
+button:hover {
+ background-color: #1976D2; 
+}
+
+.page-item
+{
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+
+@media (max-width: 786px) {
+  .filterbar input
+  {
+      width:150px !important;
+  }
+
+  .switch
+  {
+      display: none;
+  }
+
+}
+
+@media (max-width:628px)
+{
+  .panel{
+    display:block;
+    justify-content:center;
+  }
+  .filterbar
+  {
+    justify-content: center;
+  }
+  .title
+  {
+    display: flex;
+    justify-content: center;
+  }
+}

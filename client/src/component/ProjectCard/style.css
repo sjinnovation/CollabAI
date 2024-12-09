@@ -1,13 +1,14 @@
 .project-card {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
     overflow: hidden;
     transition: transform 0.3s ease;
     margin: 1rem;
-    width: 350px;
+    max-width: 381px;
+    border: 2px rgb(71 68 68) solid;
   }
   
+
   .project-card:hover {
     transform: translateY(-5px);
   }
@@ -24,11 +25,11 @@
   
   .project-content h3 {
     margin: 0 0 1rem 0;
-    color: #333;
+    color: #ffffff;
   }
   
   .project-content p {
-    color: #666;
+    color: #929292;
     margin-bottom: 1rem;
   }
   
@@ -40,11 +41,11 @@
   }
   
   .tech-tag {
-    background: #f0f0f0;
+    background: #383838;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.8rem;
-    color: #555;
+    color: #ffffff;
   }
   
   .project-links {
@@ -60,4 +61,43 @@
   
   .project-links a:hover {
     text-decoration: underline;
+  }
+  
+  /* List view styles */
+  .projects-container.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .project-card.list-view {
+    display: flex;
+    width: 100%;
+  }
+  
+  .project-card.list-view .project-image {
+    width: 200px;
+    height: 150px;
+  }
+  
+  .project-card.list-view .project-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  /* Keep existing card view styles */
+  .projects-container.card-view {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    
+    
   }

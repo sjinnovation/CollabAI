@@ -1,9 +1,9 @@
 import React from 'react';
 import './style.css';
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, viewType = 'card' }) => {
   return (
-    <div className="project-card">
+    <div className={`project-card ${viewType}-view`}>
       <img src={project.image} alt={project.title} className="project-image" />
       <div className="project-content">
         <h3>{project.title}</h3>
