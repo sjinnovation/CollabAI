@@ -37,7 +37,7 @@ import ragRouter from "./routers/ragWithKnowledgeBase.js";
 import googleDriveRouter from "./routers/googleDriveRouters.js";
 import vectorStoreRouter from "./routers/vectorStoreRoutes.js";
 import workBoardRouter from "./routers/workBoardRoute.js";
-
+import projectrouter from "./routers/projectRoutes.js";
 const app = express();
 const server = http.createServer(app);
 
@@ -82,7 +82,7 @@ app.use("/api/assistants/usage",assistantUsageRoute);
 app.use("/api/knowledge-base",knowledgeBaseRouter);
 app.use("/api/rag/",ragRouter);
 app.use("/api/vectorStore",vectorStoreRouter);
-
+app.use('/api/projects', projectrouter);
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
