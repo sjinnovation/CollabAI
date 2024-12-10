@@ -20,7 +20,7 @@ const teamSchema = mongoose.Schema(
   {
     teamDescriptions:{
       type: String,
-      default: ''
+      required: true
     }
   },
   

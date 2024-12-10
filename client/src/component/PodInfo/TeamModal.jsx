@@ -4,6 +4,7 @@ import { TeamMemberCard } from './TeamMemberCard'
 import { ProjectCard } from './ProjectCard'
 import { sortTeamMembers } from '../../contexts/sortTeamMembers'
 
+
 export const TeamModal = ({ pod, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [skillFilter, setSkillFilter] = useState('')
@@ -47,11 +48,11 @@ export const TeamModal = ({ pod, onClose }) => {
       <div className="modal1">
         <div className="modalHeader">
           <h2>{pod.name}</h2>
-          <button onClick={onClose} className="closeButton">&times;</button>
+          <button1 onClick={onClose} className="closeButton">&times;</button1>
         </div>
         <div className="modalContent">
           <div className="viewToggleContainer">
-            <button 
+            <button1
               className={`viewToggleButton ${activeView === 'members' ? 'active' : ''}`}
               onClick={() => {
                 setActiveView('members')
@@ -59,8 +60,8 @@ export const TeamModal = ({ pod, onClose }) => {
               }}
             >
               Team
-            </button>
-            <button 
+            </button1>
+            <button1
               className={`viewToggleButton ${activeView === 'projects' ? 'active' : ''}`}
               onClick={() => {
                 setActiveView('projects')
@@ -68,7 +69,7 @@ export const TeamModal = ({ pod, onClose }) => {
               }}
             >
               Projects
-            </button>
+            </button1>
           </div>
 
           {activeView === 'members' ? (
@@ -101,20 +102,20 @@ export const TeamModal = ({ pod, onClose }) => {
                   <TeamMemberCard key={member.id} member={member} />
                 ))}
               </div>
-              <div className="pagination">
-                <button
+              <div className="pagination1">
+                <button1
                   onClick={() => setCurrentMemberPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentMemberPage === 1}
                 >
                   Previous
-                </button>
+                </button1>
                 <span>{currentMemberPage} of {memberPageCount}</span>
-                <button
+                <button1
                   onClick={() => setCurrentMemberPage(prev => Math.min(prev + 1, memberPageCount))}
                   disabled={currentMemberPage === memberPageCount}
                 >
                   Next
-                </button>
+                </button1>
               </div>
             </>
           ) : (
@@ -136,20 +137,20 @@ export const TeamModal = ({ pod, onClose }) => {
                   <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
-              <div className="pagination">
-                <button
+              <div className="pagination1">
+                <button1
                   onClick={() => setCurrentProjectPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentProjectPage === 1}
                 >
                   Previous
-                </button>
+                </button1>
                 <span>{currentProjectPage} of {projectPageCount}</span>
-                <button
+                <button1
                   onClick={() => setCurrentProjectPage(prev => Math.min(prev + 1, projectPageCount))}
                   disabled={currentProjectPage === projectPageCount}
                 >
                   Next
-                </button>
+                </button1>
               </div>
             </>
           )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaSearch } from "react-icons/fa";
-import Button from './Button';
+import Button1 from './Button1';
 import Input from './Input';
 
 const SearchBar = ({ searchQuery, setSearchQuery, handleSearchSubmit }) => (
@@ -13,9 +13,9 @@ const SearchBar = ({ searchQuery, setSearchQuery, handleSearchSubmit }) => (
         onChange={(e) => setSearchQuery(e.target.value)}
         className="search-input"
       />
-      <Button type="submit" className="search-button">
+      <Button1 type="submit" className="search-button">
         <FaSearch className="search-icon" />
-      </Button>
+      </Button1>
     </form>
   </div>
 );

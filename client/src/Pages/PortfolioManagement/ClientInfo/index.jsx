@@ -13,6 +13,70 @@ import ProjectCard from '../../../component/ClientInfo/ProjectCard';
 import { getAllProjects } from '../../../api/projectApi';
 import "./ClientInfo.scss";
 
+
+
+const projects = [
+  {
+    id: 1,
+    title: "VPN Mobile App",
+    Description: "Mobile UI Research",
+    image: "https://picsum.photos/600/400?random=1",
+    Team: "Avengers",
+    techStack: ["React Native", "Node.js", "Express"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+  {
+    id: 2,
+    title: "Property Dashboard",
+    Description: "Web Interface",
+    image: "https://picsum.photos/600/400?random=2",
+    Team: "Avengers",
+    techStack: ["React", "Redux", "Material-UI"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+  {
+    id: 3,
+    title: "Healthcare Mobile App",
+    Description: "Mobile UI Branding",
+    image: "https://picsum.photos/600/400?random=3",
+    Team: "Avengers",
+    techStack: ["Flutter", "Firebase", "GraphQL"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+  {
+    id: 4,
+    title: "E-commerce Platform",
+    Description: "Web Development",
+    image: "https://picsum.photos/600/400?random=4",
+    Team: "Avengers",
+    techStack: ["Next.js", "Stripe", "MongoDB"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+  {
+    id: 5,
+    title: "Fitness Tracking App",
+    Description: "Mobile Development",
+    image: "https://picsum.photos/600/400?random=5",
+    Team: "Avengers",
+    techStack: ["React Native", "Redux", "Firebase"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+  {
+    id: 6,
+    title: "Social Media Dashboard",
+    Description: "Web Analytics",
+    image: "https://picsum.photos/600/400?random=6",
+    Team: "Avengers",
+    techStack: ["Vue.js", "D3.js", "Node.js"],
+    github: "https://github.com/guptapriya24/react-weather-app",
+    live: "https://weather-app-demo.netlify.app",
+  },
+];
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -34,40 +98,21 @@ const milestones = [
 const ClientInfo = () => {
   const [activeTab, setActiveTab] = useState("work");
   const [searchQuery, setSearchQuery] = useState("");
-  const [projects, setProjects] = useState([]);
-  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState(projects);
   const [searchHistory, setSearchHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [projectsEmblaRef, projectsEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [reviewsEmblaRef, reviewsEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [milestonesEmblaRef, milestonesEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const fetchedProjects = await getAllProjects();
-        setProjects(fetchedProjects);
-        setFilteredProjects(fetchedProjects);
-        setIsLoading(false);
-      } catch (err) {
-        setError('Failed to fetch projects');
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const trimmedQuery = searchQuery.trim().toLowerCase();
     if (trimmedQuery) {
       const filtered = projects.filter((project) =>
-        project.name.toLowerCase().includes(trimmedQuery) ||
-        project.description.toLowerCase().includes(trimmedQuery) ||
-        project.podName.toLowerCase().includes(trimmedQuery)
+        project.title.toLowerCase().includes(trimmedQuery) ||
+        project.Description.toLowerCase().includes(trimmedQuery) ||
+        project.Team.toLowerCase().includes(trimmedQuery)
       );
       setFilteredProjects(filtered);
       setSearchHistory((prev) => [...new Set([trimmedQuery, ...prev])].slice(0, 5));
@@ -80,16 +125,16 @@ const ClientInfo = () => {
     setSearchQuery("");
     setFilteredProjects(projects);
     setSearchHistory([]);
-  }, [projects]);
+  }, []);
 
   useEffect(() => {
     if (searchQuery === "") {
       setFilteredProjects(projects);
     }
-  }, [searchQuery, projects]);
+  }, [searchQuery]);
 
   const stats = [
-    { title: "Projects", value: projects.length, icon: FaCode },
+    { title: "Projects", value: 5, icon: FaCode },
     { title: "Total Revenue", value: 10000, prefix: "$", icon: FaDollarSign },
     { title: "Invoices", value: 25, icon: FaFileAlt },
     { title: "Milestones", value: 7, icon: FaBullseye },
@@ -116,9 +161,6 @@ const ClientInfo = () => {
     (currentmilestonePage - 1) * itemsPerPage,
     currentmilestonePage * itemsPerPage
   );
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="portfolio-page">
@@ -204,20 +246,20 @@ const ClientInfo = () => {
                 </div>
               ))}
             </div>
-            <div className="pagination">
-              <button
+            <div className="pagination1">
+              <button1
                 onClick={() => setCurrentProjectPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentProjectPage === 1}
               >
                 Previous
-              </button>
+              </button1>
               <span>{currentProjectPage} of {projectPageCount}</span>
-              <button
+              <button1
                 onClick={() => setCurrentProjectPage(prev => Math.min(prev + 1, projectPageCount))}
                 disabled={currentProjectPage === projectPageCount}
               >
                 Next
-              </button>
+              </button1>
             </div>
           </div>
         </TabsContent>
@@ -231,20 +273,20 @@ const ClientInfo = () => {
                 </div>
               ))}
             </div>
-            <div className="pagination">
-              <button
+            <div className="pagination1">
+              <button1
                 onClick={() => setCurrentReviewPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentReviewPage === 1}
               >
                 Previous
-              </button>
+              </button1>
               <span>{currentReviewPage} of {ReviewPageCount}</span>
-              <button
+              <button1
                 onClick={() => setCurrentReviewPage(prev => Math.min(prev + 1, ReviewPageCount))}
                 disabled={currentReviewPage === ReviewPageCount}
               >
                 Next
-              </button>
+              </button1>
             </div>
           </div>
         </TabsContent>
@@ -258,20 +300,20 @@ const ClientInfo = () => {
                 </div>
               ))}
             </div>
-            <div className="pagination">
-              <button
+            <div className="pagination1">
+              <button1
                 onClick={() => setCurrentmilestonePage(prev => Math.max(prev - 1, 1))}
                 disabled={currentmilestonePage === 1}
               >
                 Previous
-              </button>
+              </button1>
               <span>{currentmilestonePage} of {milestonePageCount}</span>
-              <button
+              <button1
                 onClick={() => setCurrentmilestonePage(prev => Math.min(prev + 1, milestonePageCount))}
                 disabled={currentmilestonePage === milestonePageCount}
               >
                 Next
-              </button>
+              </button1>
             </div>
           </div>
         </TabsContent>

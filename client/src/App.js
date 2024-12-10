@@ -41,6 +41,7 @@ import { IntegrateApplications } from "./component/IntegrateApplications/Integra
 import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboard";
 import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
 import PodInfo from "./Pages/PortfolioManagement/PodInfo";
+import ReviewsPage from "./Pages/PortfolioManagement/Reviews";
 
 function App() {
   // Hook to get the current location
@@ -59,6 +60,7 @@ function App() {
       <Route path="/portfolio" element={<PortfolioHome />} />
       <Route path="/portfoliomanagement/ClientInfo" element={<ClientInfo />} /> 
       <Route path="/portfoliomanagement/PodInfo" element={<PodInfo />} />
+      <Route path="/portfoliomanagement/Reviews" element={<ReviewsPage />} />
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  

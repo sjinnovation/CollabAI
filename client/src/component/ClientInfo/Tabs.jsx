@@ -9,12 +9,12 @@ export const TabsList = ({ children }) => (
 );
 
 export const TabsTrigger = ({ children, isActive, onClick }) => (
-  <button
+  <button1
     className={`tabs-trigger ${isActive ? "active" : ""}`}
     onClick={onClick}
   >
     {children}
-  </button>
+  </button1>
 );
 
 export const TabsContent = ({ children, isActive }) => (

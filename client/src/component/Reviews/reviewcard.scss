@@ -1,0 +1,62 @@
+
+  .starContainer {
+    display: flex;
+    margin-bottom: 0.5rem;
+  }
+  
+  .star {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .starFilled {
+    color: #fbbf24;
+  }
+  
+  .starEmpty {
+    color: #e5e7eb;
+  }
+  
+  .header {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .comment {
+    color: #4b5563;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+  }
+  
+  .projectInfo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .projectIcon {
+    color: #3b82f6;
+    margin-right: 0.5rem;
+  }
+  
+  .projectName {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+  
+  .clientInfo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .clientImage {
+    border-radius: 9999px;
+    margin-right: 0.75rem;
+  }
+  
+  .clientName {
+    font-weight: 500;
+  }
+  
