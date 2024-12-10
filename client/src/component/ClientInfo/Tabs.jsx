@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../Pages/PortfolioManagement/ClientInfo/ClientInfo.scss'
 
 export const Tabs = ({ children }) => (
   <div className="tabs1">{children}</div>

@@ -3,6 +3,8 @@ import { FaSearch, FaFilter } from 'react-icons/fa'
 import { TeamMemberCard } from './TeamMemberCard'
 import { ProjectCard } from './ProjectCard'
 import { sortTeamMembers } from '../../contexts/sortTeamMembers'
+import Button1 from '../ClientInfo/Button1';
+
 
 
 export const TeamModal = ({ pod, onClose }) => {
