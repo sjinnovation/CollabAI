@@ -41,6 +41,7 @@ import projectrouter from "./routers/projectRoutes.js";
 import clientRouter from "./routers/clientRouter.js";
 import reviewsRoutes from "./routers/reviewsRoutes.js";
 import techStackRoute from "./routers/techStackRoute.js";
+import featureRouter from "./routers/featureRouter.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -90,6 +91,7 @@ app.use('/api/projects', projectrouter);
 app.use("/api/clients", clientRouter);
 app.use('/api/techStacks',techStackRoute);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/features', featureRouter);
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));

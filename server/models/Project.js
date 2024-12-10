@@ -14,7 +14,9 @@ const ProjectSchema = new mongoose.Schema({
     links:{type:String},
     github:{type:String},
   },
-  image_link:{type:String}
+  image_link:{type:String},
+  team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Teams' },
+  feature:[{ type:mongoose.Schema.Types.ObjectId, ref:'Feature'}]
 });
 
 const Project = mongoose.model("Project", ProjectSchema);

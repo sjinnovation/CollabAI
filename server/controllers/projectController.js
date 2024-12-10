@@ -1,4 +1,6 @@
-import Project from "../models/Project.js"; // Use `import` instead of `require`
+import Project from "../models/Project.js"; 
+import mongoose from 'mongoose';
+import Teams from "../models/teamModel.js";  
 
 export const getAllProjects = async (req, res) => {
   try {
@@ -11,7 +13,7 @@ export const getAllProjects = async (req, res) => {
 
 export const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findOne({ id: parseInt(req.params.id) });
+    const project = await Project.findOne({ _id: req.params.id });
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -34,7 +36,7 @@ export const createProject = async (req, res) => {
 export const updateProject = async (req, res) => {
   try {
     const updatedProject = await Project.findOneAndUpdate(
-      { id: parseInt(req.params.id) },
+      { _id: req.params.id },
       req.body,
       { new: true }
     );
@@ -49,9 +51,7 @@ export const updateProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
   try {
-    const deletedProject = await Project.findOneAndDelete({
-      id: parseInt(req.params.id),
-    });
+    const deletedProject = await Project.findOneAndDelete({ _id: req.params.id });
     if (!deletedProject) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -60,3 +60,38 @@ export const deleteProject = async (req, res) => {
     res.status(500).json({ message: "Error deleting project", error });
   }
 };
+
+export const getProjectsByTeam = async (req, res) => {
+  const { teamId } = req.params;
+
+  try {
+    const projects = await Project.find({ team_id: mongoose.Types.ObjectId(teamId) })
+    .populate('team_id', 'name');  
+
+    if (projects.length === 0) {
+      return res.status(404).json({ message: 'No projects found for this team.' });
+    }
+
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error. Could not fetch projects.' });
+  }
+};
+
+export const getProjectsByClient = async (req,res)=>
+{
+  const {clientId}=req.params;
+  try{
+    const projects=await Project.find({client_id:clientId});
+    if(projects.length===0)
+    {
+      return res.status(404).json({message:'No projects found for this team'});
+    }
+    res.status(200).json(projects);
+  }
+  catch(error)
+  {
+    res.status(500).json({message:'Server error. Could not fetch projects'});
+  }
+};
+
