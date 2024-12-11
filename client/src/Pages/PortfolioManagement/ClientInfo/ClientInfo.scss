@@ -764,7 +764,7 @@
 }
 
 
- buttonss {
+ button-container {
   padding: 0.5rem 1rem;
   background-color: #f3f4f6;
   border: none;
@@ -775,11 +775,11 @@
   color:black;
 }
 
- buttonss:hover:not(:disabled) {
+button-container:hover:not(:disabled) {
   background-color: #e5e7eb;
 }
 
- buttonss:disabled {
+button-container:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

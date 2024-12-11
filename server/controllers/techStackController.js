@@ -10,14 +10,24 @@ export const createTechStack = async (req, res) => {
     }
 };
 
-export const getAllTechStack = async (req, res) =>
-{
-    try{
-        const tech_stack= await TechStack.find();
+export const getAllTechStack = async (req, res) => {
+    try {
+        const tech_stack = await TechStack.find();
         res.status(200).json(tech_stack);
+    } catch (error) {
+        res.status(500).json({ message: "Error getting tech stack", error });
     }
-    catch(error)
-    {
-        res.status(500).json({message:"Error getting tech stack",error});
+};
+
+export const getTechStackById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const techStack = await TechStack.findById(id);
+        if (!techStack) {
+            return res.status(404).json({ message: "Tech stack not found" });
+        }
+        res.status(200).json(techStack);
+    } catch (error) {
+        res.status(500).json({ message: "Error getting tech stack by ID", error });
     }
 };

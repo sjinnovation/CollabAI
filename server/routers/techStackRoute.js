@@ -1,9 +1,11 @@
 import express from "express";
-import { createTechStack,getAllTechStack } from "../controllers/techStackController.js";
+import { createTechStack, getAllTechStack, getTechStackById } from "../controllers/techStackController.js";
+import authenticateUser from "../middlewares/login.js";
 
-const router = express.Router();
+const techstackrouter = express.Router();
 
-router.post("/", createTechStack);
-router.get("/", getAllTechStack);
+techstackrouter.post("/", authenticateUser, createTechStack);
+techstackrouter.get("/",  getAllTechStack);
+techstackrouter.get("/:id", getTechStackById); // New route to get a tech stack by ID
 
-export default router;
+export default techstackrouter;

@@ -40,8 +40,10 @@ import workBoardRouter from "./routers/workBoardRoute.js";
 import projectrouter from "./routers/projectRoutes.js";
 import clientRouter from "./routers/clientRouter.js";
 import reviewsRoutes from "./routers/reviewsRoutes.js";
-import techStackRoute from "./routers/techStackRoute.js";
+import techstackrouter from "./routers/techStackRoute.js";
 import featureRouter from "./routers/featureRouter.js";
+import revenuerouter from "./routers/revenueRouter.js";
+import projectteamrouter from "./routers/projectTeamRouter.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -89,9 +91,12 @@ app.use("/api/rag/",ragRouter);
 app.use("/api/vectorStore",vectorStoreRouter);
 app.use('/api/projects', projectrouter);
 app.use("/api/clients", clientRouter);
-app.use('/api/techStacks',techStackRoute);
+app.use('/api/techStacks',techstackrouter);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/features', featureRouter);
+app.use('/api/revenue', revenuerouter);
+app.use('/api/project-team', projectteamrouter);
+
 
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));

@@ -1,6 +1,7 @@
 import Project from "../models/Project.js"; 
-import mongoose from 'mongoose';
-import Teams from "../models/teamModel.js";  
+import tech_stack from "../models/tech_stack.js"
+
+import mongoose from 'mongoose'; 
 
 export const getAllProjects = async (req, res) => {
   try {
@@ -12,14 +13,20 @@ export const getAllProjects = async (req, res) => {
 };
 
 export const getProjectById = async (req, res) => {
+  const { clientId } = req.params;
   try {
-    const project = await Project.findOne({ _id: req.params.id });
-    if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+    const projects = await Project.find({ client_id: clientId })
+      .populate('client_id', 'name')
+      .populate('team_id', 'name')
+      .populate('feature', 'name')
+      .populate('techStack', 'name');
+
+    if (projects.length === 0) {
+      return res.status(404).json({ message: 'No projects found for this client' });
     }
-    res.status(200).json(project);
+    res.status(200).json(projects);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching project", error });
+    res.status(500).json({ message: 'Server error. Could not fetch projects', error: error.message });
   }
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { FaCode, FaDollarSign, FaFileAlt, FaBullseye } from "react-icons/fa";
 import useEmblaCarousel from 'embla-carousel-react';
@@ -10,73 +11,10 @@ import ReviewCard from '../../../component/ClientInfo/ReviewCard';
 import SearchBar from '../../../component/ClientInfo/SearchBar';
 import MilestoneCard from '../../../component/ClientInfo/MilestoneCard';
 import ProjectCard from '../../../component/ClientInfo/ProjectCard';
-import { getAllProjects } from '../../../api/projectApi';
+import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/projectApi';
+import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
 
-
-
-const projects = [
-  {
-    id: 1,
-    title: "VPN Mobile App",
-    Description: "Mobile UI Research",
-    image: "https://picsum.photos/600/400?random=1",
-    Team: "Avengers",
-    techStack: ["React Native", "Node.js", "Express"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-  {
-    id: 2,
-    title: "Property Dashboard",
-    Description: "Web Interface",
-    image: "https://picsum.photos/600/400?random=2",
-    Team: "Avengers",
-    techStack: ["React", "Redux", "Material-UI"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-  {
-    id: 3,
-    title: "Healthcare Mobile App",
-    Description: "Mobile UI Branding",
-    image: "https://picsum.photos/600/400?random=3",
-    Team: "Avengers",
-    techStack: ["Flutter", "Firebase", "GraphQL"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-  {
-    id: 4,
-    title: "E-commerce Platform",
-    Description: "Web Development",
-    image: "https://picsum.photos/600/400?random=4",
-    Team: "Avengers",
-    techStack: ["Next.js", "Stripe", "MongoDB"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-  {
-    id: 5,
-    title: "Fitness Tracking App",
-    Description: "Mobile Development",
-    image: "https://picsum.photos/600/400?random=5",
-    Team: "Avengers",
-    techStack: ["React Native", "Redux", "Firebase"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-  {
-    id: 6,
-    title: "Social Media Dashboard",
-    Description: "Web Analytics",
-    image: "https://picsum.photos/600/400?random=6",
-    Team: "Avengers",
-    techStack: ["Vue.js", "D3.js", "Node.js"],
-    github: "https://github.com/guptapriya24/react-weather-app",
-    live: "https://weather-app-demo.netlify.app",
-  },
-];
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -98,88 +36,231 @@ const milestones = [
 const ClientInfo = () => {
   const [activeTab, setActiveTab] = useState("work");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [clientInfo, setClientInfo] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [techStack, setTechStack] = useState([]);
+  const [revenue, setRevenue] = useState({ total: 0, invoicesCount: 0 });
+  const [loading, setLoading] = useState(true);
   const [searchHistory, setSearchHistory] = useState([]);
+  const [currentProjectPage, setCurrentProjectPage] = useState(1);
+  const [currentReviewPage, setCurrentReviewPage] = useState(1);
+  const [currentMilestonePage, setCurrentMilestonePage] = useState(1);
+  const [clientId, setClientId] = useState(null);
+  const id = "507f1f77bcf86cd799439011"; // Replace this with the actual ClientID
 
-  const [projectsEmblaRef, projectsEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
-  const [reviewsEmblaRef, reviewsEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
-  const [milestonesEmblaRef, milestonesEmblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
+  
+  // Fetch client data
+  const fetchClientData = async () => {
+    try {
+      const clientData = await getClientInfo(id);
+      setClientId(clientData._id); // Assuming the API returns a `_id`
+      setClientInfo(clientData);
+      return clientData._id;
+    } catch (error) {
+      console.error("Error fetching client info:", error);
+      throw error;
+    }
+  };
 
-  const handleSearchSubmit = (e) => {
+  // Fetch projects for the client
+  const fetchProjects = async (id) => {
+    try {
+      const allProjects = await getAllProjects();
+      const filtered = allProjects.filter(
+        (project) => project.client_id === id
+      );
+      setProjects(filtered);
+      setFilteredProjects(filtered);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      throw error;
+    }
+  };
+
+
+  const fetchRevenueAndBenefits = async (clientID) => {
+    try {
+      const allRevenue = await getAllRevenueData();
+  
+      // Collect project IDs for the client
+      const projectIds = new Set(filteredProjects.map((project) => project._id));
+  
+      // Calculate total revenue and benefits
+      const { totalRevenue, totalBenefits } = allRevenue.reduce(
+        (acc, revenueItem) => {
+          if (projectIds.has(revenueItem.project_id)) {
+            acc.totalRevenue += revenueItem.revenue || 0;
+            acc.totalBenefits += revenueItem.benefits?.reduce((a, b) => a + b, 0) || 0;
+          }
+          return acc;
+        },
+        { totalRevenue: 0, totalBenefits: 0 }
+      );
+  
+      setRevenue({
+        total: totalRevenue,
+        invoicesCount: totalBenefits ,
+      });
+    } catch (error) {
+      console.error("Error fetching revenue and benefits:", error);
+    }
+  };
+  
+    const fetchTechStackDetails = async (techStackIds) => {
+    try {
+      const uniqueIds = Array.from(new Set(techStackIds));
+      // Assuming `getTechStackDetails` is the API function to fetch tech stack by ID
+      const techStackPromises = uniqueIds.map((id) => getTechStackById(id));
+      const techStackDetails = await Promise.all(techStackPromises); // Fetch details
+      console.log(techStackDetails); // Now log after initialization
+      setTechStack(techStackDetails); // Save tech stack details in state
+    } catch (error) {
+      console.error("Error fetching tech stack details:", error);
+    }
+  };
+
+  
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [clientData, allProjects, allRevenue] = await Promise.all([
+          getClientInfo(id),
+          getAllProjects(),
+          getAllRevenueData(),
+        ]);
+    
+        setClientInfo(clientData);
+        setClientId(clientData._id);
+        
+        const filtered = allProjects.filter((project) => project.client_id === clientData._id);
+        setProjects(filtered);
+        setFilteredProjects(filtered);
+    
+        // Fetch revenue and tech stack after projects are fetched
+        const projectIds = new Set(filtered.map((project) => project._id));
+        const { totalRevenue, totalBenefits } = allRevenue.reduce(
+          (acc, revenueItem) => {
+            if (projectIds.has(revenueItem.project_id)) {
+              acc.totalRevenue += revenueItem.revenue || 0;
+              acc.totalBenefits += revenueItem.benefits?.reduce((a, b) => a + b, 0) || 0;
+            }
+            return acc;
+          },
+          { totalRevenue: 0, totalBenefits: 0 }
+        );
+    
+        setRevenue({ total: totalRevenue, invoicesCount: totalBenefits });
+    
+        const allTechStackIds = filtered.flatMap((project) => project.techStack);
+        const uniqueTechStackIds = Array.from(new Set(allTechStackIds));
+        const techStackDetails = await Promise.all(
+          uniqueTechStackIds.map((techId) => getTechStackById(techId))
+        );
+        setTechStack(techStackDetails);
+      } catch (error) {
+        console.error("Error during data fetch:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+  
+    fetchData();
+  }, []);
+  
+
+  
+  
+
+  const [projectsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
+  const [reviewsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
+  const [milestonesEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
+
+  const handleSearchSubmit = useCallback((e) => {
     e.preventDefault();
     const trimmedQuery = searchQuery.trim().toLowerCase();
     if (trimmedQuery) {
       const filtered = projects.filter((project) =>
-        project.title.toLowerCase().includes(trimmedQuery) ||
-        project.Description.toLowerCase().includes(trimmedQuery) ||
-        project.Team.toLowerCase().includes(trimmedQuery)
+        project.name.toLowerCase().includes(trimmedQuery) ||
+        project.description.toLowerCase().includes(trimmedQuery) ||
+        project.status.toLowerCase().includes(trimmedQuery)
       );
       setFilteredProjects(filtered);
       setSearchHistory((prev) => [...new Set([trimmedQuery, ...prev])].slice(0, 5));
     } else {
       setFilteredProjects(projects);
     }
-  };
-
-  const clearSearch = useCallback(() => {
-    setSearchQuery("");
-    setFilteredProjects(projects);
-    setSearchHistory([]);
-  }, []);
+  }, [searchQuery, projects]);
+  
 
   useEffect(() => {
     if (searchQuery === "") {
       setFilteredProjects(projects);
     }
-  }, [searchQuery]);
+  }, [searchQuery, projects]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery("");
+    setFilteredProjects(projects);
+    setSearchHistory([]);
+  }, [projects]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!clientInfo) {
+    return <div>No client information found.</div>;
+  }
 
   const stats = [
-    { title: "Projects", value: 5, icon: FaCode },
-    { title: "Total Revenue", value: 10000, prefix: "$", icon: FaDollarSign },
-    { title: "Invoices", value: 25, icon: FaFileAlt },
-    { title: "Milestones", value: 7, icon: FaBullseye },
+    { title: "Projects", value: projects.length, icon: FaCode },
+    { title: "Total Revenue", value: revenue.total, prefix: "$", icon: FaDollarSign },
+    { title: "Total Benefits", value: revenue.invoicesCount, icon: FaFileAlt },
+    { title: "Milestones", value: milestones.length, icon: FaBullseye },
   ];
 
-  const [currentProjectPage, setCurrentProjectPage] = useState(1);
   const itemsPerPage = 3;
   const projectPageCount = Math.ceil(filteredProjects.length / itemsPerPage);
+  const reviewPageCount = Math.ceil(reviews.length / itemsPerPage);
+  const milestonePageCount = Math.ceil(milestones.length / itemsPerPage);
+
   const currentProjects = filteredProjects.slice(
     (currentProjectPage - 1) * itemsPerPage,
     currentProjectPage * itemsPerPage
   );
 
-  const [currentReviewPage, setCurrentReviewPage] = useState(1);
-  const ReviewPageCount = Math.ceil(reviews.length / itemsPerPage);
-  const currentreviews = reviews.slice(
+  const currentReviews = reviews.slice(
     (currentReviewPage - 1) * itemsPerPage,
     currentReviewPage * itemsPerPage
   );
-  
-  const [currentmilestonePage, setCurrentmilestonePage] = useState(1);
-  const milestonePageCount = Math.ceil(milestones.length / itemsPerPage);
-  const currentmilestone = milestones.slice(
-    (currentmilestonePage - 1) * itemsPerPage,
-    currentmilestonePage * itemsPerPage
+
+  const currentMilestones = milestones.slice(
+    (currentMilestonePage - 1) * itemsPerPage,
+    currentMilestonePage * itemsPerPage
   );
 
   return (
     <div className="portfolio-page">
       <div className="profile-section">
         <Avatar
-          src="https://randomuser.me/api/portraits/men/1.jpg"
-          alt="Irene Brooks"
-          fallback="IB"
+          src={ "https://randomuser.me/api/portraits/men/1.jpg"}
+          alt={clientInfo.name}
+          fallback={clientInfo.name.charAt(0)}
           className="profile-avatar"
         />
-        
+
         <div className="profile-info">
           <div className="profile-header">
-            <h1 className="profile-name">Irene Brooks</h1>
-            <Badge className="profile-badge">Pro</Badge>
+            <h1 className="profile-name">{clientInfo.name}</h1>
+            <Badge className="profile-badge">Client</Badge>
           </div>
-          
-          <p className="profile-title">Interface and Brand Designer</p>
-          <p className="profile-location">based in San Antonio</p>
+
+          <p className="profile-title">{clientInfo.description}</p>
+          <p className="profile-location">{clientInfo.contact_info}</p>
         </div>
 
         <div className="content-container">
@@ -198,15 +279,17 @@ const ClientInfo = () => {
               </Cards>
             ))}
           </div>
-
           <div className="tech-stack">
-            <p className="tech-stack-title">Tech Stack:</p>
-            <div className="tech-stack-icons">
-              <span className="tech-item">React</span>
-              <span className="tech-item">Node.js</span>
-              <span className="tech-item">JavaScript</span>
-            </div>
-          </div>
+  <p className="tech-stack-title">Tech Stack:</p>
+  <div className="tech-stack-icons">
+    {techStack.map((tech, index) => (
+      <span key={index} className="tech-item">
+        {tech.name} {/* Assuming `name` is the property you want to display */}
+      </span>
+    ))}
+  </div>
+</div>
+
         </div>
       </div>
 
@@ -231,9 +314,9 @@ const ClientInfo = () => {
             Milestones
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent isActive={activeTab === "work"}>
-          <SearchBar 
+          <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             handleSearchSubmit={handleSearchSubmit}
@@ -241,25 +324,23 @@ const ClientInfo = () => {
           <div className="projects-carousel" ref={projectsEmblaRef}>
             <div className="projects-container1">
               {currentProjects.map((project) => (
-                <div key={project.id} className="project-slide">
-                  <ProjectCard project={project} />
+                <div key={project._id} className="project-slide">
+                  <ProjectCard project={project} techStack={project.techStackDetails} />
                 </div>
               ))}
             </div>
             <div className="pagination1">
-              <button1
-                onClick={() => setCurrentProjectPage(prev => Math.max(prev - 1, 1))}
+              <button-container onClick={() => setCurrentProjectPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentProjectPage === 1}
               >
                 Previous
-              </button1>
+              </button-container>
               <span>{currentProjectPage} of {projectPageCount}</span>
-              <button1
-                onClick={() => setCurrentProjectPage(prev => Math.min(prev + 1, projectPageCount))}
+              <button-container onClick={() => setCurrentProjectPage(prev => Math.min(prev + 1, projectPageCount))}
                 disabled={currentProjectPage === projectPageCount}
               >
                 Next
-              </button1>
+              </button-container>
             </div>
           </div>
         </TabsContent>
@@ -267,26 +348,24 @@ const ClientInfo = () => {
         <TabsContent isActive={activeTab === "reviews"}>
           <div className="reviews-carousel" ref={reviewsEmblaRef}>
             <div className="reviews-container">
-              {currentreviews.map((review) => (
+              {currentReviews.map((review) => (
                 <div key={review.id} className="review-slide">
                   <ReviewCard review={review} />
                 </div>
               ))}
             </div>
             <div className="pagination1">
-              <button1
-                onClick={() => setCurrentReviewPage(prev => Math.max(prev - 1, 1))}
+              <button-container onClick={() => setCurrentReviewPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentReviewPage === 1}
               >
                 Previous
-              </button1>
-              <span>{currentReviewPage} of {ReviewPageCount}</span>
-              <button1
-                onClick={() => setCurrentReviewPage(prev => Math.min(prev + 1, ReviewPageCount))}
-                disabled={currentReviewPage === ReviewPageCount}
+              </button-container>
+              <span>{currentReviewPage} of {reviewPageCount}</span>
+              <button-container onClick={() => setCurrentReviewPage(prev => Math.min(prev + 1, reviewPageCount))}
+                disabled={currentReviewPage === reviewPageCount}
               >
                 Next
-              </button1>
+              </button-container>
             </div>
           </div>
         </TabsContent>
@@ -294,26 +373,24 @@ const ClientInfo = () => {
         <TabsContent isActive={activeTab === "milestones"}>
           <div className="milestones-carousel" ref={milestonesEmblaRef}>
             <div className="milestones-container">
-              {currentmilestone.map((milestone) => (
+              {currentMilestones.map((milestone) => (
                 <div key={milestone.id} className="milestone-slide">
                   <MilestoneCard milestone={milestone} />
                 </div>
               ))}
             </div>
             <div className="pagination1">
-              <button1
-                onClick={() => setCurrentmilestonePage(prev => Math.max(prev - 1, 1))}
-                disabled={currentmilestonePage === 1}
+              <button-container onClick={() => setCurrentMilestonePage(prev => Math.max(prev - 1, 1))}
+                disabled={currentMilestonePage === 1}
               >
                 Previous
-              </button1>
-              <span>{currentmilestonePage} of {milestonePageCount}</span>
-              <button1
-                onClick={() => setCurrentmilestonePage(prev => Math.min(prev + 1, milestonePageCount))}
-                disabled={currentmilestonePage === milestonePageCount}
+              </button-container>
+              <span>{currentMilestonePage} of {milestonePageCount}</span>
+              <button-container onClick={() => setCurrentMilestonePage(prev => Math.min(prev + 1, milestonePageCount))}
+                disabled={currentMilestonePage === milestonePageCount}
               >
                 Next
-              </button1>
+              </button-container>
             </div>
           </div>
         </TabsContent>
@@ -323,3 +400,4 @@ const ClientInfo = () => {
 }
 
 export default ClientInfo;
+
