@@ -7,11 +7,12 @@ import {
   updateProject,
   deleteProject,
   getProjectsByTeam,
-  getProjectsByClient,
+  getProjectsByClient,getProjectByProjectId
 } from "../controllers/projectController.js"; // Use `import` instead of `require`
 
 
 const projectrouter = express.Router();
+projectrouter.get('/project/:id', authenticateUser, getProjectByProjectId);
 
 projectrouter.get("/",authenticateUser, getAllProjects);
 projectrouter.get("/:id",authenticateUser, getProjectById);

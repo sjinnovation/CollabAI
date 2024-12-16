@@ -172,9 +172,6 @@ const ClientInfo = () => {
   }, []);
   
 
-  
-  
-
   const [projectsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [milestonesEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
@@ -325,7 +322,7 @@ const ClientInfo = () => {
             <div className="projects-container1">
               {currentProjects.map((project) => (
                 <div key={project._id} className="project-slide">
-                  <ProjectCard project={project} techStack={project.techStackDetails} />
+                  <ProjectCard project={project} techStack={techStack} />
                 </div>
               ))}
             </div>

@@ -102,3 +102,21 @@ export const getProjectsByClient = async (req,res)=>
   }
 };
 
+export const getProjectByProjectId = async (req, res) => {
+  const { id } = req.params; // Destructure the project ID from the request parameters
+  try {
+    const project = await Project.findById(id)
+      .populate('client_id', 'name') // Populate related client details
+      .populate('team_id', 'name')   // Populate team details
+      .populate('feature', 'name')  // Populate features
+      .populate('techStack', 'name'); // Populate tech stack
+
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error. Could not fetch project.', error: error.message });
+  }
+};

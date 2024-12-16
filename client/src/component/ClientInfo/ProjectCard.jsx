@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaCircle,FaCalendarAlt } from 'react-icons/fa';
-import { Cardss, CardContent, CardFooter } from './Cards';  // Ensure 'Cardss' is correct; if not, use 'Cards'
+import { FaCircle, FaCalendarAlt } from 'react-icons/fa';
+import { Cardss, CardContent, CardFooter } from './Cards';
 import Badge from './Badge';
 import { getTechStackById } from '../../api/projectApi.js';
 
@@ -17,29 +17,27 @@ const getStatusColor = (status) => {
   }
 };
 
-const ProjectCard = ({ project, techStackIds }) => {
+const ProjectCard = ({ project }) => {
   const [techStack, setTechStack] = useState([]);
 
   useEffect(() => {
     const fetchTechStackDetails = async () => {
       try {
-        const uniqueIds = Array.from(new Set(techStackIds)); // Remove duplicates
-        console.log("Tech Stack IDs: ", uniqueIds);  // Log techStackIds
-        const techStackPromises = uniqueIds.map((id) => getTechStackById(id));
+        const techStackPromises = project.techStack.map((id) => getTechStackById(id));
         const techStackDetails = await Promise.all(techStackPromises);
         
-        console.log("Fetched Tech Stack Details: ", techStackDetails);  // Log API response
+        console.log("Fetched Tech Stack Details: ", techStackDetails);
         
-        setTechStack(techStackDetails); // Save tech stack details in state
+        setTechStack(techStackDetails.map(detail => detail.name)); // Save tech stack names in state
       } catch (error) {
         console.error("Error fetching tech stack details:", error);
       }
     };
 
-    if (techStackIds && techStackIds.length > 0) {
+    if (project.techStack && project.techStack.length > 0) {
       fetchTechStackDetails();
     }
-  }, [techStackIds]); // Runs when techStackIds changes
+  }, [project.techStack]);
 
   return (
     <Cardss className="project-card1">
@@ -57,7 +55,6 @@ const ProjectCard = ({ project, techStackIds }) => {
         <div className="project-details">
           <h4 className="project-title">{project.name}</h4>
           <div className="project-stat">
-          
             {project.description}
           </div>
           <div className="project-status">
@@ -69,14 +66,12 @@ const ProjectCard = ({ project, techStackIds }) => {
               <FaCalendarAlt style={{ color: "white", marginRight: '8px' }} />
               <span style={{color: "white"}}>{new Date(project.start_time).toLocaleDateString()}</span>-  <span style={{color: "white"}}>{new Date(project.end_time).toLocaleDateString()}</span>
             </div>
-           
           </div>
           <div className="project-tech-stack">
-            {techStack && techStack.length > 0 && techStack.map((tech, index) => (
-              <Badge key={index} className="tech-badge">{tech.name}</Badge>
+            {techStack.map((tech, index) => (
+              <Badge key={index} className="tech-badge">{tech}</Badge>
             ))}
           </div>
-       
           <div className="project-links">
             {project.links && project.links.github && (
               <a href={project.links.github} target="_blank" rel="noopener noreferrer">
@@ -96,3 +91,4 @@ const ProjectCard = ({ project, techStackIds }) => {
 };
 
 export default ProjectCard;
+

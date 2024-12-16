@@ -1,47 +1,94 @@
-import React from 'react';
-import '../../Pages/PortfolioManagement/PodInfo/PodInfo.scss';
+import React, { useState, useEffect } from 'react';
+import { FaCircle, FaCalendarAlt } from 'react-icons/fa';
+import { Cardss, CardContent, CardFooter } from '../../component/ClientInfo/Cards';
+import Badge from '../../component/ClientInfo/Badge';
+import { getTechStackById } from '../../api/projectApi';
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'stage':
+      return 'yellow';
+    case 'dev':
+      return 'blue';
+    case 'live':
+      return 'green';
+    default:
+      return 'red';
+  }
+};
 
 export const ProjectCard = ({ project }) => {
-  // Guard clause: Return null if project is not defined
-  if (!project) {
-    return null;
-  }
+  const [techStack, setTechStack] = useState([]);
+ 
+   useEffect(() => {
+     const fetchTechStackDetails = async () => {
+       try {
+         const techStackPromises = project.techStack.map((id) => getTechStackById(id));
+         const techStackDetails = await Promise.all(techStackPromises);
+         
+         console.log("Fetched Tech Stack Details: ", techStackDetails);
+         
+         setTechStack(techStackDetails.map(detail => detail.name)); // Save tech stack names in state
+       } catch (error) {
+         console.error("Error fetching tech stack details:", error);
+       }
+     };
+ 
+     if (project.techStack && project.techStack.length > 0) {
+       fetchTechStackDetails();
+     }
+   }, [project.techStack]);
 
   return (
-    
-      <div className={`project-card1`}>
-        <img 
-          src={project.imageUrl} 
-          alt={project.name || "Project"} 
-          className="project-image" 
-        />
-        <div className="project-content1">
-          <h3><a
-      href={`http://localhost:4000/portfolio-management/${project.id}`}
-      target="_self"
-      rel="noopener noreferrer"
-      className="projectCardLink"
-    >{project.name}</a></h3>
-          <p>{project.description}</p>
-          <div className="technologies">
-            {project.techStack && project.techStack.map((tech, index) => (
-              <span key={index} className="tech-tag">{tech}</span>
+    <Cardss className="project-card1">
+      <CardContent className="project-image-container">
+        <div className="project-image-wrapper">
+          <img
+            src={"https://picsum.photos/600/400?random=1"}
+            alt={project.name}
+            className="project-image"
+          />
+          <div className="project-image-overlay" />
+        </div>
+      </CardContent>
+      <CardFooter className="project-info">
+        <div className="project-details">
+          <h4 className="project-title">{project.name}</h4>
+          <div className="project-stat">
+            {project.description}
+          </div>
+          <div className="project-status">
+            <FaCircle style={{ color: getStatusColor(project.status), fontSize: '14px', margin: '5px' }} />
+            <span style={{ color: "white" }}>{project.status}</span>
+          </div>
+          <div className="project-dates">
+            <div className="project-start">
+              <FaCalendarAlt style={{ color: "white", marginRight: '8px' }} />
+              <span style={{color: "white"}}>{new Date(project.start_time).toLocaleDateString()}</span>-  <span style={{color: "white"}}>{new Date(project.end_time).toLocaleDateString()}</span>
+            </div>
+          </div>
+          <div className="project-tech-stack">
+            {techStack.map((tech, index) => (
+              <Badge key={index} className="tech-badge">{tech}</Badge>
             ))}
           </div>
           <div className="project-links">
-            {project.github && (
-              <a href={project.github} target="_blank" rel="noopener noreferrer">
+            {project.links && project.links.github && (
+              <a href={project.links.github} target="_blank" rel="noopener noreferrer">
                 GitHub
               </a>
             )}
-            {project.live && (
-              <a href={project.live} target="_blank" rel="noopener noreferrer">
+            {project.links && project.links.links && (
+              <a href={project.links.links} target="_blank" rel="noopener noreferrer">
                 Live Demo
               </a>
             )}
           </div>
         </div>
-      </div>
-    
+      </CardFooter>
+    </Cardss>
   );
 };
+
+export default ProjectCard;
+
