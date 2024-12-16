@@ -121,7 +121,6 @@ const ClientInfo = () => {
   };
 
   
-  
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -131,16 +130,17 @@ const ClientInfo = () => {
           getAllProjects(),
           getAllRevenueData(),
         ]);
-    
+
         setClientInfo(clientData);
-        setClientId(clientData._id);
-        
-        const filtered = allProjects.filter((project) => project.client_id === clientData._id);
-        setProjects(filtered);
-        setFilteredProjects(filtered);
-    
-        // Fetch revenue and tech stack after projects are fetched
-        const projectIds = new Set(filtered.map((project) => project._id));
+        console.log('Client data:', clientData);
+
+        const clientProjects = allProjects.filter(project => project.client_id._id === clientData._id);
+        console.log('Filtered client projects:', clientProjects);
+
+        setProjects(clientProjects);
+        setFilteredProjects(clientProjects);
+
+        const projectIds = new Set(clientProjects.map(project => project._id));
         const { totalRevenue, totalBenefits } = allRevenue.reduce(
           (acc, revenueItem) => {
             if (projectIds.has(revenueItem.project_id)) {
@@ -151,25 +151,25 @@ const ClientInfo = () => {
           },
           { totalRevenue: 0, totalBenefits: 0 }
         );
-    
+
         setRevenue({ total: totalRevenue, invoicesCount: totalBenefits });
-    
-        const allTechStackIds = filtered.flatMap((project) => project.techStack);
+
+        const allTechStackIds = clientProjects.flatMap(project => project.techStack);
         const uniqueTechStackIds = Array.from(new Set(allTechStackIds));
         const techStackDetails = await Promise.all(
-          uniqueTechStackIds.map((techId) => getTechStackById(techId))
+          uniqueTechStackIds.map(techId => getTechStackById(techId))
         );
         setTechStack(techStackDetails);
+
       } catch (error) {
         console.error("Error during data fetch:", error);
       } finally {
         setLoading(false);
       }
     };
-    
-  
+
     fetchData();
-  }, []);
+  }, [id]);
   
 
   const [projectsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
