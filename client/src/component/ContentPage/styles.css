@@ -1,6 +1,6 @@
 .container{
     height : 100%;
-    padding:35px 0;
+
     margin: 0 0;
     width:100%;
     
@@ -12,11 +12,16 @@
 
 .panel{
     display:flex;
-    gap:3rem;
+
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
 
+
+}
+
+.title
+{
+  margin-bottom: 0px !important;
 }
 
 .filterbar
@@ -51,6 +56,13 @@ a{
     width: 0;
     height: 0;
   }
+
+  .dropdown
+  {
+    border-radius: 16px;
+    background-color: #070707;
+    list-style-type:none;
+  }
   
   /* The slider */
   .slider {
@@ -64,6 +76,7 @@ a{
     -webkit-transition: .4s;
     transition: .4s;
   }
+
   
   .slider:before {
     position: absolute;
@@ -165,6 +178,14 @@ button:hover {
 .page-item
 {
   background: rgba(255, 255, 255, 0.1) !important;
+}
+
+@media (max-width: 991px)
+{
+  .filterbar
+  {
+    gap:0px;
+  }
 }
 
 

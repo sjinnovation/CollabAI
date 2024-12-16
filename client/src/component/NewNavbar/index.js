@@ -10,7 +10,7 @@ const NewNavbar = () => {
     </div>
     <div className="tabs">
         <div className="tab">Home</div>
-        <div className="tab">Tab 2</div>
+        <div className="tab"><a href="/form">Tab 2</a></div>
         <div className="tab">Collab AI</div>
     
     </div>

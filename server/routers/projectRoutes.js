@@ -21,5 +21,4 @@ projectrouter.put("/:id",authenticateUser, updateProject);
 projectrouter.delete("/:id",authenticateUser, deleteProject);
 projectrouter.get('/team/:teamId',authenticateUser, getProjectsByTeam);
 projectrouter.get('/client/:clientId', getProjectsByClient)
-
 export default projectrouter;

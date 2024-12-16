@@ -31,7 +31,7 @@ export default function HeroBanner() {
             placeholder="Search..." 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
-            style={{ borderRadius: "8px", height: "56px", width: "700px", fontSize: "1.5rem",paddingInline:"30px",background:"transparent",border:"1px #86858b solid" }} // Increased size
+            style={{ borderRadius: "8px", height: "56px", fontSize: "1.5rem",paddingInline:"30px",background:"transparent",border:"1px #86858b solid" }} // Increased size
           />
         </div>
 

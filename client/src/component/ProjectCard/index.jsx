@@ -4,18 +4,19 @@ import './style.css';
 const ProjectCard = ({ project, viewType = 'card' }) => {
   return (
     <div className={`card-container ${viewType}-view`}>
-      <img src={project.image} alt={project.title} className="image-style" />
+      <img src={project.image_link} alt={project.name} className="image-style" />
       <div className="content-area">
-        <h3>{project.title}</h3>
+        <h3>{project.name}</h3>
+        <p>{project.client_id.name}</p>
         <p>{project.description}</p>
         <div className="technologies">
-          {project.technologies.map((tech, index) => (
-            <span key={index} className="technology-label">{tech}</span>
+          {project.techStack.map((tech, index) => (
+            <span key={index} className="technology-label">{tech.name}</span>
           ))}
         </div>
         <div className="links-section">
-          <a href={project.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-          <a href={project.live} target="_blank" rel="noopener noreferrer">Live Demo</a>
+          <a href={project.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href={project.links.links} target="_blank" rel="noopener noreferrer">Live Demo</a>
         </div>
       </div>
     </div>

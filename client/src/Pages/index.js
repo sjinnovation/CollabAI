@@ -19,6 +19,7 @@ import ChatPage from "./ChatPage";
 import AssistantsChatPage from "./AssistantsChatPage";
 import AssistantFileDownloadPage from "./AssistantFileDownload";
 import PortfolioHome from "./PortfolioHome";
+import Form from "./Form";
 export {
   LoginForm,
   PageNotFound,
@@ -38,5 +39,6 @@ export {
   ChatPage,
   AssistantsChatPage,
   AssistantFileDownloadPage,
-  PortfolioHome
+  PortfolioHome,
+  Form
 };

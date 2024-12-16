@@ -2,19 +2,16 @@ import React from 'react';
 import ProjectCard from '../ProjectCard';
 import './style.css';
 
-const Projects = ({ viewType, filter, tags, projects }) => {
-  const filteredProjects = projects.filter(project => {
-    const projectName = project.name ? project.name.toLowerCase() : '';
-    const matchesFilter = projectName.includes(filter.toLowerCase());
-    const matchesTags = tags.length === 0 || tags.some(tag => project.tags && project.tags.includes(tag));
-    return matchesFilter && matchesTags;
-  });
-
+const Projects = ({ viewType, projects }) => {
   return (
     <div className={`projects-area ${viewType}`}>
-      {filteredProjects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
+      {projects.length > 0 ? (
+        projects.map((project) => (
+          <ProjectCard key={project.id} project={project} />
+        ))
+      ) : (
+        <p style={{color:"white"}}>No projects available.</p>
+      )}
     </div>
   );
 };

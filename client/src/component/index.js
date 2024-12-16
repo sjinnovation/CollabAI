@@ -7,4 +7,5 @@ import HeroBanner from "./HeroBanner";
 import ContentPage from "./ContentPage";
 import ProjectCard from "./ProjectCard";
 import Projects from "./Projects";
-export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects };
+import ProjectForm from "./ProjectForm";
+export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects,ProjectForm };

@@ -1,9 +1,8 @@
 import { axiosSecureInstance } from "./axios";
 
-// Fetch all projects
-export const getAllProjects = async () => {
+export const getAllProjects = async (sortBy='') => {
   try {
-    const response = await axiosSecureInstance.get('/api/projects');
+    const response = await axiosSecureInstance.get('/api/projects',{params:{sortBy},});
     return response.data;
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -21,7 +20,6 @@ export const getProjectById = async (id) => {
     throw error;
   }
 };
-
 // Create a new project
 export const createProject = async (projectData) => {
   try {
@@ -32,7 +30,6 @@ export const createProject = async (projectData) => {
     throw error;
   }
 };
-
 // Update an existing project
 export const updateProject = async (id, projectData) => {
   try {
@@ -43,7 +40,6 @@ export const updateProject = async (id, projectData) => {
     throw error;
   }
 };
-
 // Delete a project
 export const deleteProject = async (id) => {
   try {
@@ -54,7 +50,6 @@ export const deleteProject = async (id) => {
     throw error;
   }
 };
-
 // Fetch client information
 export const getClientInfo = async (clientId) => {
   try {
@@ -66,7 +61,6 @@ export const getClientInfo = async (clientId) => {
     throw error;
   }
 };
-
 // Fetch all projects for a specific client
 export const getClientProjects = async (clientId) => {
   try {
@@ -77,8 +71,6 @@ export const getClientProjects = async (clientId) => {
     throw error;
   }
 };
-
-
 // Fetch total revenue and benefits for a client
 export const getAllRevenueData = async () => {
   try {
@@ -89,7 +81,6 @@ export const getAllRevenueData = async () => {
     throw error;
   }
 };
-
 export const getTechStackById = async (id) => {
   try {
     console.log('Fetching tech stack for ID:', id);
@@ -109,10 +100,6 @@ export const getTechStackById = async (id) => {
     throw error;
   }
 };
-
-
-
-
 // Handle API error details
 export const getTeamById = async (id) => {
   try {
@@ -124,8 +111,6 @@ export const getTeamById = async (id) => {
     throw error;
   }
 };
-
-
 export const getProjectTeamMembers = async (projectId) => {
   try {
     const response = await axiosSecureInstance.get(`/api/project-team/project/${projectId}`);
@@ -135,7 +120,6 @@ export const getProjectTeamMembers = async (projectId) => {
     throw error;
   }
 };
-
 export const getAllTeams = async () => {
   try {
     const response = await axiosSecureInstance.get('/api/teams');
@@ -145,7 +129,6 @@ export const getAllTeams = async () => {
     throw error;
   }
 };
-
 export const getTeamMembers = async (teamId) => {
   try {
     const response = await axiosSecureInstance.get(`/api/teams/${teamId}/members`);
@@ -155,7 +138,6 @@ export const getTeamMembers = async (teamId) => {
     throw error;
   }
 }
-
 export const getProjectTeamMembersByTeam = async (teamId) => {
   try {
     console.log('Fetching project team members for team:', teamId);
@@ -172,7 +154,6 @@ export const getProjectTeamMembersByTeam = async (teamId) => {
     throw error;
   }
 };
-
 export const getAllUsers = async () => {
   try {
     console.log('Fetching all users');
@@ -188,7 +169,6 @@ export const getAllUsers = async () => {
     throw error;
   }
 };
-
 export const getUsersByTeamId = async (teamId) => {
   try {
     console.log('Fetching users for team:', teamId);
@@ -196,22 +176,17 @@ export const getUsersByTeamId = async (teamId) => {
       getAllUsers(),
       getAllProjectTeams()
     ]);
-    
     const allUsers = usersResponse.user;
     const allProjectTeams = projectTeamsResponse;
-
     if (!Array.isArray(allUsers)) {
       throw new TypeError('Expected allUsers to be an array');
     }
-
     const teamUsers = allUsers.filter(user => user.teamId === teamId);
-    
     const usersWithRoles = teamUsers.map(user => {
       const userProjects = allProjectTeams.filter(pt => pt.user_id === user._id && pt.team_id === teamId);
       const roles = userProjects.map(up => up.role_in_project);
       return { ...user, roles_in_project: roles };
     });
-
     console.log('Filtered team users with roles:', usersWithRoles);
     return usersWithRoles;
   } catch (error) {
@@ -219,8 +194,6 @@ export const getUsersByTeamId = async (teamId) => {
     throw error;
   }
 };
-
-
 export const fetchProjectById = async (projectId) => {
   try {
     const response = await axiosSecureInstance.get(`/api/projects/project/${projectId}`);
@@ -231,9 +204,6 @@ export const fetchProjectById = async (projectId) => {
     return null; // Return null to handle potential issues gracefully
   }
 };
-
-
-
 export const getAllProjectTeams = async () => {
   try {
     console.log('Fetching all project teams');
@@ -245,33 +215,25 @@ export const getAllProjectTeams = async () => {
     throw error;
   }
 };
-
 export const getProjectsByTeam = async (teamId) => {
   try {
     console.log('Fetching projects for team:', teamId);
-    
     const allProjectTeams = await getAllProjectTeams();
     const teamProjects = allProjectTeams.filter(pt => pt.team_id === teamId);
     console.log('Filtered team projects:', teamProjects);
-    
     if (teamProjects.length === 0) {
       console.log('No projects found for this team');
       return [];
     }
-    
     const projectIds = teamProjects.map(tp => tp.project_id);
     console.log('Project IDs:', projectIds);
-    
     const projectPromises = projectIds.map(id => fetchProjectById(id));
     const projects = await Promise.all(projectPromises);
-
     const validProjects = projects.filter(project => project !== null);
-
     // Remove duplicates by project id
     const uniqueProjects = Array.from(
       new Map(validProjects.map(project => [project.id, project])).values()
     );
-
     console.log('Unique projects:', uniqueProjects);
     return uniqueProjects;
   } catch (error) {
@@ -279,8 +241,6 @@ export const getProjectsByTeam = async (teamId) => {
     throw error;
   }
 };
-
-
 const handleApiError = (error) => {
   if (error.response) {
     // The request was made and the server responded with a status code that falls out of the range of 2xx

@@ -14,7 +14,7 @@
     align-items: center;
     width: 100%;
     max-width: 1350px;
-    gap: 4rem;
+    gap: 3rem;
     position: relative;
 }
 
@@ -82,9 +82,9 @@
 
 
 .oval-background {
-    width: 500px;
-    height: 500px;
-    background-color:rgb(56, 51, 83);
+    width: 300px;
+    height: 300px;
+    background-color:rgb(73, 68, 105);
     background-size: 100% 100%;
     background-repeat: no-repeat;
     border-radius: 50%;
@@ -95,6 +95,26 @@
   .search-bar input{
     width: 700px;
   }
+
+  .search
+  {
+    width:700px;
+  }
+
+  @media (max-width: 1024px)
+{
+  .search-bar .search
+  {
+      width:500px !important;
+  }
+}
+
+@media (max-width: 606px) {
+    .search-bar .search
+    {
+        width:300px !important;
+    }
+}
   
   @media (max-width: 768px) {
     .carousel-slide {
@@ -118,6 +138,13 @@
         font-size: 3rem;
     }
 
+}
+
+@media (max-width: 400px)
+{
+    #typing {
+        font-size: 2rem;
+    }
 }
 
 @keyframes blink {

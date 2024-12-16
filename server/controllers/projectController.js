@@ -1,13 +1,28 @@
 import Project from "../models/Project.js"; 
-import tech_stack from "../models/tech_stack.js"
-
-import mongoose from 'mongoose'; 
+import mongoose from 'mongoose';
+import Teams from "../models/teamModel.js";  
 
 export const getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find();
+    const {sortBy}=req.query;
+    let sortCriteria= {};
+    if(sortBy=='budget')
+    {
+      sortCriteria.budget=-1;
+    }
+    else if (sortBy=='recent')
+      {
+        sortCriteria.start_time=-1;
+      }
+    const projects = await Project.find().sort(sortCriteria)
+      .populate('client_id') // Populate client data
+      .populate('feature') // Populate feature data
+      .populate('techStack') // Populate tech stack data
+      .populate('team_id'); // Populate team data
+
     res.status(200).json(projects);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error fetching projects", error });
   }
 };
@@ -101,6 +116,18 @@ export const getProjectsByClient = async (req,res)=>
     res.status(500).json({message:'Server error. Could not fetch projects'});
   }
 };
+
+
+export const getProjects = async (req, res) => {
+  try {
+    const projects = await Project.find().sort({ createdAt: -1 });
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching projects", error });
+  }
+};
+
+
 
 export const getProjectByProjectId = async (req, res) => {
   const { id } = req.params; // Destructure the project ID from the request parameters

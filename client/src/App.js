@@ -19,6 +19,7 @@ import {
   AssistantsChatPage,
   ChatPage,
   AssistantFileDownloadPage,
+  Form
 } from "./Pages";
 
 import PortfolioHome from "./Pages/PortfolioHome";
@@ -60,6 +61,7 @@ function App() {
       <Route path="/portfolio" element={<PortfolioHome />} />
       <Route path="/portfoliomanagement/ClientInfo" element={<ClientInfo />} /> 
       <Route path="/portfoliomanagement/PodInfo" element={<PodInfo />} />
+      <Route path="/Form" element={<Form/>}></Route>
       <Route path="/portfoliomanagement/Reviews" element={<ReviewsPage />} />
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
