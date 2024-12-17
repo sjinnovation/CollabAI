@@ -7,7 +7,7 @@ import { getAllProjects } from '../../api/projectApi';
 
 export default function ContentPage() {
     const [isListView, setIsListView] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTags, setSelectedTags] = useState([]);
     const [activePage, setActivePage] = useState(1);
@@ -18,10 +18,13 @@ export default function ContentPage() {
     const [projectsPerPage, setProjectsPerPage] = useState(6);
     const [items, setItems] = useState([]);
     const [totalPages, setTotalPages] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
+        setSearch(e.target.value);
     };
+
+
 
     const toggleTag = (tag) => {
         setSelectedTags((prevTags) => {
@@ -46,8 +49,9 @@ export default function ContentPage() {
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
             try {
-                const response = await getAllProjects(sortBy);
+                const response = await getAllProjects(sortBy,search);
                 console.log('response', response);
                 setFetchedProjects(response);
 
@@ -81,11 +85,13 @@ export default function ContentPage() {
                 generateItems();
             } catch (error) {
                 console.error('Error fetching projects:', error);
+            } finally {
+                setIsLoading(false);
             }
         };
 
         fetchData();
-    }, [activePage, projectsPerPage, sortBy]);
+    }, [activePage, projectsPerPage, sortBy,search]);
 
     // Filter projects
     const filteredProjects = fetchedProjects.filter((project) => {
@@ -117,8 +123,8 @@ export default function ContentPage() {
                         <input
                             type="text"
                             placeholder="Search projects..."
-                            style={{ borderRadius: "16px", height: "3rem", width: "300px" }}
-                            value={searchTerm}
+                            style={{ borderRadius: "8px", height: "3rem", width: "300px" }}
+                            value={search}
                             onChange={handleSearchChange}
                         />
                     </div>
@@ -215,12 +221,15 @@ export default function ContentPage() {
                 </div>
             )}
 
-            <Projects
-                viewType={isListView ? 'list' : 'card'}
-                filter={searchTerm}
-                tags={selectedTags}
-                projects={currentProjects} // Pass the filtered and paginated projects
-            />
+              
+             
+                <Projects
+                    viewType={isListView ? 'list' : 'card'}
+                    filter={search}
+                    tags={selectedTags}
+                    projects={currentProjects} // Pass the filtered and paginated projects
+                />
+            
 
             <Pagination>{items}</Pagination> {/* Render pagination here */}
         </div>

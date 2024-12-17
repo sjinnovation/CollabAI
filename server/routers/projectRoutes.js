@@ -12,9 +12,9 @@ import {
 
 
 const projectrouter = express.Router();
-projectrouter.get('/project/:id', authenticateUser, getProjectByProjectId);
+projectrouter.get('/project/:id', getProjectByProjectId);
 
-projectrouter.get("/",authenticateUser, getAllProjects);
+projectrouter.get("/", getAllProjects);
 projectrouter.get("/:id",authenticateUser, getProjectById);
 projectrouter.post("/",authenticateUser, createProject);
 projectrouter.put("/:id",authenticateUser, updateProject);

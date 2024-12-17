@@ -4,21 +4,31 @@ import Teams from "../models/teamModel.js";
 
 export const getAllProjects = async (req, res) => {
   try {
-    const {sortBy}=req.query;
-    let sortCriteria= {};
-    if(sortBy=='budget')
-    {
-      sortCriteria.budget=-1;
+    const { sortBy, search } = req.query; // Added search parameter
+    let sortCriteria = {};
+    let searchCriteria = {}; // Initialize search criteria
+
+    if (search) {
+      searchCriteria = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } }, // Assuming 'name' is a field in your Project model
+          { description: { $regex: search, $options: 'i' } } // Add other fields as necessary
+        ]
+      };
     }
-    else if (sortBy=='recent')
-      {
-        sortCriteria.start_time=-1;
-      }
-    const projects = await Project.find().sort(sortCriteria)
-      .populate('client_id') // Populate client data
-      .populate('feature') // Populate feature data
-      .populate('techStack') // Populate tech stack data
-      .populate('team_id'); // Populate team data
+
+    if (sortBy == 'budget') {
+      sortCriteria.budget = -1;
+    } else if (sortBy == 'recent') {
+      sortCriteria.start_time = -1;
+    }
+
+    const projects = await Project.find(searchCriteria) // Apply search criteria
+      .sort(sortCriteria)
+      .populate('client_id')
+      .populate('feature')
+      .populate('techStack')
+      .populate('team_id');
 
     res.status(200).json(projects);
   } catch (error) {
@@ -100,23 +110,18 @@ export const getProjectsByTeam = async (req, res) => {
   }
 };
 
-export const getProjectsByClient = async (req,res)=>
-{
-  const {clientId}=req.params;
-  try{
-    const projects=await Project.find({client_id:clientId});
-    if(projects.length===0)
-    {
-      return res.status(404).json({message:'No projects found for this team'});
+export const getProjectsByClient = async (req, res) => {
+  const { clientId } = req.params;
+  try {
+    const projects = await Project.find({ client_id: clientId });
+    if (projects.length === 0) {
+      return res.status(404).json({ message: 'No projects found for this client' });
     }
     res.status(200).json(projects);
-  }
-  catch(error)
-  {
-    res.status(500).json({message:'Server error. Could not fetch projects'});
+  } catch (error) {
+    res.status(500).json({ message: 'Server error. Could not fetch projects', error: error.message });
   }
 };
-
 
 export const getProjects = async (req, res) => {
   try {
@@ -126,8 +131,6 @@ export const getProjects = async (req, res) => {
     res.status(500).json({ message: "Error fetching projects", error });
   }
 };
-
-
 
 export const getProjectByProjectId = async (req, res) => {
   const { id } = req.params; // Destructure the project ID from the request parameters

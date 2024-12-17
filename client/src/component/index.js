@@ -8,4 +8,7 @@ import ContentPage from "./ContentPage";
 import ProjectCard from "./ProjectCard";
 import Projects from "./Projects";
 import ProjectForm from "./ProjectForm";
-export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects,ProjectForm };
+import DetailsBanner from "./DetailsBanner";
+import DetailsContent from "./DetailsContent";
+export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects,ProjectForm,DetailsBanner,DetailsContent };
+

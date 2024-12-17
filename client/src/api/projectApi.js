@@ -1,8 +1,8 @@
 import { axiosSecureInstance } from "./axios";
 
-export const getAllProjects = async (sortBy='') => {
+export const getAllProjects = async (sortBy='',search='') => {
   try {
-    const response = await axiosSecureInstance.get('/api/projects',{params:{sortBy},});
+    const response = await axiosSecureInstance.get('/api/projects',{params:{sortBy,search}});
     return response.data;
   } catch (error) {
     console.error('Error fetching projects:', error);

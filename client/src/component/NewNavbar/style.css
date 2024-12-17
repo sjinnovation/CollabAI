@@ -9,6 +9,13 @@
     font-size: 20px;
     position: fixed;
     z-index: 10000;
+    top: 0;
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(-100%);
+}
+
+.new-navbar.show {
+    transform: translateY(0);
 }
 
 .tabs
