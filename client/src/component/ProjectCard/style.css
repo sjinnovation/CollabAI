@@ -3,7 +3,7 @@
     border-radius: 16px;
     overflow: hidden;
     transition: transform 0.3s ease;
-    margin: 1rem;
+
     max-width: 381px;
     border: 2px rgb(71 68 68) solid;
 }

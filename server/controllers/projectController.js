@@ -137,7 +137,7 @@ export const getProjectByProjectId = async (req, res) => {
   try {
     const project = await Project.findById(id)
       .populate('client_id', 'name') // Populate related client details
-      .populate('team_id', 'name')   // Populate team details
+      .populate('team_id','teamTitle')   // Populate team details
       .populate('feature', 'name')  // Populate features
       .populate('techStack', 'name'); // Populate tech stack
 

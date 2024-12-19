@@ -10,7 +10,7 @@
 .projects-area {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem; 
+    margin-top: 2rem;
 }
 
 @media (max-width: 1017px) {

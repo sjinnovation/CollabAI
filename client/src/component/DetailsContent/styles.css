@@ -17,7 +17,7 @@
   .project-content {
 
     margin: 0 auto;
-    width:70%;
+    width:60%;
   }
   
   .logo-placeholder {
@@ -45,7 +45,6 @@
   .project-title {
     font-size: 36px;
     font-weight: bold;
-    max-width: 1350px;
     display: flex;
     justify-content: center;
     padding: 50px 0;
@@ -60,16 +59,25 @@
   }
   
   .details-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding:24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: 15px;
+    
+
+    border-radius: 8px;
   }
   
   .detail-item {
     display: flex;
     align-items: center;
     gap: 8px;
+
+    padding: 16px;
+    border-radius: 8px;
+    min-height: 50px;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .icon {
@@ -91,8 +99,8 @@
   }
   
   .priority-badge {
-    background-color: rgba(220, 38, 38, 0.2);
-    color: #ef4444;
+    background-color: rgba(38, 220, 90, 0.881);
+    color: #000000;
   }
   
   .completion-info {
@@ -145,9 +153,10 @@
   }
 
   .details-grids {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display:flex;
     gap: 24px;
+    margin-bottom: 2rem;
+    margin-top: 2rem;
   }
   
   .info-box {
@@ -158,6 +167,7 @@
     align-items: flex-start;
     gap: 16px;
     border:1px solid #888;
+    width:100%;
   }
 
   .info-box:hover
