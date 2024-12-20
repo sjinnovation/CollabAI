@@ -60,8 +60,9 @@ function App() {
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
       <Route path="/portfolio" element={<PortfolioHome />} />
-      <Route path="/portfoliomanagement/ClientInfo" element={<ClientInfo />} /> 
+      <Route path="/Client/:id" element={<ClientInfo />} /> 
       <Route path="/portfoliomanagement/PodInfo" element={<PodInfo />} />
+      <Route path="/Pod/:id" element={<PodInfo />} />
       <Route path="/Form" element={<Form/>}></Route>
       <Route path="/projectdetails/:id" element={<ProjectDetails />} />
       <Route path="/portfoliomanagement/Reviews" element={<ReviewsPage />} />

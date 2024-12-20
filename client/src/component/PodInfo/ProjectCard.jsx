@@ -4,7 +4,7 @@ import { Cardss, CardContent, CardFooter } from '../../component/ClientInfo/Card
 import Badge from '../../component/ClientInfo/Badge';
 import { getTechStackById } from '../../api/projectApi';
 import {InitialsAvatar} from '../../component/InitialsAvatar/InitialsAvatar'
-
+import { useNavigate } from 'react-router-dom';
 const getStatusStyle = (status) => {
   switch (status) {
     case 'stage':
@@ -60,8 +60,12 @@ const StatusButton = ({ status }) => {
 
 
 export const ProjectCard = ({ project }) => {
+  const navigate = useNavigate();
   const [techStack, setTechStack] = useState([]);
-
+const handleProjectClick = (id) => {
+  console.log('Navigating to project:', id);
+  navigate(`/projectdetails/${id}`);
+};
   useEffect(() => {
     const fetchTechStackDetails = async () => {
       try {
@@ -80,7 +84,7 @@ export const ProjectCard = ({ project }) => {
   }, [project.techStack]);
 
   return (
-    <div className="card-container">
+    <div className="card-container " onClick={()=>handleProjectClick(project._id)}>
       <CardContent className="project-image-container">
         <div className="project-image-wrapper">
           {project.image_link ? (
@@ -96,8 +100,8 @@ export const ProjectCard = ({ project }) => {
         </div>
       </CardContent>
       <CardFooter className="project-info">
-        <div className="project-details">
-          <h4 className="project-title">{project.name}</h4>
+        <div className="project-detailss">
+          <h4 className="project-titles">{project.name}</h4>
           <div className="project-stat">{project.description}</div>
           <div className="project-stat">
             <StatusButton status={project.status} />
@@ -108,7 +112,9 @@ export const ProjectCard = ({ project }) => {
               <span style={{ color: 'white' }}>
                 {new Date(project.start_time).toLocaleDateString()}
               </span>
-              -
+
+              →
+              
               <span style={{ color: 'white' }}>
                 {new Date(project.end_time).toLocaleDateString()}
               </span>

@@ -14,7 +14,7 @@ import ProjectCard from '../../../component/ClientInfo/ProjectCard';
 import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/projectApi';
 import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
-import {InitialsAvatar} from '../../../component/InitialsAvatar/InitialsAvatar.jsx'
+import { useParams } from 'react-router-dom';
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -34,6 +34,7 @@ const milestones = [
 ];
 
 const ClientInfo = () => {
+   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("work");
   const [searchQuery, setSearchQuery] = useState("");
   const [clientInfo, setClientInfo] = useState(null);
@@ -47,7 +48,7 @@ const ClientInfo = () => {
   const [currentReviewPage, setCurrentReviewPage] = useState(1);
   const [currentMilestonePage, setCurrentMilestonePage] = useState(1);
   const [clientId, setClientId] = useState(null);
-  const id = "507f1f77bcf86cd799439011"; // Replace this with the actual ClientID
+
 
   
   // Fetch client data

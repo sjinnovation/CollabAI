@@ -4,62 +4,16 @@ import { Cardss, CardContent, CardFooter } from './Cards';
 import Badge from './Badge';
 import { getTechStackById } from '../../api/projectApi.js';
 import {InitialsAvatar} from '../../component/InitialsAvatar/InitialsAvatar'
-const getStatusStyle = (status) => {
-  switch (status) {
-    case 'stage':
-      return {
-        borderColor: 'yellow',
-        backgroundColor: 'yellow',
-        color: 'black',
-      };
-    case 'dev':
-      return {
-        borderColor: 'blue',
-        backgroundColor: 'blue',
-        color: 'white',
-      };
-    case 'live':
-      return {
-        borderColor: 'green',
-        backgroundColor: 'green',
-        color: 'white',
-      };
-    default:
-      return {
-        borderColor: 'red',
-        backgroundColor: 'red',
-        color: 'white',
-      };
-  }
-};
+import { useNavigate } from 'react-router-dom';
 
-const StatusButton = ({ status }) => {
-  const styles = getStatusStyle(status);
-
-  return (
-    <button
-      type="button"
-      className="status-btn"
-      style={{
-        ...styles,
-        borderWidth: '2px',
-        borderStyle: 'solid',
-        borderRadius: '20px',
-        padding: '5px 15px',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        textTransform: 'capitalize',
-        cursor: 'pointer',
-      }}
-    >
-      {status}
-    </button>
-  );
-};
 
 const ProjectCard = ({ project }) => {
+   const navigate = useNavigate();
   const [techStack, setTechStack] = useState([]);
-
+  const handleProjectClick = (id) => {
+    console.log('Navigating to project:', id);
+    navigate(`/projectdetails/${id}`);
+  };
   useEffect(() => {
     const fetchTechStackDetails = async () => {
       try {
@@ -80,7 +34,7 @@ const ProjectCard = ({ project }) => {
   }, [project.techStack]);
 
   return (
-    <div className="card-container">
+    <div className="card-container" onClick={()=>handleProjectClick(project._id)}>
       <CardContent className="project-image-container">
         <div className="project-image-wrapper">
            {project.image_link ? (
@@ -96,8 +50,8 @@ const ProjectCard = ({ project }) => {
         </div>
       </CardContent>
       <CardFooter className="project-info">
-        <div className="project-details">
-          <h4 className="project-title">{project.name}</h4>
+        <div className="project-detailss">
+          <h4 className="project-titles">{project.name}</h4>
           <p className="project-stat">{project.client_id.name}</p>
           <div className="project-stat">
             {project.description}
@@ -105,13 +59,13 @@ const ProjectCard = ({ project }) => {
           <div className="project-stat">
   
           <div>
-      <StatusButton status={project.status} />
+          <Badge className="status-badge">{project.status || 'In progress'}</Badge>
     </div>
           </div>
           <div className="project-stat">
             <div className="project-start">
               <FaCalendarAlt style={{ color: "white", marginRight: '8px' }} />
-              <span style={{color: "white"}}>{new Date(project.start_time).toLocaleDateString()}</span>-  <span style={{color: "white"}}>{new Date(project.end_time).toLocaleDateString()}</span>
+              <span style={{color: "white"}}>{new Date(project.start_time).toLocaleDateString()}</span> → <span style={{color: "white"}}>{new Date(project.end_time).toLocaleDateString()}</span>
             </div>
           </div>
           <div className="technologies">

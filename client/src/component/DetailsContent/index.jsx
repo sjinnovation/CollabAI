@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Layout, Circle, Calendar, Flag, FileText, DollarSign, Clock } from 'lucide-react';
 import './styles.css';
 import { fetchProjectById } from '../../api/projectApi';
-
+import { useNavigate } from 'react-router-dom';
 const InfoBox = ({ icon: Icon, label, value, subValue }) => (
   <div className="info-box">
     <Icon className="icon" />
@@ -27,8 +27,16 @@ const Progress = ({ value }) => (
 
 export default function ProjectDetails() {
   const { id } = useParams();
+   const navigate = useNavigate();
   const [project, setProject] = useState(null);
-
+  const handleProjectClick = (id) => {
+    console.log('Navigating to client:', id);
+    navigate(`/Client/${id}`);
+  };
+  const handleTeamClick = (id) => {
+    console.log('Navigating to Pod:', id);
+    navigate(`/Pod/${id}`);
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,8 +75,8 @@ export default function ProjectDetails() {
             <div className="detail-item">
               <span className="icon">👤</span>
               <span className="label">Owner:</span>
-              <div className="owner-info">
-                <div className="avatar-placeholder"></div>
+              <div className="owner-info" onClick={()=>handleProjectClick(project.client_id?._id)} >
+                <div className="avatar-placeholder" ></div>
                 <span>{project.client_id?.name || 'Unknown'}</span>
               </div>
             </div>
@@ -108,7 +116,7 @@ export default function ProjectDetails() {
             <div className="detail-item team">
               <FileText className="icon" />
               <span className="label">Team:</span>
-              <div className="summary-content">
+              <div className="summary-content" onClick={()=>handleTeamClick(project.team_id?._id)}>
                 <p style={{marginBottom:"0"}}>{project.team_id?.teamTitle || 'No team information available'}</p>
               </div>
             </div>
