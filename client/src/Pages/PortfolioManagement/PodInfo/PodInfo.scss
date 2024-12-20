@@ -352,7 +352,7 @@
   max-width: 1280px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 10px 10px rgb(255 255 255), 0 4px 6px 12px rgb(255 255 255);
+  box-shadow: 1px 1px 1px 1px rgb(103 87 87), 1px 1px 1px 2px rgb(103 88 88);
   display: flex;
   flex-direction: column;
 }
@@ -362,7 +362,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #333;
 }
 
 .modalHeader h2 {
@@ -1072,4 +1072,17 @@
   .cardContent {
     padding: 1rem;
   }
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Adjust as per your card's layout */
+  height: 100%;
+  background-color: #ccc; /* Neutral background color */
+  border-radius: 0%; /* Makes it circular */
+  font-size: 84px; /* Adjust font size */
+  font-weight: bold;
+  color: #333; /* Text color */
 }

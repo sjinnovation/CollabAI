@@ -1,12 +1,14 @@
 import React from 'react';
 import '../../Pages/PortfolioManagement/PodInfo/PodInfo.scss'
-
+import {InitialsAvatar} from '../../component/InitialsAvatar/InitialsAvatar'
 export function TeamMemberCard({ member }) {
   return (
-    <div className="project-card1">
+    <div className="card-container">
       <div className="imageContainer">
-        <img src={member.profilePicture || "https://picsum.photos/200"} alt={`${member.fname} ${member.lname}`} className="image" />
         <div className={`activeIndicator ${member.status === 'active' ? 'active' : ''}`} />
+         {
+            <InitialsAvatar name={`${member.fname} ${member.lname}`} className="image-placeholder" />
+          }
       </div>
       <div className="cardContent">
         <h2 className="name">{`${member.fname} ${member.lname}`}</h2>

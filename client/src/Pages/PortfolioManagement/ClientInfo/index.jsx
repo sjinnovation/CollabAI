@@ -14,7 +14,7 @@ import ProjectCard from '../../../component/ClientInfo/ProjectCard';
 import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/projectApi';
 import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
-
+import {InitialsAvatar} from '../../../component/InitialsAvatar/InitialsAvatar.jsx'
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -212,7 +212,13 @@ const ClientInfo = () => {
   if (!clientInfo) {
     return <div>No client information found.</div>;
   }
-
+  const getInitials = (name) => {
+    const words = name.split(' ');
+    return words.length === 1
+      ? words[0][0].toUpperCase()
+      : `${words[0][0]}${words[1][0]}`.toUpperCase();
+  };
+  
   const stats = [
     { title: "Projects", value: projects.length, icon: FaCode },
     { title: "Total Revenue", value: revenue.total, prefix: "$", icon: FaDollarSign },
@@ -239,16 +245,23 @@ const ClientInfo = () => {
     (currentMilestonePage - 1) * itemsPerPage,
     currentMilestonePage * itemsPerPage
   );
+  
 
   return (
     <div className="portfolio-page">
       <div className="profile-section">
-        <Avatar
-          src={ "https://randomuser.me/api/portraits/men/1.jpg"}
-          alt={clientInfo.name}
-          fallback={clientInfo.name.charAt(0)}
-          className="profile-avatar"
-        />
+         {clientInfo.image ? (
+            <Avatar
+              src={clientInfo.image}
+              alt={clientInfo.name}
+              className="profile-avatar"
+            />
+          ) : (
+            <div className="profile-avatar">
+            {getInitials(clientInfo.name)}
+          </div>
+          )}
+        
 
         <div className="profile-info">
           <div className="profile-header">
