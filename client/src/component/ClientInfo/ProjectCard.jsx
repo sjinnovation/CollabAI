@@ -34,7 +34,7 @@ const ProjectCard = ({ project }) => {
   }, [project.techStack]);
 
   return (
-    <div className="card-container" onClick={()=>handleProjectClick(project._id)}>
+    <div className="card-container" onClick={()=>handleProjectClick(project._id)} style={{ background: "#18181b" }}>
       <CardContent className="project-image-container">
         <div className="project-image-wrapper">
            {project.image_link ? (
@@ -54,7 +54,14 @@ const ProjectCard = ({ project }) => {
           <h4 className="project-titles">{project.name}</h4>
           <p className="project-stat">{project.client_id.name}</p>
           <div className="project-stat">
-            {project.description}
+          {project.description.length > 20 ? (
+          <>
+            <p>{project.description.substring(0, 50)}......</p>
+            
+          </>
+        ) : (
+          <p>{project.description}</p>
+        )}
           </div>
           <div className="project-stat">
   

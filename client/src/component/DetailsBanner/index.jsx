@@ -41,7 +41,7 @@ const DetailsBanner=()=>
                     ) : (
                       <InitialsAvatar name={project.name} style={{height:"100%"}} className="image-placeholder" />
            )}
-          <div className="project-image-overlay" />
+         
         </div>
 
         </div>

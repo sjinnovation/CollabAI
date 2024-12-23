@@ -277,7 +277,7 @@ const ClientInfo = () => {
         <div className="content-container">
           <div className="stats-grid">
             {stats.map(({ title, value, prefix, icon: Icon }) => (
-              <Cards key={title} className="stat-card">
+              <div key={title} className="info-box">
                 <CardContent>
                   <div className="stat-header">
                     <Icon className="stat-icon" />
@@ -287,7 +287,7 @@ const ClientInfo = () => {
                     {prefix}{value.toLocaleString()}
                   </p>
                 </CardContent>
-              </Cards>
+              </div>
             ))}
           </div>
           <div className="tech-stack">

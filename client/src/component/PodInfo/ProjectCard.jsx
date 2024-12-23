@@ -5,58 +5,6 @@ import Badge from '../../component/ClientInfo/Badge';
 import { getTechStackById } from '../../api/projectApi';
 import {InitialsAvatar} from '../../component/InitialsAvatar/InitialsAvatar'
 import { useNavigate } from 'react-router-dom';
-const getStatusStyle = (status) => {
-  switch (status) {
-    case 'stage':
-      return {
-        borderColor: 'yellow',
-        backgroundColor: 'yellow',
-        color: 'black',
-      };
-    case 'dev':
-      return {
-        borderColor: 'blue',
-        backgroundColor: 'blue',
-        color: 'white',
-      };
-    case 'live':
-      return {
-        borderColor: 'green',
-        backgroundColor: 'green',
-        color: 'white',
-      };
-    default:
-      return {
-        borderColor: 'red',
-        backgroundColor: 'red',
-        color: 'white',
-      };
-  }
-};
-
-const StatusButton = ({ status }) => {
-  const styles = getStatusStyle(status);
-
-  return (
-    <button
-      type="button"
-      className="status-btn"
-      style={{
-        ...styles,
-        borderWidth: '2px',
-        borderStyle: 'solid',
-        borderRadius: '20px',
-        padding: '5px 15px',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        textTransform: 'capitalize',
-        cursor: 'pointer',
-      }}
-    >
-      {status}
-    </button>
-  );
-};
 
 
 export const ProjectCard = ({ project }) => {
@@ -84,7 +32,7 @@ const handleProjectClick = (id) => {
   }, [project.techStack]);
 
   return (
-    <div className="card-container " onClick={()=>handleProjectClick(project._id)}>
+    <div className="card-container " onClick={()=>handleProjectClick(project._id)} style={{ background: "#18181b" }}>
       <CardContent className="project-image-container">
         <div className="project-image-wrapper">
           {project.image_link ? (
@@ -102,9 +50,16 @@ const handleProjectClick = (id) => {
       <CardFooter className="project-info">
         <div className="project-detailss">
           <h4 className="project-titles">{project.name}</h4>
-          <div className="project-stat">{project.description}</div>
+          <div className="project-stat">{project.description.length > 20 ? (
+          <>
+            <p>{project.description.substring(0, 50)}......</p>
+            
+          </>
+        ) : (
+          <p>{project.description}</p>
+        )}</div>
           <div className="project-stat">
-            <StatusButton status={project.status} />
+          <Badge className="status-badge">{project.status || 'In progress'}</Badge>
           </div>
           <div className="project-stat">
             <div className="project-start">
