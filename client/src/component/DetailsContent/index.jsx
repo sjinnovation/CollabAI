@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout, Circle, Calendar, Flag, FileText, DollarSign, Clock } from 'lucide-react';
 import './styles.css';
-import { fetchProjectById } from '../../api/projectApi';
+import { fetchProjectById ,getProjectTeamMembers} from '../../api/projectApi';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -49,6 +49,21 @@ export default function ProjectDetails() {
     };
     fetchData();
   }, [id]);
+
+  useEffect(()=>{
+    const fetchData=async()=>
+    {
+      try{
+        const response=await getProjectTeamMembers(id);
+        console.log('Fetched project team members:', response);
+        setProject({...project, team: response});
+      }
+      catch(error){
+        console.error('Error fetching project team members:', error);
+      }
+    };
+
+  });
 
   if (!project) {
     return <div>Loading project details...</div>;
