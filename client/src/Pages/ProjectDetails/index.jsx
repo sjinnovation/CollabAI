@@ -8,8 +8,9 @@ const ProjectDetails=()=>{
 return(
     <>
         <NewNavbar ></NewNavbar>
-        <div>
+      
         <DetailsBanner></DetailsBanner>
+        <div className="content">
         <DetailsContent></DetailsContent>
         </div>
 

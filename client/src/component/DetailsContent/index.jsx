@@ -4,6 +4,8 @@ import { Layout, Circle, Calendar, Flag, FileText, DollarSign, Clock } from 'luc
 import './styles.css';
 import { fetchProjectById } from '../../api/projectApi';
 import { useNavigate } from 'react-router-dom';
+
+
 const InfoBox = ({ icon: Icon, label, value, subValue }) => (
   <div className="info-box">
     <Icon className="icon" />
@@ -19,16 +21,13 @@ const Badge = ({ children, className }) => (
   <span className={`badge ${className}`}>{children}</span>
 );
 
-const Progress = ({ value }) => (
-  <div className="progress-bar">
-    <div className="progress-bar-fill" style={{ width: `${value}%` }}></div>
-  </div>
-);
+
 
 export default function ProjectDetails() {
   const { id } = useParams();
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
+  
   const handleProjectClick = (id) => {
     console.log('Navigating to client:', id);
     navigate(`/Client/${id}`);
@@ -57,7 +56,7 @@ export default function ProjectDetails() {
 
   return (
     <div className="project-page">
-      <div className="project-title" style={{ background: "#18181b" }}>
+      <div className="project-title" style={{  }}>
         <h1>{project.name}</h1>
       </div>
 
@@ -107,7 +106,7 @@ export default function ProjectDetails() {
 
             <div className="detail-item summary">
               <FileText className="icon" />
-              <span className="label">Summary:</span>
+              <span className="label">Team:</span>
               <div className="summary-content">
                 <p>{project.summary || 'No summary available'}</p>
               </div>

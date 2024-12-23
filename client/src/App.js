@@ -61,6 +61,8 @@ function App() {
       <Route path="*" element={<PageNotFound />} />
       <Route path="/portfolio" element={<PortfolioHome />} />
       <Route path="/Client/:id" element={<ClientInfo />} /> 
+      <Route path="/portfoliomanagement/Client/:id" element={<ClientInfo />} /> 
+
       <Route path="/portfoliomanagement/PodInfo" element={<PodInfo />} />
       <Route path="/Pod/:id" element={<PodInfo />} />
       <Route path="/Form" element={<Form/>}></Route>

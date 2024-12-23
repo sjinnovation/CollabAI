@@ -4,38 +4,37 @@ import Teams from "../models/teamModel.js";
 
 export const getAllProjects = async (req, res) => {
   try {
-    const { sortBy, search } = req.query; // Added search parameter
+    const { sortBy, search } = req.query;
     let sortCriteria = {};
-    let searchCriteria = {}; // Initialize search criteria
 
-    if (search) {
-      searchCriteria = {
-        $or: [
-          { name: { $regex: search, $options: 'i' } }, // Assuming 'name' is a field in your Project model
-          { description: { $regex: search, $options: 'i' } } // Add other fields as necessary
-        ]
-      };
-    }
-
-    if (sortBy == 'budget') {
+    if (sortBy === 'budget') {
       sortCriteria.budget = -1;
-    } else if (sortBy == 'recent') {
+    } else if (sortBy === 'recent') {
       sortCriteria.start_time = -1;
     }
 
-    const projects = await Project.find(searchCriteria) // Apply search criteria
+    let projects = await Project.find({})
       .sort(sortCriteria)
       .populate('client_id')
       .populate('feature')
       .populate('techStack')
       .populate('team_id');
 
+    // Filter after population
+    if (search) {
+      projects = projects.filter((project) =>
+        project.name.match(new RegExp(search, 'i')) ||
+        project.team_id?.teamTitle?.match(new RegExp(search, 'i'))
+      );
+    }
+
     res.status(200).json(projects);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching projects", error });
+    res.status(500).json({ message: 'Error fetching projects', error });
   }
 };
+
 
 export const getProjectById = async (req, res) => {
   const { clientId } = req.params;
@@ -47,6 +46,7 @@ export const getProjectById = async (req, res) => {
       .populate('techStack', 'name');
 
     if (projects.length === 0) {
+      console.log(2);
       return res.status(404).json({ message: 'No projects found for this client' });
     }
     res.status(200).json(projects);
@@ -115,6 +115,7 @@ export const getProjectsByClient = async (req, res) => {
   try {
     const projects = await Project.find({ client_id: clientId });
     if (projects.length === 0) {
+      console.log('1')
       return res.status(404).json({ message: 'No projects found for this client' });
     }
     res.status(200).json(projects);
@@ -150,3 +151,39 @@ export const getProjectByProjectId = async (req, res) => {
     res.status(500).json({ message: 'Server error. Could not fetch project.', error: error.message });
   }
 };
+
+export const searchByAllFields = async (req, res) => {
+  console.log("Backend", req.params);
+  try {
+    console.log("Backend", req.params);
+    const { searchTerm } = req.query;
+    console.log("Backend: Search request received");
+    console.log("Backend: Search term:", searchTerm);
+
+    let projects = await Project.find({})
+      .populate('client_id')
+      .populate('feature')
+      .populate('techStack')
+      .populate('team_id');
+
+    console.log("Backend: Found initial projects:", projects.length);
+
+    if (searchTerm) {
+      projects = projects.filter((project) =>
+        project.name.match(new RegExp(searchTerm, 'i')) ||
+        project.team_id?.teamTitle?.match(new RegExp(searchTerm, 'i')) ||
+        project.client_id?.name?.match(new RegExp(searchTerm, 'i')) ||
+        project.feature.some((feat) => feat.name.match(new RegExp(searchTerm, 'i'))) ||
+        project.techStack.some((tech) => tech.name.match(new RegExp(searchTerm, 'i')))
+      );
+      console.log("Backend: After filtering, found matches:", projects.length);
+    }
+
+    console.log("Backend: Sending response");
+    res.status(200).json({ success: true, data: projects });
+  } catch (err) {
+    console.error('Backend Error in searchByAllFields:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+

@@ -2,6 +2,19 @@
 {
     height:250px;
     width:100%;
-    background: linear-gradient(to bottom, blueviolet, violet);
+    /* background: #0000009c; */
 
+
+}
+
+.image-styles
+{
+    height:100%;
+    width:100%;
+    object-fit: cover;
+
+}
+.project-image-wrappers
+{
+    height:100%;
 }

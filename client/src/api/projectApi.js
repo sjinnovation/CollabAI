@@ -13,7 +13,7 @@ export const getAllProjects = async (sortBy='',search='') => {
 // Fetch project by ID
 export const getProjectById = async (id) => {
   try {
-    const response = await axiosSecureInstance.get(`/api/projects/${id}`);
+    const response = await axiosSecureInstance.get(`/api/projects/client/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching project:', error);
@@ -255,3 +255,19 @@ const handleApiError = (error) => {
     console.error('Error setting up request:', error.message);
   }
 };
+
+
+export const searchByAllFields = async (searchTerm='') => {
+  try {
+    console.log('Frontend: Initiating search request with term:', searchTerm);
+    const response = await axiosSecureInstance.get('/api/projects/search', {
+      params: { searchTerm }
+    });
+    // const response = await axiosSecureInstance.get('/api/projects/search');
+    console.log('Frontend: Received search response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Frontend: Error searching by all fields:', error);
+    throw error;
+  }
+}

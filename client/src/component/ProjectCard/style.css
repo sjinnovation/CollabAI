@@ -96,6 +96,11 @@
     gap: 1rem;
 }
 
+.project-start #text
+{
+    color:white !important;
+}
+
 @media (max-width: 768px) {
     /* ... existing styles ... */
 }

@@ -7,7 +7,8 @@ import {
   updateProject,
   deleteProject,
   getProjectsByTeam,
-  getProjectsByClient,getProjectByProjectId
+  getProjectsByClient,getProjectByProjectId,
+  searchByAllFields
 } from "../controllers/projectController.js"; // Use `import` instead of `require`
 
 
@@ -15,10 +16,11 @@ const projectrouter = express.Router();
 projectrouter.get('/project/:id', getProjectByProjectId);
 
 projectrouter.get("/", getAllProjects);
-projectrouter.get("/:id",authenticateUser, getProjectById);
+projectrouter.get("/client/:id",authenticateUser, getProjectById);
 projectrouter.post("/",authenticateUser, createProject);
 projectrouter.put("/:id",authenticateUser, updateProject);
 projectrouter.delete("/:id",authenticateUser, deleteProject);
-projectrouter.get('/team/:teamId',authenticateUser, getProjectsByTeam);
-projectrouter.get('/client/:clientId', getProjectsByClient)
+projectrouter.get('/team/:teamId', getProjectsByTeam);
+projectrouter.get('/client/:clientId', getProjectsByClient);
+projectrouter.get('/search/', searchByAllFields);
 export default projectrouter;

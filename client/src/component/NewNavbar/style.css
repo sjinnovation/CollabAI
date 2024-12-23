@@ -12,6 +12,7 @@
     top: 0;
     transition: transform 0.3s ease-in-out;
     transform: translateY(-100%);
+    border-bottom:1px solid #86858b;
 }
 
 .new-navbar.show {

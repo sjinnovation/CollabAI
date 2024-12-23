@@ -4,15 +4,60 @@
 import React, { useEffect, useState, useCallback } from "react"
 import typeWriter from './script.js'
 import './style.css'
+import { searchByAllFields } from "../../api/projectApi.js"
+import debounce from 'lodash.debounce'
 
 export default function HeroBanner() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [searchTerm, setSearchTerm] = useState(''); // State for search term
+  const [searchResults, setSearchResults] = useState([]); // Add this new state
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSearchChange = useCallback(
+    debounce((value) => setSearchTerm(value), 300),
+    []
+  );
 
   useEffect(() => {
     const cleanup = typeWriter();
     return () => cleanup();
   }, []);
+
+  // Remove the separate handleSearch function and add useEffect
+  useEffect(() => {
+    let isMounted = true;
+    setError(null);
+
+    const searchProjects = async () => {
+      setIsLoading(true);
+      try {
+        const results = await searchByAllFields(searchTerm);
+        if (isMounted) {
+          setSearchResults(results);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setError(error.message);
+          console.error('Search error:', error);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    if (searchTerm) {
+      searchProjects();
+    } else {
+      setSearchResults([]);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [searchTerm]); 
 
   return (
     <div className="hero-container">
@@ -29,10 +74,14 @@ export default function HeroBanner() {
             type="text" 
             className="search"
             placeholder="Search..." 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
-            style={{ borderRadius: "8px", height: "56px", fontSize: "1.5rem",paddingInline:"30px",background:"transparent",border:"1px #86858b solid" }} // Increased size
+            onChange={(e) => handleSearchChange(e.target.value)}
+            style={{ borderRadius: "8px", height: "56px", fontSize: "1.5rem", paddingInline:"30px", background:"transparent", border:"1px #86858b solid",color:"white" }}
           />
+          <div>
+            <ul>
+              <li></li>
+            </ul>
+          </div>
         </div>
 
         {/* Carousel Code (commented out) */}

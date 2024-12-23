@@ -31,7 +31,6 @@ export default function ContentPage() {
             const newTags = prevTags.includes(tag)
                 ? prevTags.filter((t) => t !== tag)
                 : [...prevTags, tag];
-            console.log("Selected tags:", newTags);
             return newTags;
         });
     };
@@ -52,13 +51,11 @@ export default function ContentPage() {
             setIsLoading(true);
             try {
                 const response = await getAllProjects(sortBy,search);
-                console.log('response', response);
                 setFetchedProjects(response);
 
                 const uniqueTechStackTags = [...new Set(response.flatMap((project) => project.techStack || []))];
                 const uniqueClientTags = [...new Set(response.flatMap((project) => project.client_id || []))];
                 const uniqueTeamsTags = [...new Set(response.flatMap((project) => project.team_id || []))];
-                console.log("teams", uniqueTeamsTags);
                 const uniqueFeaturesTags = [...new Set(response.flatMap((project) => project.feature || []))];
                 setAllTags({
                     techStack: uniqueTechStackTags,
@@ -231,7 +228,7 @@ export default function ContentPage() {
                 />
             
 
-            <Pagination>{items}</Pagination> {/* Render pagination here */}
+            <Pagination style={{marginTop:"20px"}}>{items}</Pagination> {/* Render pagination here */}
         </div>
     );
 }
