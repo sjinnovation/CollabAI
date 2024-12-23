@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../component/Cli
 import ReviewCard from '../../../component/ClientInfo/ReviewCard';
 import SearchBar from '../../../component/ClientInfo/SearchBar';
 import MilestoneCard from '../../../component/ClientInfo/MilestoneCard';
-import ProjectCard from '../../../component/ClientInfo/ProjectCard';
+import ProjectCard from '../../../component/ProjectCard'
 import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/projectApi';
 import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
@@ -181,17 +181,24 @@ const ClientInfo = () => {
     e.preventDefault();
     const trimmedQuery = searchQuery.trim().toLowerCase();
     if (trimmedQuery) {
-      const filtered = projects.filter((project) =>
-        project.name.toLowerCase().includes(trimmedQuery) ||
-        project.description.toLowerCase().includes(trimmedQuery) ||
-        project.status.toLowerCase().includes(trimmedQuery)
-      );
+      const filtered = projects.filter((project) => {
+        const techStackIncludes = project.techStack.some((tech) =>
+          tech.name.toLowerCase().includes(trimmedQuery)
+        );
+        return (
+          project.name.toLowerCase().includes(trimmedQuery) ||
+          project.description.toLowerCase().includes(trimmedQuery) ||
+          project.status.toLowerCase().includes(trimmedQuery) ||
+          techStackIncludes
+        );
+      });
       setFilteredProjects(filtered);
       setSearchHistory((prev) => [...new Set([trimmedQuery, ...prev])].slice(0, 5));
     } else {
       setFilteredProjects(projects);
     }
   }, [searchQuery, projects]);
+  
   
 
   useEffect(() => {
@@ -338,6 +345,7 @@ const ClientInfo = () => {
                 <div key={project._id} className="project-slide">
                   <ProjectCard project={project} techStack={techStack} />
                 </div>
+                
               ))}
             </div>
             <div className="pagination1">

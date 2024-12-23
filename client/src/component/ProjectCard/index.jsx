@@ -17,7 +17,7 @@ const ProjectCard = ({ project, viewType = 'card' }) => {
   return (
     <div className={`card-container ${viewType}-view`} onClick={()=>handleProjectClick(project._id)}>
               <div className="project-image-wrapper">
-           {project.image_link ? (
+           {project.image_link ? ( 
                       <img
                         src={project.image_link}
                         alt={project.name}

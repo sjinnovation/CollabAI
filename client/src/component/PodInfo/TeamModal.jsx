@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { TeamMemberCard } from './TeamMemberCard'
-import { ProjectCard } from './ProjectCard'
+import ProjectCard from '../../component/ProjectCard'
 import { getUsersByTeamId, getProjectsByTeam, getTeamById } from '../../api/projectApi'
 
 export const TeamModal = ({ teamId, onClose }) => {
@@ -12,7 +12,7 @@ export const TeamModal = ({ teamId, onClose }) => {
   const [currentProjectPage, setCurrentProjectPage] = useState(1)
   const [activeView, setActiveView] = useState('members')
   const [teamMembers, setTeamMembers] = useState([])
-  const [projects, setProjects] = useState([])
+  const [projects, setProjects] = useState([]);
   const [teamName, setTeamName] = useState('')
   const [error, setError] = useState(null)
   const itemsPerPage = 3
