@@ -15,6 +15,7 @@ import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/
 import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
 import { useParams } from 'react-router-dom';
+import {NewNavbar} from '../../../component';
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -276,7 +277,7 @@ const ClientInfo = () => {
             <h1 className="profile-name">{clientInfo.name}</h1>
             <Badge className="profile-badge">Client</Badge>
           </div>
-
+          <p className="profile-title">Point of Contact : {clientInfo.point_of_contact}</p>
           <p className="profile-title">{clientInfo.description}</p>
           <p className="profile-location">{clientInfo.contact_info}</p>
         </div>

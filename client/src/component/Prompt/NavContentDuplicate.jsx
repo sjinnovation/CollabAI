@@ -102,12 +102,6 @@ const NavContentDuplicate = ({
   const handleClickOnKnowledgeBase = () => {
     navigate("/knowledge-base");
   };
-  const handleClickClientInfo = () => {
-    navigate('/portfolio-management/ClientInfo');
-  };
-  const handleClickPodInfo = () => {
-    navigate('/portfolio-management/PodInfo');
-  };
   const [showSubButtons, setShowSubButtons] = useState(false); // State for sub-buttons visibility
 
   const toggleSubButtons = () => {
@@ -121,8 +115,9 @@ const NavContentDuplicate = ({
     []
   );
   const handlePortfolioManagement = () => {
-    navigate("/portfolio");
-  }
+    navigate("/platform-management-feature/portfolio");
+};
+
   // Main sidebar end
   return (
     <div className="w-100 h-100 d-flex flex-column justify-content-between">
@@ -155,28 +150,6 @@ const NavContentDuplicate = ({
           onClick={handleClick}
           className="glyphicon glyphicon-th-large sidebar-item"
         >
-          <div className="sidebar">
-      {/* Portfolio Management Button */}
-      <div
-        onClick={toggleSubButtons}
-        className="glyphicon glyphicon-th-large sidebar-item"
-      >
-        <p className="fw-bold custom-size-for-explore-text sidebar-text">
-          <BsFillLayersFill className="fs-5 me-2 sidebar-icon" />
-          Portfolio Management
-        </p>
-      </div>
-
-      {/* Sub-buttons */}
-      {showSubButtons && (
-        <div className="sub-buttons-container">
-          <button onClick={handleClickClientInfo }>
-            Client Info
-          </button>
-          <button onClick={handleClickPodInfo}>Pod Info</button>
-        </div>
-      )}
-    </div>
           <p className="fw-bold custom-size-for-explore-text sidebar-text">
             <BsFillLayersFill className="fs-5 me-2 sidebar-icon" />
             Explore Agents

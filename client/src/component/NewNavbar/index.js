@@ -49,7 +49,7 @@ const NewNavbar = () => {
     Portfolio
     </div>
     <div className="tabs">
-        <div className="tab" onClick={() => navigate('/portfolio')}>Home</div>
+        <div className="tab" onClick={() => navigate('/platform-management-feature/portfolio')}>Home</div>
         <div className="tab" onClick={() => navigate('/form')}>Add</div>
         <div className="tab" onClick={()=> navigate('/')}>Collab AI</div>
     

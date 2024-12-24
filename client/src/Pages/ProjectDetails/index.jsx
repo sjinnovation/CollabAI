@@ -6,15 +6,14 @@ import {DetailsContent,DetailsBanner,NewNavbar} from '../../component';
 
 const ProjectDetails=()=>{
 return(
-    <>
-        <NewNavbar ></NewNavbar>
+    <div className="scroll-container">
       
         <DetailsBanner></DetailsBanner>
         <div className="content">
         <DetailsContent></DetailsContent>
         </div>
 
-    </>
+ </div>
    
 )
 }

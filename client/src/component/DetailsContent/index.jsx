@@ -30,11 +30,11 @@ export default function ProjectDetails() {
   
   const handleProjectClick = (id) => {
     console.log('Navigating to client:', id);
-    navigate(`/Client/${id}`);
+    navigate(`/platform-management-feature/Client/${id}`);
   };
   const handleTeamClick = (id) => {
     console.log('Navigating to Pod:', id);
-    navigate(`/Pod/${id}`);
+    navigate(`/platform-management-feature/Pod/${id}`);
   };
   useEffect(() => {
     const fetchData = async () => {

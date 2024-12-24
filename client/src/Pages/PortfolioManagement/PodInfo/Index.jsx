@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { TeamModal } from '../../../component/PodInfo/TeamModal.jsx';
 import { PodCard } from '../../../component/PodInfo/PodCard.jsx';
 import './PodInfo.scss'
+import {NewNavbar} from '../../../component';
 
 const PodInfo = () => {
   const [teams, setTeams] = useState([]);
@@ -38,18 +39,18 @@ const PodInfo = () => {
     setSelectedTeamId(teamId);
     setIsModalOpen(true);
     // Update the URL when a team is clicked
-    navigate(`/Pod/${teamId}`);
+    navigate(`/platform-management-feature/Pod/${teamId}`);
   };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-
+ 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedTeamId(null);
     // Remove the team ID from the URL when closing the modal
-    navigate('/portfoliomanagement/PodInfo');
+    navigate('/platform-management-feature/PodInfo');
   };
 
   const filteredTeams = teams.filter(team =>
@@ -57,7 +58,8 @@ const PodInfo = () => {
   );
 
   return (
-    <div className="teamPage">
+  
+    <div className="teamPage" style={{height:'1000px'}}>
       <div className="container1">
         <h1 className="title">
           Team Pods Overview
@@ -91,6 +93,7 @@ const PodInfo = () => {
         />
       )}
     </div>
+    
   );
 };
 
