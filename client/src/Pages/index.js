@@ -21,6 +21,7 @@ import AssistantFileDownloadPage from "./AssistantFileDownload";
 import PortfolioHome from "./PortfolioHome";
 import ProjectDetails from "./ProjectDetails";
 import Form from "./Form";
+import Upload from "./Upload";
 
 export {
   LoginForm,
@@ -43,5 +44,6 @@ export {
   AssistantFileDownloadPage,
   PortfolioHome,
   Form,
-  ProjectDetails
+  ProjectDetails,
+  Upload,
 };

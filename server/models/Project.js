@@ -9,7 +9,7 @@ const ProjectSchema = new mongoose.Schema({
   budget: { type: Number,required: true },
   hr_taken: { type:Number},
   client_id:{type:mongoose.Schema.Types.ObjectId,ref:'Client',required: true},
-  techStack: [{ type:mongoose.Schema.Types.ObjectId,ref:'TechStack'}],
+  techStack: [{ type:mongoose.Schema.Types.ObjectId,ref:'TechStack',required: true}],
   links:{
     links:{type:String},
     github:{type:String},

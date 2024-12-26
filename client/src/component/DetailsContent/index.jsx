@@ -8,11 +8,15 @@ import { useNavigate } from 'react-router-dom';
 
 const InfoBox = ({ icon: Icon, label, value, subValue }) => (
   <div className="info-box">
-    <Icon className="icon" />
+    
     <div className="info-content">
+      <div style={{display:"flex",gap:"5px"}}>
+      <Icon className="icon" />
       <span className="info-label">{label}</span>
+      </div>
+
       <span className="info-value">{value}</span>
-      {subValue && <span className="info-sub-value">{subValue}</span>}
+     
     </div>
   </div>
 );
@@ -27,6 +31,7 @@ export default function ProjectDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
+  const [teammember, setTeammember] = useState([]);
   
   const handleProjectClick = (id) => {
     console.log('Navigating to client:', id);
@@ -55,15 +60,18 @@ export default function ProjectDetails() {
     {
       try{
         const response=await getProjectTeamMembers(id);
-        console.log('Fetched project team members:', response);
-        setProject({...project, team: response});
+        
+        setTeammember(response);
+        console.log('Fetched project team members:', teammember);
+      
       }
       catch(error){
         console.error('Error fetching project team members:', error);
       }
     };
-
-  });
+  
+    fetchData();
+  },[id]);
 
   if (!project) {
     return <div>Loading project details...</div>;
@@ -123,7 +131,13 @@ export default function ProjectDetails() {
               <FileText className="icon" />
               <span className="label">Team:</span>
               <div className="summary-content">
-                <p>{project.summary || 'No summary available'}</p>
+                {teammember?.map((member, index) => (
+                    <p key={member._id}>
+                        {member.user_id?.fname} {member.user_id?.lname} - {member.role_in_project}
+                    </p>
+                ))}
+                {/*{teammember?.map(()=>{
+                  }} <p>{project.summary || 'No summary available'}</p> */}
               </div>
             </div>
 
@@ -141,19 +155,19 @@ export default function ProjectDetails() {
               icon={DollarSign}
               label="Budget"
               value="$12,000"
-              subValue="$10,000 spent"
+             
             />
             <InfoBox
               icon={Clock}
               label="Hours taken"
               value={project.hr_taken || 'N/A'}
-              subValue="120 hrs estimated"
+              
             />
             <InfoBox
               icon={Clock}
               label="Team Members"
               value="10"
-              subValue="120 hrs estimated"
+              
             />
           </div>
         </div>

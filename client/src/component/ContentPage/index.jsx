@@ -190,33 +190,42 @@ export default function ContentPage() {
 
             {/* Filter Modal */}
             {isModalOpen && (
-                <div className="modal" style={{ zIndex: 100, overflowY: 'auto' }}>
-                    <div className="modal-content">
-                        <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
-                        <h2>Filter Projects</h2>
-                        <div style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-                            <h5>Select Tags:</h5>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                {Object.entries(allTags).map(([category, tags]) => (
-                                    <div key={category} style={{ flex: 1, marginRight: '10px' }}>
-                                        <h5>{category.charAt(0).toUpperCase() + category.slice(1)}</h5>
-                                        {tags.map((tag) => (
-                                            <label key={tag._id} style={{ display: 'block', marginBottom: '5px' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedTags.includes(tag)}
-                                                    onChange={() => toggleTag(tag)}
-                                                />
-                                                {tag.name || tag.teamTitle}
-                                            </label>
-                                        ))}
-                                    </div>
-                                ))}
-                            </div>
+    <div className="modal">
+        <div className="modal-content">
+            <div className="modal-header">
+                <h2 className="modal-title" style={{color:"black"}}>Filter Projects</h2>
+                <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
+            </div>
+            <div className="modal-body">
+                {Object.entries(allTags).map(([category, tags]) => (
+                    <div key={category} className="tag-section">
+                        <h3 className="tag-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                        <div className="tag-list">
+                            {tags.map((tag) => (
+                                <label key={tag._id} className="tag-item">
+                                    <input
+                                        type="checkbox"
+                                        className="tag-checkbox"
+                                        checked={selectedTags.includes(tag)}
+                                        onChange={() => toggleTag(tag)}
+                                    />
+                                    <span className="tag-label">{tag.name || tag.teamTitle}</span>
+                                </label>
+                            ))}
                         </div>
                     </div>
-                </div>
-            )}
+                ))}
+            </div>
+            <div className="modal-footer">
+                <button className="secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button onClick={() => {
+                    // Apply filters logic here
+                    setIsModalOpen(false);
+                }}>Apply Filters</button>
+            </div>
+        </div>
+    </div>
+)}
 
               
              

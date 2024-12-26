@@ -10,5 +10,6 @@ import Projects from "./Projects";
 import ProjectForm from "./ProjectForm";
 import DetailsBanner from "./DetailsBanner";
 import DetailsContent from "./DetailsContent";
-export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects,ProjectForm,DetailsBanner,DetailsContent };
+import Imports from "./Imports";
+export { MainContent, Footer, Header, Sidebar,NewNavbar,HeroBanner,ContentPage,ProjectCard,Projects,ProjectForm,DetailsBanner,DetailsContent,Imports };
 

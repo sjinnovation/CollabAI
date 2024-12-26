@@ -1,5 +1,5 @@
 let i = 0;
-const text = "Welcome To Portfolio Management";
+const text = "Welcome to Portfolio Management";
 const typingSpeed = 200;
 const pauseDuration = 3000;
 let activeTimeout = null;

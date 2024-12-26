@@ -12,6 +12,7 @@
     padding: 24px;
     display: flex;
     background: #18181b;
+    
   }
   
   .project-content {
@@ -70,7 +71,7 @@
   
   .detail-item {
     display: flex;
-    align-items: center;
+   
     gap: 8px;
 
     padding: 16px;
@@ -167,7 +168,7 @@
     align-items: flex-start;
     gap: 16px;
     border:1px solid #888;
-    width:100%;
+    
   }
 
   .info-box:hover
@@ -186,6 +187,9 @@
   .info-content {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    padding:2rem;
+    align-items: center;
   }
   
   .info-label {
@@ -284,4 +288,43 @@
     }
   }
   
+  @media (max-width: 1149px) {
+    .project-content
+    {
+      font-size: 14px;
+    }
+    .details-grid
+    {
+      display: block;
+    }
+    .project-details
+    {
+      display: block;
+    }
+    .feature-list
+    {
+      margin:0 auto ;
+      width:100%;
+    }
+    .details-grid
+    {
+      display: block;
+    }
+    .details-grids
+    {
+      
+    
+      width:100%;
   
+      align-items:center;
+    }
+    .info-box
+    {
+      width:200px;
+    }
+  }
+
+  @media (max-width:880px)
+  {
+
+  }

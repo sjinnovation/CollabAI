@@ -116,63 +116,141 @@ a{
   .modal {
     display: flex;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Darker overlay for better contrast */
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-content {
-    background-color: #434343;
-    margin: 10% auto; /* Center the modal */
-    padding: 30px; /* Increased padding for better spacing */
+    background-color: #ffffff;
+    margin: 0 auto;
+    padding: 20px;
     border: 1px solid #888;
-    width: 40%; /* Adjusted width for a more compact look */
-    border-radius: 10px; /* Rounded corners for the modal */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
-    color: rgb(255, 255, 255);
+    width: 90%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    color: #333;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
 }
 
 .close {
-    color: #000000;
+    color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
 }
 
 .close:hover,
 .close:focus {
-    color: #ff0000; /* Change color on hover for better visibility */
+    color: #ff0000;
     text-decoration: none;
-    cursor: pointer;
 }
 
-h2 {
-    margin-bottom: 20px; /* Space below the heading */
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
-label {
-    display: block; /* Stack labels vertically */
-    margin: 10px 0; /* Space between labels */
+.tag-section {
+    margin-bottom: 20px;
 }
 
-/* Style for the filter button */
+.tag-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tag-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.tag-checkbox {
+    margin-right: 5px;
+}
+
+.tag-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
 button {
     background-color: #2196F3;
-    color: white; 
+    color: white;
     border: none;
-    border-radius: 5px; 
-    padding: 10px 15px; 
+    border-radius: 4px;
+    padding: 10px 15px;
     cursor: pointer;
-    transition: background-color 0.3s; 
+    transition: background-color 0.3s;
+    font-size: 1rem;
 }
 
 button:hover {
- background-color: #1976D2; 
+    background-color: #1976D2;
+}
+
+button.secondary {
+    background-color: #f0f0f0;
+    color: #333;
+    margin-right: 10px;
+}
+
+button.secondary:hover {
+    background-color: #e0e0e0;
+}
+
+@media (max-width: 600px) {
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+    }
+
+    .tag-list {
+        flex-direction: column;
+    }
 }
 
 .page-item

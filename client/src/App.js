@@ -20,7 +20,8 @@ import {
   ChatPage,
   AssistantFileDownloadPage,
   Form,
-  ProjectDetails
+  ProjectDetails,
+  Upload 
 } from "./Pages";
 
 import PortfolioHome from "./Pages/PortfolioHome";
@@ -44,6 +45,7 @@ import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboar
 import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
 import PodInfo from "./Pages/PortfolioManagement/PodInfo";
 import ReviewsPage from "./Pages/PortfolioManagement/Reviews";
+import { Import } from "lucide-react";
 
 function App() {
   // Hook to get the current location
@@ -68,6 +70,7 @@ function App() {
       <Route path="/Form" element={<Form/>}></Route>
       <Route path="/projectdetails/:id" element={<ProjectDetails />} />
       <Route path="/portfoliomanagement/Reviews" element={<ReviewsPage />} />
+      <Route path="/upload" element={<Upload/>}/>
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  

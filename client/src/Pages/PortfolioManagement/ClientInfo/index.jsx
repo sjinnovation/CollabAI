@@ -265,7 +265,7 @@ const ClientInfo = () => {
               className="profile-avatar"
             />
           ) : (
-            <div className="profile-avatar">
+            <div className="profile-avatar" style={{color:'white'}}>
             {getInitials(clientInfo.name)}
           </div>
           )}

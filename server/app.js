@@ -44,7 +44,7 @@ import techstackrouter from "./routers/techStackRoute.js";
 import featureRouter from "./routers/featureRouter.js";
 import revenuerouter from "./routers/revenueRouter.js";
 import projectteamrouter from "./routers/projectTeamRouter.js";
-
+import importRouter from "./routers/importRoute.js";
 const app = express();
 const server = http.createServer(app);
 
@@ -96,6 +96,7 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/features', featureRouter);
 app.use('/api/revenue', revenuerouter);
 app.use('/api/project-team', projectteamrouter);
+app.use('/api/import',importRouter);
 
 
 app.use(bodyParser.json({ extended: true }));
