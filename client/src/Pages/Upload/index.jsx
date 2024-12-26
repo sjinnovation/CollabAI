@@ -1,10 +1,11 @@
+import { Color } from "antd/es/color-picker"
 import { Imports } from "../../component"
-
+import './style.css'
 export default function Upload() {
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Import Excel Data</h1>
+    <div className="containerr mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6" style={{color:'white'}}>Import Excel Data</h1>
       <Imports />
     </div>
   )

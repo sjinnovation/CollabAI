@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Import axios
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 import "./styles.css";
 import Projects from '../Projects';
-import Pagination from 'react-bootstrap/Pagination'; // Import Pagination
+import Pagination from 'react-bootstrap/Pagination';
 import { getAllProjects } from '../../api/projectApi';
 
 export default function ContentPage() {
@@ -14,7 +14,7 @@ export default function ContentPage() {
     const [isSortModalOpen, setIsSortModalOpen] = useState(false);
     const [sortBy, setSortBy] = useState('');
     const [fetchedProjects, setFetchedProjects] = useState([]);
-    const [allTags, setAllTags] = useState([]);
+    const [allTags, setAllTags] = useState({});
     const [projectsPerPage, setProjectsPerPage] = useState(6);
     const [items, setItems] = useState([]);
     const [totalPages, setTotalPages] = useState(0);
@@ -23,8 +23,6 @@ export default function ContentPage() {
     const handleSearchChange = (e) => {
         setSearch(e.target.value);
     };
-
-
 
     const toggleTag = (tag) => {
         setSelectedTags((prevTags) => {
@@ -50,19 +48,26 @@ export default function ContentPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const response = await getAllProjects(sortBy,search);
-                setFetchedProjects(response);
+                const response = await getAllProjects(sortBy);
+                console.log("API Response:", response);
 
-                const uniqueTechStackTags = [...new Set(response.flatMap((project) => project.techStack || []))];
-                const uniqueClientTags = [...new Set(response.flatMap((project) => project.client_id || []))];
-                const uniqueTeamsTags = [...new Set(response.flatMap((project) => project.team_id || []))];
-                const uniqueFeaturesTags = [...new Set(response.flatMap((project) => project.feature || []))];
+                // Create a helper function to get unique values
+                const getUniqueValues = (arr) => [...new Set(arr.map(JSON.stringify))].map(JSON.parse);
+
+                // Process tags more effectively
+                const techStackTags = getUniqueValues(response.flatMap((project) => project.techStack || []).filter(Boolean));
+                const clientTags = getUniqueValues(response.map((project) => project.client_id).filter(Boolean));
+                const teamsTags = getUniqueValues(response.map((project) => project.team_id).filter(Boolean));
+                const featuresTags = getUniqueValues(response.flatMap((project) => project.feature || []).filter(Boolean));
+
                 setAllTags({
-                    techStack: uniqueTechStackTags,
-                    client: uniqueClientTags,
-                    teams: uniqueTeamsTags,
-                    features: uniqueFeaturesTags
+                    techStack: techStackTags,
+                    client: clientTags,
+                    teams: teamsTags,
+                    features: featuresTags,
                 });
+
+                setFetchedProjects(response);
 
                 const initialTotalPages = Math.ceil(response.length / projectsPerPage);
                 setTotalPages(initialTotalPages);
@@ -81,31 +86,52 @@ export default function ContentPage() {
 
                 generateItems();
             } catch (error) {
-                console.error('Error fetching projects:', error);
+                console.error("Error fetching projects:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchData();
-    }, [activePage, projectsPerPage, sortBy,search]);
+    }, [sortBy]);
 
-    // Filter projects
-    const filteredProjects = fetchedProjects.filter((project) => {
-        const matches =
-            selectedTags.length === 0 ||
-            project.techStack.some((tag) => selectedTags.includes(tag)) ||
-            project.feature.some((res) => selectedTags.includes(res)) ||
-            selectedTags.includes(project.team_id) ||
-            selectedTags.includes(project.client_id);
+    const filteredProjects = useMemo(() => {
+        return fetchedProjects.filter((project) => {
+            const matchesSearch = project.name.toLowerCase().includes(search.toLowerCase());
+            if (!matchesSearch) return false;
 
-        return matches;
-    });
+            if (selectedTags.length === 0) return true;
+            return selectedTags.some(tag =>
+                (project.techStack && project.techStack.some(tech => tech._id === tag || tech.name === tag)) ||
+                (project.feature && project.feature.some(feature => feature._id === tag || feature === tag)) ||
+                (project.team_id && (project.team_id._id === tag || project.team_id.teamTitle === tag)) ||
+                (project.client_id && (project.client_id._id === tag || project.client_id.name === tag))
+            );
+        });
+    }, [fetchedProjects, selectedTags, search]);
 
-    // Pagination logic
+    useEffect(() => {
+        const filteredTotalPages = Math.ceil(filteredProjects.length / projectsPerPage);
+        setTotalPages(filteredTotalPages);
+
+        const generateItems = () => {
+            const newItems = [];
+            for (let number = 1; number <= filteredTotalPages; number++) {
+                newItems.push(
+                    <Pagination.Item key={number} active={number === activePage} onClick={() => setActivePage(number)}>
+                        {number}
+                    </Pagination.Item>
+                );
+            }
+            setItems(newItems);
+        };
+
+        generateItems();
+        setActivePage(1); // Reset to first page when filters or search changes
+    }, [filteredProjects, projectsPerPage, search]);
+
     const startIndex = (activePage - 1) * projectsPerPage;
     const currentProjects = filteredProjects.slice(startIndex, startIndex + projectsPerPage);
-    console.log("Current - ", currentProjects);
 
     return (
         <div className="container">
@@ -115,7 +141,6 @@ export default function ContentPage() {
                 </div>
 
                 <div className="filterbar">
-                    {/* Search Input */}
                     <div>
                         <input
                             type="text"
@@ -127,7 +152,6 @@ export default function ContentPage() {
                     </div>
 
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                        {/* Sort Button */}
                         <button
                             style={{
                                 backgroundColor: 'transparent',
@@ -143,7 +167,6 @@ export default function ContentPage() {
                             <u style={{ fontSize: '19.2px' }}>Sort By</u>
                         </button>
 
-                        {/* Dropdown Menu */}
                         {isSortModalOpen && (
                             <div
                                 className="dropdown"
@@ -168,8 +191,8 @@ export default function ContentPage() {
                                                 transition: 'background-color 0.2s ease',
                                             }}
                                             onClick={() => {
-                                                setSortBy(option); // Update sorting criteria
-                                                setIsSortModalOpen(false); // Close modal
+                                                setSortBy(option);
+                                                setIsSortModalOpen(false);
                                             }}
                                             onMouseEnter={(e) => (e.target.style.backgroundColor = '#444')}
                                             onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
@@ -188,56 +211,57 @@ export default function ContentPage() {
                 </div>
             </div>
 
-            {/* Filter Modal */}
             {isModalOpen && (
-    <div className="modal">
-        <div className="modal-content">
-            <div className="modal-header">
-                <h2 className="modal-title" style={{color:"black"}}>Filter Projects</h2>
-                <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
-            </div>
-            <div className="modal-body">
-                {Object.entries(allTags).map(([category, tags]) => (
-                    <div key={category} className="tag-section">
-                        <h3 className="tag-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
-                        <div className="tag-list">
-                            {tags.map((tag) => (
-                                <label key={tag._id} className="tag-item">
-                                    <input
-                                        type="checkbox"
-                                        className="tag-checkbox"
-                                        checked={selectedTags.includes(tag)}
-                                        onChange={() => toggleTag(tag)}
-                                    />
-                                    <span className="tag-label">{tag.name || tag.teamTitle}</span>
-                                </label>
+                <div className="modal">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="modal-title" style={{ color: "black" }}>Filter Projects</h2>
+                            <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
+                        </div>
+                        <div className="modal-body">
+                            {Object.entries(allTags).map(([category, tags]) => (
+                                <div key={category} className="tag-section">
+                                    <h3 className="tag-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                                    <div className="tag-list">
+                                        {tags.map((tag) => {
+                                            const tagId = tag._id || tag.id || tag;
+                                            const tagName = tag.name || tag.teamTitle || tag;
+                                            return (
+                                                <label key={tagId} className="tag-item">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="tag-checkbox"
+                                                        checked={selectedTags.includes(tagId)}
+                                                        onChange={() => toggleTag(tagId)}
+                                                    />
+                                                    <span className="tag-label">{tagName}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             ))}
                         </div>
+                        <div className="modal-footer">
+                            <button className="secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                            <button onClick={() => setIsModalOpen(false)}>Apply Filters</button>
+                        </div>
                     </div>
-                ))}
-            </div>
-            <div className="modal-footer">
-                <button className="secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button onClick={() => {
-                    // Apply filters logic here
-                    setIsModalOpen(false);
-                }}>Apply Filters</button>
-            </div>
-        </div>
-    </div>
-)}
+                </div>
+            )}
 
-              
-             
+            {!isLoading && (
                 <Projects
                     viewType={isListView ? 'list' : 'card'}
                     filter={search}
                     tags={selectedTags}
-                    projects={currentProjects} // Pass the filtered and paginated projects
+                    projects={currentProjects}
                 />
-            
+            )}
 
-            <Pagination style={{marginTop:"20px"}}>{items}</Pagination> {/* Render pagination here */}
+            <Pagination style={{ marginTop: "20px" }}>{items}</Pagination>
         </div>
     );
 }
+
+

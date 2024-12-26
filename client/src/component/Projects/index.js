@@ -10,7 +10,7 @@ const Projects = ({ viewType, projects }) => {
   // Function to handle project click
   const handleProjectClick = (id) => {
     console.log('Navigating to project:', id);
-    navigate(`/projectdetails/${id}`);
+    navigate(`/platform-management-feature/projectdetails/${id}`);
   };
 
   return (

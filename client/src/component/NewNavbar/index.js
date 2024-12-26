@@ -45,7 +45,7 @@ const NewNavbar = () => {
   }, []);
 
   return <div className="new-navbar">
-    <div className="logo" onClick={()=>navigate('/portfolio')}>
+    <div className="logo" onClick={()=>navigate('/platform-management-feature/portfolio')}>
     Portfolio
     </div>
     <div className="tabs">
