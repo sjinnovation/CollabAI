@@ -85,7 +85,7 @@ export default function ProjectDetails() {
 
       <div className="project-details">
         <div className="project-content">
-          <p style={{ marginBottom: "2rem" }}>{project.description}</p>
+          <p className="project-contents " style={{ marginBottom: "2rem"}}>{project.description}</p>
 
           <div className="details-grid">
             <div className="detail-item">

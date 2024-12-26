@@ -89,13 +89,13 @@ export default function HeroBanner() {
   const handleItemClick = (item) => {
     switch (item.type) {
       case 'project':
-        navigate(`/projectdetails/${item.id}`);
+        navigate(`/platform-management-feature/projectdetails/${item.id}`);
         break;
       case 'client':
-        navigate(`/Client/${item.id}`);
+        navigate(`/platform-management-feature/Client/${item.id}`);
         break;
       case 'team':
-        navigate(`/Pod/${item.id}`);
+        navigate(`/platform-management-feature/Pod/${item.id}`);
         break;
       default:
         console.error('Unknown item type:', item.type);
@@ -111,7 +111,7 @@ export default function HeroBanner() {
         <div className="oval-background"></div>
         <div className="typing-container">
           <p id="typing" aria-live="polite"></p>
-          <span className="cursor"></span>
+          <span className="cursor">|</span>
         </div>
         
         <div className="search-bar" style={{ position: 'relative', zIndex: 100 }}>

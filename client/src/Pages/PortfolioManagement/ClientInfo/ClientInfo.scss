@@ -947,3 +947,13 @@ button-container:disabled {
   white-space: nowrap;
 }
 
+.info-boxs {
+  background-color: #27272a;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border:1px solid #888;
+  width:100%;
+}

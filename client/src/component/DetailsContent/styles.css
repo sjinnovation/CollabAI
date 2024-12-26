@@ -12,7 +12,6 @@
     padding: 24px;
     display: flex;
     background: #18181b;
-    
   }
   
   .project-content {
@@ -71,7 +70,7 @@
   
   .detail-item {
     display: flex;
-   
+    align-items: center;
     gap: 8px;
 
     padding: 16px;
@@ -168,7 +167,7 @@
     align-items: flex-start;
     gap: 16px;
     border:1px solid #888;
-    
+    width:100%;
   }
 
   .info-box:hover
@@ -187,9 +186,6 @@
   .info-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding:2rem;
-    align-items: center;
   }
   
   .info-label {
@@ -288,43 +284,112 @@
     }
   }
   
-  @media (max-width: 1149px) {
-    .project-content
-    {
-      font-size: 14px;
-    }
-    .details-grid
-    {
-      display: block;
-    }
-    .project-details
-    {
-      display: block;
-    }
-    .feature-list
-    {
-      margin:0 auto ;
-      width:100%;
-    }
-    .details-grid
-    {
-      display: block;
-    }
-    .details-grids
-    {
-      
-    
-      width:100%;
-  
-      align-items:center;
-    }
-    .info-box
-    {
-      width:200px;
-    }
+  /* Other CSS rules */
+
+@media (max-width: 1200px) {
+  .project-details {
+    flex-direction: column;
   }
 
-  @media (max-width:880px)
-  {
-
+  .project-content {
+    width: 100%;
+    margin-bottom: 2rem;
   }
+
+  .feature-list {
+    width: 50%;
+    max-width: none;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .project-details {
+    flex-direction: column;
+  }
+
+  .project-content {
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  .project-contents {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .details-grids {
+    flex-direction: column;
+    align-items: center;
+}
+
+  .info-box {
+    width: 50%;
+  }
+
+  .feature-list {
+    width: 50%;
+    margin: 0 auto;
+  }
+
+  .project-title {
+    font-size: 28px;
+    padding: 30px 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .detail-item .label {
+    margin-bottom: 0.5rem;
+  }
+
+  .info-box, .feature-list {
+    width: 50%;
+  }
+
+  .project-title {
+    font-size: 24px;
+    padding: 20px 0;
+  }
+
+  .details-grid {
+    gap: 10px;
+  }
+
+  .detail-item {
+    padding: 12px;
+  }
+
+  .info-value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-title {
+    font-size: 24px;
+    padding: 20px 0;
+  }
+
+  .details-grid {
+    gap: 10px;
+  }
+
+  .detail-item {
+    padding: 12px;
+  }
+
+  .info-value {
+    font-size: 20px;
+  }
+}
+

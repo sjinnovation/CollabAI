@@ -285,7 +285,7 @@ const ClientInfo = () => {
         <div className="content-container">
           <div className="stats-grid">
             {stats.map(({ title, value, prefix, icon: Icon }) => (
-              <div key={title} className="info-box">
+              <div key={title} className="info-boxs">
                 <CardContent>
                   <div className="stat-header">
                     <Icon className="stat-icon" />
