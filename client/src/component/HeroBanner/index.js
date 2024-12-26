@@ -111,7 +111,7 @@ export default function HeroBanner() {
         <div className="oval-background"></div>
         <div className="typing-container">
           <p id="typing" aria-live="polite"></p>
-          <span className="cursor">|</span>
+          <span className="cursor"></span>
         </div>
         
         <div className="search-bar" style={{ position: 'relative', zIndex: 100 }}>
