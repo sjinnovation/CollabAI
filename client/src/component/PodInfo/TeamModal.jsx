@@ -45,12 +45,21 @@ export const TeamModal = ({ teamId, onClose }) => {
     fetchTeamData()
   }, [teamId])
 
-  const filteredMembers = teamMembers.filter(member => 
-    (member.fname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredMembers = teamMembers
+  .map((member) => ({
+    ...member,
+    roles_in_project: member.roles_in_project
+      ? [...new Set(member.roles_in_project)] // Deduplicate roles
+      : [],
+  }))
+  .filter(member =>
+    member.fname.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.lname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (member.roles_in_project && member.roles_in_project.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()))) ||
-    (member.username && member.username.toLowerCase().includes(searchTerm.toLowerCase())))
-  )
+    (member.roles_in_project && member.roles_in_project.some(role =>
+      role.toLowerCase().includes(searchTerm.toLowerCase()))) ||
+    (member.username && member.username.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
 
   const memberPageCount = Math.ceil(filteredMembers.length / itemsPerPage)
   const currentMembers = filteredMembers.slice(
@@ -62,6 +71,7 @@ export const TeamModal = ({ teamId, onClose }) => {
     project.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
   )
   const projectPageCount = Math.ceil(filteredProjects.length / itemsPerPage)
+  console.log("filtered projects",filteredProjects)
   const currentProjects = filteredProjects.slice(
     (currentProjectPage - 1) * itemsPerPage,
     currentProjectPage * itemsPerPage

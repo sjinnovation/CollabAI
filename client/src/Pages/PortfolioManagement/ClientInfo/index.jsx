@@ -109,18 +109,23 @@ const ClientInfo = () => {
     }
   };
   
-    const fetchTechStackDetails = async (techStackIds) => {
+  const fetchTechStackDetails = async (techStackIds) => {
     try {
-      const uniqueIds = Array.from(new Set(techStackIds));
-      // Assuming `getTechStackDetails` is the API function to fetch tech stack by ID
+      const uniqueIds = Array.from(new Set(techStackIds)); // Deduplicate IDs
       const techStackPromises = uniqueIds.map((id) => getTechStackById(id));
-      const techStackDetails = await Promise.all(techStackPromises); // Fetch details
-      console.log(techStackDetails); // Now log after initialization
-      setTechStack(techStackDetails); // Save tech stack details in state
+      const techStackDetails = await Promise.all(techStackPromises);
+  
+      // Deduplicate fetched details by a unique property (e.g., `id`)
+      const uniqueTechStack = Array.from(
+        new Map(techStackDetails.map((tech) => [tech.id, tech])).values()
+      );
+  
+      setTechStack(uniqueTechStack); // Save deduplicated details in state
     } catch (error) {
       console.error("Error fetching tech stack details:", error);
     }
   };
+  
 
   
   useEffect(() => {
@@ -132,16 +137,15 @@ const ClientInfo = () => {
           getAllProjects(),
           getAllRevenueData(),
         ]);
-
+  
         setClientInfo(clientData);
         console.log('Client data:', clientData);
-
         const clientProjects = allProjects.filter(project => project.client_id._id === clientData._id);
         console.log('Filtered client projects:', clientProjects);
-
+  
         setProjects(clientProjects);
         setFilteredProjects(clientProjects);
-
+  
         const projectIds = new Set(clientProjects.map(project => project._id));
         const { totalRevenue, totalBenefits } = allRevenue.reduce(
           (acc, revenueItem) => {
@@ -153,23 +157,28 @@ const ClientInfo = () => {
           },
           { totalRevenue: 0, totalBenefits: 0 }
         );
-
+  
         setRevenue({ total: totalRevenue, invoicesCount: totalBenefits });
-
+  
         const allTechStackIds = clientProjects.flatMap(project => project.techStack);
         const uniqueTechStackIds = Array.from(new Set(allTechStackIds));
         const techStackDetails = await Promise.all(
           uniqueTechStackIds.map(techId => getTechStackById(techId))
         );
-        setTechStack(techStackDetails);
-
+  
+        // Deduplicate tech stack details by a unique property (e.g., `id`)
+        const uniqueTechStackDetails = Array.from(
+          new Map(techStackDetails.map(tech => [tech._id, tech])).values()
+        );
+  
+        setTechStack(uniqueTechStackDetails);
       } catch (error) {
         console.error("Error during data fetch:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [id]);
   

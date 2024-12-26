@@ -231,11 +231,11 @@ export const getProjectsByTeam = async (teamId) => {
     const projects = await Promise.all(projectPromises);
     const validProjects = projects.filter(project => project !== null);
     // Remove duplicates by project id
-    const uniqueProjects = Array.from(
-      new Map(validProjects.map(project => [project.id, project])).values()
-    );
-    console.log('Unique projects:', uniqueProjects);
-    return uniqueProjects;
+  //  const uniqueProjects = Array.from(
+     // new Map(validProjects.map(project => [project.id, project])).values()
+   // );
+   //console.log('Unique projects:', uniqueProjects);
+    return validProjects;
   } catch (error) {
     console.error('Error fetching projects by team ID:', error);
     throw error;

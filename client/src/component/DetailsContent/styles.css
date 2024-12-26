@@ -334,6 +334,7 @@
   .project-title {
     font-size: 28px;
     padding: 30px 0;
+    text-align: center;
   }
 }
 
@@ -356,10 +357,6 @@
     width: 50%;
   }
 
-  .project-title {
-    font-size: 24px;
-    padding: 20px 0;
-  }
 
   .details-grid {
     gap: 10px;
@@ -376,9 +373,10 @@
 
 @media (max-width: 480px) {
   .project-title {
-    font-size: 24px;
-    padding: 20px 0;
-  }
+    font-size: 28px;
+    padding: 30px 10px;
+    text-align: center;
+}
 
   .details-grid {
     gap: 10px;
