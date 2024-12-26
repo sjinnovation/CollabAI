@@ -25,7 +25,7 @@ import {
 } from "./Pages";
 
 import PortfolioHome from "./Pages/PortfolioHome";
-
+import PlatformManagementfeature from "./Pages/PlatformMangemenrfeature/PlatformMangamentfeature";
 import Layout from "./Pages/Layout";
 import AssistantLayout from "./Pages/Layout/AssistantLayout";
 import ConfigurationTabs from "./Pages/configration/index";
@@ -61,16 +61,23 @@ function App() {
       <Route path="login" element={<LoginForm />} />
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
-      <Route path="/portfolio" element={<PortfolioHome />} />
-      <Route path="/Client/:id" element={<ClientInfo />} /> 
-      <Route path="/portfoliomanagement/Client/:id" element={<ClientInfo />} /> 
-
-      <Route path="/portfoliomanagement/PodInfo" element={<PodInfo />} />
-      <Route path="/Pod/:id" element={<PodInfo />} />
       <Route path="/Form" element={<Form/>}></Route>
-      <Route path="/projectdetails/:id" element={<ProjectDetails />} />
-      <Route path="/portfoliomanagement/Reviews" element={<ReviewsPage />} />
-      <Route path="/upload" element={<Upload/>}/>
+      <Route
+                path="/platform-management-feature/*"
+                element={
+                    <PlatformManagementfeature>
+                        <Routes>
+                            <Route path="portfolio" element={<PortfolioHome />} />
+                            <Route path="projectdetails/:id" element={<ProjectDetails />} />
+                            <Route path="Client/:id" element={<ClientInfo />} /> 
+                            <Route path="PodInfo" element={<PodInfo />} />
+                            <Route path="Pod/:id" element={<PodInfo />} />
+                            <Route path="PodInfo" element={<PodInfo />} />
+                            <Route path="portfoliomanagement/Reviews" element={<ReviewsPage />} />
+                        </Routes>
+                    </PlatformManagementfeature>
+                }
+            />
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  
@@ -143,8 +150,9 @@ function App() {
         path="assistants/download/:file_id"
         element={<AssistantFileDownloadPage />}
       />
-    </Routes>
+     
+
+</Routes>
   );
 }
-
 export default App;
