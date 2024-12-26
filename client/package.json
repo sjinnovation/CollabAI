@@ -4,7 +4,11 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@googleapis/docs": "^3.0.2",
+    "@mui/icons-material": "^6.3.0",
+    "@mui/material": "^6.3.0",
     "@react-oauth/google": "^0.12.1",
     "@rpldy/uploader": "^1.8.1",
     "@testing-library/jest-dom": "^5.16.4",
