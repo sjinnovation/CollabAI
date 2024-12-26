@@ -50,7 +50,7 @@ const NewNavbar = () => {
     </div>
     <div className="tabs">
         <div className="tab" onClick={() => navigate('/platform-management-feature/portfolio')}>Home</div>
-        <div className="tab" onClick={() => navigate('/form')}>Add</div>
+        <div className="tab" onClick={() => navigate('/platform-management-feature/import')}>Add</div>
         <div className="tab" onClick={()=> navigate('/')}>Collab AI</div>
     
     </div>

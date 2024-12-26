@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { TeamModal } from '../../../component/PodInfo/TeamModal.jsx';
 import { PodCard } from '../../../component/PodInfo/PodCard.jsx';
 import './PodInfo.scss'
-import {NewNavbar} from '../../../component';
+import {NewNavbar} from '../../../component/index.js';
 
 const PodInfo = () => {
   const [teams, setTeams] = useState([]);

@@ -74,6 +74,7 @@ function App() {
                             <Route path="Pod/:id" element={<PodInfo />} />
                             <Route path="PodInfo" element={<PodInfo />} />
                             <Route path="portfoliomanagement/Reviews" element={<ReviewsPage />} />
+                            <Route path="import" element={<Upload/>}/>
                         </Routes>
                     </PlatformManagementfeature>
                 }

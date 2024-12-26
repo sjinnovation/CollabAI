@@ -8,6 +8,8 @@ import TechStack from '../models/tech_stack.js';
 import Teams from '../models/teamModel.js';
 import Features from '../models/featureModel.js';
 import Client from '../models/clientModel.js';
+import ProjectTeam from '../models/projectTeamModel.js';
+import User from '../models/user.js';
 
 const router = express.Router();
 
@@ -25,7 +27,7 @@ const upload = multer({
     }
 }).single('file');
 
-// Utility function to read and parse Excel files
+
 const parseExcelFile = (buffer) => {
     const workbook = xlsx.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
@@ -78,7 +80,6 @@ export const importExcelData = async (req, res) => {
                     } else {
                         console.warn(`TechStack is not a string for project "${data.name}"`);
                     }
-                    
 
                     // Handle Team
                     const teamId = await findOrCreate(Teams, { teamTitle: data.teamTitle }, {
@@ -90,15 +91,14 @@ export const importExcelData = async (req, res) => {
                     const clientId = await findOrCreate(Client, { name: data.client_name }, {
                         name: data.client_name,
                         description: data.client_description,
-                        contactInfo: data.client_contactInfo,
-                        pointOfContact: data.client_pointOfContact,
+                        contact_info: data.client_contact_info,
+                        point_of_contact: data.client_point_of_contact,
                         image: data.client_image
                     });
 
                     // Handle Features
                     const featureIds = [];
                     if (typeof data.feature === 'string') {
-                        // Split, trim, and process each feature item
                         const featureArray = data.feature.split(',').map(feature => feature.trim());
                         for (const featureName of featureArray) {
                             try {
@@ -112,7 +112,12 @@ export const importExcelData = async (req, res) => {
                         console.warn(`Feature is not a string for project "${data.name}"`);
                     }
 
-                    // Create Project
+                  
+                    const membersData = data['Member Name and Role'] ? data['Member Name and Role'].split(',').map((entry) => {
+                        const [memberName, role] = entry.trim().split(' - '); // Split by " - "
+                        return { name: memberName.trim(), role: role.trim() };
+                    }) : [];
+
                     const projectData = {
                         name: data.name,
                         description: data.description,
@@ -134,6 +139,41 @@ export const importExcelData = async (req, res) => {
 
                     const project = new Project(projectData);
                     await project.save();
+
+
+                    const projectId = project._id;
+
+                    // Handle Member creation after Project creation
+                    for (const member of membersData) {
+                        if (!member.name || !member.role) {
+                            console.warn(`Skipping member with missing name or role in project "${data.name}"`);
+                            continue;
+                        }
+
+                        try {
+                            let user = await User.findOne({ fname: member.name });
+                            if (!user) {
+                                console.error(`User "${member.name}" not found. Import process stopped.`);
+                                return res.status(400).json({
+                                    message: `User "${member.name}" not found. Import process stopped. No data imported.`
+                                });
+                            }
+
+                          
+                            const projectTeamData = {
+                                project_id: projectId, // Now associating the user with the created project
+                                user_id: user._id,
+                                role_in_project: member.role, 
+                                team_id: teamId
+                            };
+
+                            const projectTeam = new ProjectTeam(projectTeamData);
+                            await projectTeam.save();
+                        } catch (error) {
+                            console.error(`Error processing member "${member.name}" in project "${data.name}":`, error.message);
+                        }
+                    }
+
                     results.push(`Project "${data.name}" imported successfully`);
                 } catch (innerError) {
                     console.error(`Error importing project "${data.name}":`, innerError);
@@ -154,4 +194,3 @@ export const importExcelData = async (req, res) => {
         }
     });
 };
-
