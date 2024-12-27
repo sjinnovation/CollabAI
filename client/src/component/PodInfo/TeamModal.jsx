@@ -23,28 +23,30 @@ export const TeamModal = ({ teamId, onClose }) => {
         setError('Team ID is undefined');
         return;
       }
-
+  
       try {
         const [membersData, projectsData, teamData] = await Promise.all([
           getUsersByTeamId(teamId),
           getProjectsByTeam(teamId),
           getTeamById(teamId)
         ]);
-
+  
         setTeamMembers(membersData);
-        setProjects(projectsData);
-        console.log("Team members with roles:", membersData);
-        console.log("Projects:", projectsData);
+  
+        // Deduplicate projects
+        const uniqueProjects = Array.from(new Set(projectsData.map(p => p._id)))
+          .map(id => projectsData.find(p => p._id === id));
+        setProjects(uniqueProjects);
+  
         setTeamName(teamData.teamTitle);
       } catch (error) {
         console.error('Error fetching team data:', error);
         setError('Failed to load team data. Please try again later.');
       }
-    }
-
-    fetchTeamData()
-  }, [teamId])
-
+    };
+  
+    fetchTeamData();
+  }, [teamId]);
   const filteredMembers = teamMembers
   .map((member) => ({
     ...member,
@@ -178,9 +180,9 @@ export const TeamModal = ({ teamId, onClose }) => {
                 </div>
               </div>
               <div className="projectsGrid">
-                {currentProjects.map((project) => (
-                  <ProjectCard key={project._id} project={project} />
-                ))}
+              {currentProjects.map((project, index) => (
+  <ProjectCard key={project._id || project.name + index} project={project} />
+))}
               </div>
               <div className="pagination1">
                 <button-container
