@@ -83,13 +83,10 @@ export const getAllRevenueData = async () => {
 };
 export const getTechStackById = async (id) => {
   try {
-    console.log('Fetching tech stack for ID:', id);
     if (typeof id === 'object' && id !== null) {
-      console.warn('Received object instead of ID:', id);
       id = id._id || id.id; // Use _id or id property if available
     }
     const response = await axiosSecureInstance.get(`/api/techStacks/${id}`);
-    console.log('Tech stack response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching tech stack by ID:', error);
@@ -104,7 +101,6 @@ export const getTechStackById = async (id) => {
 export const getTeamById = async (id) => {
   try {
     const response = await axiosSecureInstance.get(`/api/teams/${id}`);
-    console.log(response.data.team)
     return response.data.team;
   } catch (error) {
     console.error('Error fetching team:', error);
@@ -140,10 +136,8 @@ export const getTeamMembers = async (teamId) => {
 }
 export const getProjectTeamMembersByTeam = async (teamId) => {
   try {
-    console.log('Fetching project team members for team:', teamId);
     const timestamp = new Date().getTime();
     const response = await axiosSecureInstance.get(`/api/project-team/team/${teamId}?_=${timestamp}`);
-    console.log('Response data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching project team members:', error);
@@ -156,9 +150,7 @@ export const getProjectTeamMembersByTeam = async (teamId) => {
 };
 export const getAllUsers = async () => {
   try {
-    console.log('Fetching all users');
     const response = await axiosSecureInstance.get('/api/user/get-all-users');
-    console.log('All users response data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching all users:', error);
@@ -171,7 +163,6 @@ export const getAllUsers = async () => {
 };
 export const getUsersByTeamId = async (teamId) => {
   try {
-    console.log('Fetching users for team:', teamId);
     const [usersResponse, projectTeamsResponse] = await Promise.all([
       getAllUsers(),
       getAllProjectTeams()
@@ -186,8 +177,7 @@ export const getUsersByTeamId = async (teamId) => {
       const userProjects = allProjectTeams.filter(pt => pt.user_id === user._id && pt.team_id === teamId);
       const roles = userProjects.map(up => up.role_in_project);
       return { ...user, roles_in_project: roles };
-    });
-    console.log('Filtered team users with roles:', usersWithRoles);
+    })
     return usersWithRoles;
   } catch (error) {
     console.error('Error fetching users by team ID:', error);
@@ -197,7 +187,6 @@ export const getUsersByTeamId = async (teamId) => {
 export const fetchProjectById = async (projectId) => {
   try {
     const response = await axiosSecureInstance.get(`/api/projects/project/${projectId}`);
-    console.log("Project data:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching project:", error);
@@ -206,9 +195,7 @@ export const fetchProjectById = async (projectId) => {
 };
 export const getAllProjectTeams = async () => {
   try {
-    console.log('Fetching all project teams');
     const response = await axiosSecureInstance.get('/api/project-team/all');
-    console.log('All project teams response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching all project teams:', error);
@@ -217,16 +204,13 @@ export const getAllProjectTeams = async () => {
 };
 export const getProjectsByTeam = async (teamId) => {
   try {
-    console.log('Fetching projects for team:', teamId);
     const allProjectTeams = await getAllProjectTeams();
     const teamProjects = allProjectTeams.filter(pt => pt.team_id === teamId);
-    console.log('Filtered team projects:', teamProjects);
     if (teamProjects.length === 0) {
-      console.log('No projects found for this team');
       return [];
     }
     const projectIds = teamProjects.map(tp => tp.project_id);
-    console.log('Project IDs:', projectIds);
+
     const projectPromises = projectIds.map(id => fetchProjectById(id));
     const projects = await Promise.all(projectPromises);
     const validProjects = projects.filter(project => project !== null);
@@ -259,12 +243,10 @@ const handleApiError = (error) => {
 
 export const searchByAllFields = async (searchTerm='') => {
   try {
-    console.log('Frontend: Initiating search request with term:', searchTerm);
     const response = await axiosSecureInstance.get('/api/projects/search', {
       params: { searchTerm }
     });
     // const response = await axiosSecureInstance.get('/api/projects/search');
-    console.log('Frontend: Received search response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Frontend: Error searching by all fields:', error);

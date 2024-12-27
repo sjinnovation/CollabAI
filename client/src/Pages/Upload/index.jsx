@@ -1,4 +1,4 @@
-import { Color } from "antd/es/color-picker"
+
 import { Imports } from "../../component"
 import './style.css'
 export default function Upload() {

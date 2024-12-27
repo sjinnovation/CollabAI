@@ -13,7 +13,6 @@ export const PodCard = ({ team, onClick }) => {
     const fetchTeamMembers = async () => {
       try {
         const members = await getUsersByTeamId(team._id);
-        console.log('Fetched team members:', members);
 
         if (!Array.isArray(members)) {
           throw new Error('Fetched data is not an array');
@@ -21,9 +20,6 @@ export const PodCard = ({ team, onClick }) => {
 
         const active = members.filter(member => member.status === 'active').length;
         const inactive = members.length - active;
-
-        console.log('Active members:', active);
-        console.log('Inactive members:', inactive);
 
         setActiveMembers(active);
         setInactiveMembers(inactive);

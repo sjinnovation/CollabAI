@@ -13,8 +13,8 @@ export default function ImportForm() {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessages, setSuccessMessages] = useState([]);
-  const [importComplete, setImportComplete] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [, setImportComplete] = useState(false);
+
 
   useEffect(() => {
     if (successMessages.length > 0) {
@@ -24,24 +24,6 @@ export default function ImportForm() {
       return () => clearTimeout(timer);
     }
   }, [successMessages]);
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-      setError(null);
-    }
-  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {

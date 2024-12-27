@@ -7,9 +7,9 @@ import { addNewFieldToAllExistingData, createTeam, deleteTeamById, getAllTeams, 
 const teamRouter = express.Router();
 
 teamRouter.post("/",authenticateUser, createTeam);
-teamRouter.get("/",getAllTeams);
+teamRouter.get("/",authenticateUser,getAllTeams);
 teamRouter.patch("/:id",authenticateUser,updateTeamById);
-teamRouter.get("/:id",getTeamById);
+teamRouter.get("/:id",authenticateUser,getTeamById);
 teamRouter.delete("/:id",authenticateUser,deleteTeamById);
-teamRouter.put("/add-new-field", addNewFieldToAllExistingData);
+teamRouter.put("/add-new-field",authenticateUser, addNewFieldToAllExistingData);
 export default teamRouter;

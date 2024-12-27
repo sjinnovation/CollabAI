@@ -13,14 +13,14 @@ import {
 
 
 const projectrouter = express.Router();
-projectrouter.get('/project/:id', getProjectByProjectId);
+projectrouter.get('/project/:id',authenticateUser, getProjectByProjectId);
 
-projectrouter.get("/", getAllProjects);
+projectrouter.get("/",authenticateUser, getAllProjects);
 projectrouter.get("/client/:id",authenticateUser, getProjectById);
 projectrouter.post("/",authenticateUser, createProject);
 projectrouter.put("/:id",authenticateUser, updateProject);
 projectrouter.delete("/:id",authenticateUser, deleteProject);
-projectrouter.get('/team/:teamId', getProjectsByTeam);
-projectrouter.get('/client/:clientId', getProjectsByClient);
-projectrouter.get('/search/', searchByAllFields);
+projectrouter.get('/team/:teamId',authenticateUser, getProjectsByTeam);
+projectrouter.get('/client/:clientId',authenticateUser, getProjectsByClient);
+projectrouter.get('/search/',authenticateUser, searchByAllFields);
 export default projectrouter;

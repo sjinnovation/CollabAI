@@ -32,7 +32,6 @@ export default function HeroBanner() {
       try {
         const results = await searchByAllFields(searchTerm);
         if (isMounted) {
-          console.log('Search results:', results.data);
           setSearchResults(results.data || []);
           setShowDropdown(results.data && results.data.length > 0);
         }
@@ -103,7 +102,6 @@ export default function HeroBanner() {
     setShowDropdown(false);
   };
 
-  console.log('Render state:', { searchTerm, showDropdown, filteredResults });
 
   return (
     <div className="hero-container">

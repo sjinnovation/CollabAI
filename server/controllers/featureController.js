@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+
 import Feature from '../models/featureModel.js'
 
 export const createFeature = async (req, res) => {

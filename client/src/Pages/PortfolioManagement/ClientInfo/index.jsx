@@ -4,7 +4,7 @@ import { FaCode, FaDollarSign, FaFileAlt, FaBullseye } from "react-icons/fa";
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Badge from '../../../component/ClientInfo/Badge';
-import { Cards, CardContent } from '../../../component/ClientInfo/Cards';
+import { CardContent } from '../../../component/ClientInfo/Cards';
 import { Avatar } from '../../../component/ClientInfo/Avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../component/ClientInfo/Tabs';
 import ReviewCard from '../../../component/ClientInfo/ReviewCard';
@@ -15,7 +15,6 @@ import { getClientInfo,getAllRevenueData,getTechStackById  } from '../../../api/
 import { getAllProjects } from "../../../api/projectApi";
 import "./ClientInfo.scss";
 import { useParams } from 'react-router-dom';
-import {NewNavbar} from '../../../component';
 const reviews = [
   { id: 1, headline: "Amazing Project!", reviewer: "John Doe", comment: "Very well executed.", rating: 5, reviewerImage: "https://picsum.photos/50" },
   { id: 2, headline: "Great Work", reviewer: "Jane Smith", comment: "Great design and functionality!", rating: 4, reviewerImage: "/placeholder.svg?height=50&width=50" },
@@ -44,11 +43,11 @@ const ClientInfo = () => {
   const [techStack, setTechStack] = useState([]);
   const [revenue, setRevenue] = useState({ total: 0, invoicesCount: 0 });
   const [loading, setLoading] = useState(true);
-  const [searchHistory, setSearchHistory] = useState([]);
+  const [, setSearchHistory] = useState([]);
   const [currentProjectPage, setCurrentProjectPage] = useState(1);
   const [currentReviewPage, setCurrentReviewPage] = useState(1);
   const [currentMilestonePage, setCurrentMilestonePage] = useState(1);
-  const [clientId, setClientId] = useState(null);
+  const [, setClientId] = useState(null);
 
 
   
@@ -139,9 +138,7 @@ const ClientInfo = () => {
         ]);
   
         setClientInfo(clientData);
-        console.log('Client data:', clientData);
         const clientProjects = allProjects.filter(project => project.client_id._id === clientData._id);
-        console.log('Filtered client projects:', clientProjects);
   
         setProjects(clientProjects);
         setFilteredProjects(clientProjects);

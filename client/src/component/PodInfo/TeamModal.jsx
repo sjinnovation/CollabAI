@@ -6,7 +6,6 @@ import { getUsersByTeamId, getProjectsByTeam, getTeamById } from '../../api/proj
 
 export const TeamModal = ({ teamId, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [skillFilter, setSkillFilter] = useState('')
   const [projectSearchTerm, setProjectSearchTerm] = useState('')
   const [currentMemberPage, setCurrentMemberPage] = useState(1)
   const [currentProjectPage, setCurrentProjectPage] = useState(1)
@@ -73,7 +72,6 @@ export const TeamModal = ({ teamId, onClose }) => {
     project.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
   )
   const projectPageCount = Math.ceil(filteredProjects.length / itemsPerPage)
-  console.log("filtered projects",filteredProjects)
   const currentProjects = filteredProjects.slice(
     (currentProjectPage - 1) * itemsPerPage,
     currentProjectPage * itemsPerPage

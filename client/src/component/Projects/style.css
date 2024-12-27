@@ -11,6 +11,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 @media (max-width: 1017px) {

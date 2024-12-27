@@ -1,6 +1,5 @@
 import Project from "../models/Project.js"; 
 import mongoose from 'mongoose';
-import Teams from "../models/teamModel.js";  
 
 export const getAllProjects = async (req, res) => {
   try {
@@ -46,7 +45,6 @@ export const getProjectById = async (req, res) => {
       .populate('techStack', 'name');
 
     if (projects.length === 0) {
-      console.log(2);
       return res.status(404).json({ message: 'No projects found for this client' });
     }
     res.status(200).json(projects);
@@ -115,7 +113,6 @@ export const getProjectsByClient = async (req, res) => {
   try {
     const projects = await Project.find({ client_id: clientId });
     if (projects.length === 0) {
-      console.log('1')
       return res.status(404).json({ message: 'No projects found for this client' });
     }
     res.status(200).json(projects);
@@ -153,12 +150,8 @@ export const getProjectByProjectId = async (req, res) => {
 };
 
 export const searchByAllFields = async (req, res) => {
-  console.log("Backend", req.params);
   try {
-    console.log("Backend", req.params);
     const { searchTerm } = req.query;
-    console.log("Backend: Search request received");
-    console.log("Backend: Search term:", searchTerm);
 
     let projects = await Project.find({})
       .populate('client_id')
@@ -166,7 +159,6 @@ export const searchByAllFields = async (req, res) => {
       .populate('techStack')
       .populate('team_id');
 
-    console.log("Backend: Found initial projects:", projects.length);
 
     if (searchTerm) {
       projects = projects.filter((project) =>
@@ -176,10 +168,9 @@ export const searchByAllFields = async (req, res) => {
         project.feature.some((feat) => feat.name.match(new RegExp(searchTerm, 'i'))) ||
         project.techStack.some((tech) => tech.name.match(new RegExp(searchTerm, 'i')))
       );
-      console.log("Backend: After filtering, found matches:", projects.length);
     }
 
-    console.log("Backend: Sending response");
+
     res.status(200).json({ success: true, data: projects });
   } catch (err) {
     console.error('Backend Error in searchByAllFields:', err);

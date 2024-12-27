@@ -36,6 +36,7 @@ import TrackUsage from "./Pages/SuperAdmin/TrackUsage/TrackUsage";
 import TrackUsageComponent from "./Pages/SuperAdmin/TrackUsage/TrackUsageComponent";
 import PublicAssistant from "./Pages/ExploreGPTs";
 import ProtectedRoutes from "./component/ProtectedRoute/ProtectedRoute";
+import ProtectedRouteFeature from "./component/ProtectedRoute/ProtectedRouteFeature";
 import AssistantTypeList from "./Pages/AssistantType/index";
 import TaskCommands from "./Pages/SuperAdmin/TaskCommands/TaskCommands";import KnowledgeBase from "./Pages/KnowledgeBase";
 import { IntegrateApplications } from "./component/IntegrateApplications/IntegrateApplications";
@@ -45,7 +46,6 @@ import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboar
 import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
 import PodInfo from "./Pages/PortfolioManagement/PodInfo";
 import ReviewsPage from "./Pages/PortfolioManagement/Reviews";
-import { Import } from "lucide-react";
 
 function App() {
   // Hook to get the current location
@@ -62,6 +62,7 @@ function App() {
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
       <Route path="/Form" element={<Form/>}></Route>
+      <Route element={<ProtectedRouteFeature />}>
       <Route
                 path="/platform-management-feature/*"
                 element={
@@ -78,7 +79,7 @@ function App() {
                         </Routes>
                     </PlatformManagementfeature>
                 }
-            />
+            /></Route>
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  

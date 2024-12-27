@@ -5,7 +5,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { TeamModal } from '../../../component/PodInfo/TeamModal.jsx';
 import { PodCard } from '../../../component/PodInfo/PodCard.jsx';
 import './PodInfo.scss'
-import {NewNavbar} from '../../../component/index.js';
 
 const PodInfo = () => {
   const [teams, setTeams] = useState([]);
@@ -27,7 +26,6 @@ const PodInfo = () => {
   const fetchTeams = async () => {
     try {
       const fetchedTeams = await getAllTeams();
-      console.log('Fetched teams:', fetchedTeams);
       setTeams(fetchedTeams);
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -35,7 +33,6 @@ const PodInfo = () => {
   };
 
   const handleTeamClick = (teamId) => {
-    console.log('Team clicked:', teamId);
     setSelectedTeamId(teamId);
     setIsModalOpen(true);
     // Update the URL when a team is clicked

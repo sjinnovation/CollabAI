@@ -1,6 +1,6 @@
 import React from 'react';
 import './style.css';
-import { FaCircle, FaCalendarAlt } from 'react-icons/fa';
+import { FaCalendarAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import {InitialsAvatar} from '../../component/InitialsAvatar/InitialsAvatar';
 import Badge from '../ClientInfo/Badge';
@@ -10,7 +10,6 @@ const ProjectCard = ({ project, viewType = 'card' }) => {
 
   // Function to handle project click
   const handleProjectClick = (id) => {
-    console.log('Navigating to project:', id);
     navigate(`/platform-management-feature/projectdetails/${id}`);
   };
 

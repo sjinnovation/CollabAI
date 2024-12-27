@@ -139,7 +139,7 @@ export default function ContentPage() {
                 <div className="title">
                     <h1>Portfolio</h1>
                 </div>
-
+    
                 <div className="filterbar">
                     <div>
                         <input
@@ -150,7 +150,7 @@ export default function ContentPage() {
                             onChange={handleSearchChange}
                         />
                     </div>
-
+    
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                         <button
                             style={{
@@ -166,7 +166,7 @@ export default function ContentPage() {
                         >
                             <u style={{ fontSize: '19.2px' }}>Sort By</u>
                         </button>
-
+    
                         {isSortModalOpen && (
                             <div
                                 className="dropdown"
@@ -204,13 +204,13 @@ export default function ContentPage() {
                             </div>
                         )}
                     </div>
-
+    
                     <a style={{ color: 'white' }} onClick={() => setIsModalOpen(true)}>
                         <u>Filter</u>
                     </a>
                 </div>
             </div>
-
+    
             {isModalOpen && (
                 <div className="modal">
                     <div className="modal-content">
@@ -249,7 +249,7 @@ export default function ContentPage() {
                     </div>
                 </div>
             )}
-
+    
             {!isLoading && (
                 <Projects
                     viewType={isListView ? 'list' : 'card'}
@@ -258,10 +258,22 @@ export default function ContentPage() {
                     projects={currentProjects}
                 />
             )}
-
-            <Pagination style={{ marginTop: "20px" }}>{items}</Pagination>
+    
+            <div className="pagination1">
+                <button-container
+                    onClick={() => setActivePage(prev => Math.max(prev - 1, 1))}
+                    disabled={activePage === 1}
+                >
+                    Previous
+                </button-container>
+                <span>{activePage} of {totalPages}</span>
+                <button-container
+                    onClick={() => setActivePage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={activePage === totalPages}
+                >
+                    Next
+                </button-container>
+            </div>
         </div>
     );
-}
-
-
+}    
