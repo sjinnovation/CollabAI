@@ -324,20 +324,23 @@ const ClientInfo = () => {
             isActive={activeTab === "work"}
             onClick={() => setActiveTab("work")}
           >
-            Work
+            Projects
           </TabsTrigger>
-          <TabsTrigger
-            isActive={activeTab === "reviews"}
-            onClick={() => setActiveTab("reviews")}
-          >
-            Reviews
-          </TabsTrigger>
-          <TabsTrigger
-            isActive={activeTab === "milestones"}
-            onClick={() => setActiveTab("milestones")}
-          >
-            Milestones
-          </TabsTrigger>
+       {/* 
+<TabsTrigger
+  isActive={activeTab === "reviews"}
+  onClick={() => setActiveTab("reviews")}
+>
+  Reviews
+</TabsTrigger>
+<TabsTrigger
+  isActive={activeTab === "milestones"}
+  onClick={() => setActiveTab("milestones")}
+>
+  Milestones
+</TabsTrigger>
+*/}
+
         </TabsList>
 
         <TabsContent isActive={activeTab === "work"}>

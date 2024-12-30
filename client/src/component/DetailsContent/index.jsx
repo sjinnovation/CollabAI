@@ -34,11 +34,9 @@ export default function ProjectDetails() {
   const [teammember, setTeammember] = useState([]);
   
   const handleProjectClick = (id) => {
-    console.log('Navigating to client:', id);
     navigate(`/platform-management-feature/Client/${id}`);
   };
   const handleTeamClick = (id) => {
-    console.log('Navigating to Pod:', id);
     navigate(`/platform-management-feature/Pod/${id}`);
   };
   useEffect(() => {

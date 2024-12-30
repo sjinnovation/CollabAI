@@ -1,6 +1,6 @@
 
 import { Imports } from "../../component"
-import './style.css'
+import './style.css' 
 export default function Upload() {
 
   return (
