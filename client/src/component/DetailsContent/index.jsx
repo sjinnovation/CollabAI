@@ -44,9 +44,7 @@ export default function ProjectDetails() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Fetching project with ID:', id);
         const response = await fetchProjectById(id);
-        console.log('Fetched project data:', response);
         setProject(response);
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -55,23 +53,18 @@ export default function ProjectDetails() {
     fetchData();
   }, [id]);
 
-  useEffect(()=>{
-    const fetchData=async()=>
-    {
-      try{
-        const response=await getProjectTeamMembers(id);
-        
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getProjectTeamMembers(id);
         setTeammember(response);
-        console.log('Fetched project team members:', teammember);
-      
-      }
-      catch(error){
+      } catch (error) {
         console.error('Error fetching project team members:', error);
       }
     };
-  
+
     fetchData();
-  },[id]);
+  }, [id]);
 
   if (!project) {
     return <div>Loading project details...</div>;
