@@ -37,7 +37,14 @@ import ragRouter from "./routers/ragWithKnowledgeBase.js";
 import googleDriveRouter from "./routers/googleDriveRouters.js";
 import vectorStoreRouter from "./routers/vectorStoreRoutes.js";
 import workBoardRouter from "./routers/workBoardRoute.js";
-
+import projectrouter from "./routers/projectRoutes.js";
+import clientRouter from "./routers/clientRouter.js";
+import reviewsRoutes from "./routers/reviewsRoutes.js";
+import techstackrouter from "./routers/techStackRoute.js";
+import featureRouter from "./routers/featureRouter.js";
+import revenuerouter from "./routers/revenueRouter.js";
+import projectteamrouter from "./routers/projectTeamRouter.js";
+import importRouter from "./routers/importRoute.js";
 const app = express();
 const server = http.createServer(app);
 
@@ -82,6 +89,14 @@ app.use("/api/assistants/usage",assistantUsageRoute);
 app.use("/api/knowledge-base",knowledgeBaseRouter);
 app.use("/api/rag/",ragRouter);
 app.use("/api/vectorStore",vectorStoreRouter);
+app.use('/api/projects', projectrouter);
+app.use("/api/clients", clientRouter);
+app.use('/api/techStacks',techstackrouter);
+app.use('/api/reviews', reviewsRoutes);
+app.use('/api/features', featureRouter);
+app.use('/api/revenue', revenuerouter);
+app.use('/api/project-team', projectteamrouter);
+app.use('/api/import',importRouter);
 
 
 app.use(bodyParser.json({ extended: true }));

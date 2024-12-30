@@ -18,6 +18,10 @@ import AssistantsList from './SuperAdmin/Assistant/AssistantsList';
 import ChatPage from "./ChatPage";
 import AssistantsChatPage from "./AssistantsChatPage";
 import AssistantFileDownloadPage from "./AssistantFileDownload";
+import PortfolioHome from "./PortfolioHome";
+import ProjectDetails from "./ProjectDetails";
+import Form from "./Form";
+import Upload from "./Upload";
 
 export {
   LoginForm,
@@ -37,5 +41,9 @@ export {
   AssistantsList,
   ChatPage,
   AssistantsChatPage,
-  AssistantFileDownloadPage
+  AssistantFileDownloadPage,
+  PortfolioHome,
+  Form,
+  ProjectDetails,
+  Upload,
 };

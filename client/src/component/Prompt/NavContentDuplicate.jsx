@@ -33,6 +33,8 @@ import { ThemeContext } from "../../contexts/themeConfig";
 import { FaFolderOpen } from "react-icons/fa6";
 import { BsFillLayersFill } from "react-icons/bs";
 import CommonNavLinks from "../layout/NewSidebar/CommonNavLinks";
+import PortfolioHome from "../../Pages/PortfolioHome";
+
 
 const NavContentDuplicate = ({
   setChatLog,
@@ -100,6 +102,11 @@ const NavContentDuplicate = ({
   const handleClickOnKnowledgeBase = () => {
     navigate("/knowledge-base");
   };
+  const [showSubButtons, setShowSubButtons] = useState(false); // State for sub-buttons visibility
+
+  const toggleSubButtons = () => {
+    setShowSubButtons(!showSubButtons); // Toggle visibility
+  };
   const handleAssistantSearch = useCallback(
     debounce((value) => {
       setSearchQuery(value);
@@ -107,6 +114,10 @@ const NavContentDuplicate = ({
     }, 600),
     []
   );
+  const handlePortfolioManagement = () => {
+    navigate("/platform-management-feature/portfolio");
+};
+
   // Main sidebar end
   return (
     <div className="w-100 h-100 d-flex flex-column justify-content-between">
@@ -142,6 +153,15 @@ const NavContentDuplicate = ({
           <p className="fw-bold custom-size-for-explore-text sidebar-text">
             <BsFillLayersFill className="fs-5 me-2 sidebar-icon" />
             Explore Agents
+          </p>
+        </div>
+        <div
+          onClick={handlePortfolioManagement}
+          className="glyphicon glyphicon-th-large sidebar-item"
+        >
+          <p className="fw-bold custom-size-for-explore-text sidebar-text">
+            <BsFillLayersFill className="fs-5 me-2 sidebar-icon" />
+            Portfolio management
           </p>
         </div>
         <div style={{ padding: "0.875rem", paddingTop: 0 }}>

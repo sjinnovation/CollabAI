@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "embla-carousel-autoplay": "^8.5.1",
+    "embla-carousel-react": "^8.5.1",
+    "lodash.debounce": "^4.0.8"
+  }
+}

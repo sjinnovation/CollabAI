@@ -1,10 +1,14 @@
 {
-  "name": "OpenAIframework",
-  "version": "0.1.0",
+  "name": "react",
+  "version": "18.3.1",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@googleapis/docs": "^3.0.2",
+    "@mui/icons-material": "^6.3.0",
+    "@mui/material": "^6.3.0",
     "@react-oauth/google": "^0.12.1",
     "@rpldy/uploader": "^1.8.1",
     "@testing-library/jest-dom": "^5.16.4",
@@ -17,12 +21,15 @@
     "bootstrap-icons": "^1.9.1",
     "browserify-zlib": "^0.2.0",
     "dompurify": "^3.0.9",
+    "embla-carousel-autoplay": "^8.5.1",
+    "embla-carousel-react": "^8.5.1",
     "framer-motion": "^11.0.8",
     "gapi-script": "^1.2.0",
     "google-auth-library": "^9.11.0",
     "googleapis": "^140.0.1",
     "highlight.js": "^11.9.0",
     "js-cookie": "^3.0.5",
+    "lucide-react": "^0.468.0",
     "marked": "^9.1.6",
     "moment": "^2.29.4",
     "openai": "^4.36.0",
@@ -37,7 +44,7 @@
     "react-google-login": "^5.2.2",
     "react-google-picker": "^0.1.0",
     "react-hot-toast": "^2.4.0",
-    "react-icons": "^4.4.0",
+    "react-icons": "^4.12.0",
     "react-infinite-scroll-component": "^6.1.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
@@ -88,5 +95,9 @@
     "url": "^0.11.3",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4"
-  }
+  },
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

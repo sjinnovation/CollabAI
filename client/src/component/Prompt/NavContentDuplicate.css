@@ -76,3 +76,45 @@
 .sidebar-hr {
  border: 1px solid rgb(108,117,125);
 }
+.sidebar-item {
+  column-gap: 8px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-item:hover {
+  background-color: var(--sidebar-hover-bg-color);
+}
+
+/* Sub-button Styles */
+.sub-buttons-container {
+  margin-left: 30px;
+  padding-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sub-buttons-container button {
+  background-color: var(--sidebar-button-bg-color);
+  color: var(--sidebar-text-color);
+  font-size: 13px;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sub-buttons-container button:hover {
+  background-color: var(--sidebar-hover-bg-color);
+}
+
+.sub-buttons-container button:focus {
+  outline: none;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}

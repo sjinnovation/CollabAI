@@ -1,0 +1,26 @@
+.carouselContainer {
+    overflow: hidden;
+  }
+  
+  .carouselTrack {
+    display: flex;
+  }
+  
+  .carouselSlide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+  
+  @media (min-width: 640px) {
+    .carouselSlide {
+      flex: 0 0 50%;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .carouselSlide {
+      flex: 0 0 33.33%;
+    }
+  }
+  
+  

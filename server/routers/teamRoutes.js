@@ -11,5 +11,5 @@ teamRouter.get("/",authenticateUser,getAllTeams);
 teamRouter.patch("/:id",authenticateUser,updateTeamById);
 teamRouter.get("/:id",authenticateUser,getTeamById);
 teamRouter.delete("/:id",authenticateUser,deleteTeamById);
-teamRouter.put("/add-new-field", addNewFieldToAllExistingData);
+teamRouter.put("/add-new-field",authenticateUser, addNewFieldToAllExistingData);
 export default teamRouter;

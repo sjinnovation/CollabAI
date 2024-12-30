@@ -1,0 +1,28 @@
+.searchContainer {
+    position: relative;
+    max-width: 25rem;
+    width: 100%;
+    margin: 0 auto 2rem auto;
+  }
+  
+  .searchInput {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+  }
+  
+  .searchInput:focus {
+    outline: none;
+    ring: 2px solid #3b82f6;
+  }
+  
+  .searchIcon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+  
+  

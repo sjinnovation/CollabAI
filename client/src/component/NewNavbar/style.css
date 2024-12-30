@@ -1,0 +1,29 @@
+.new-navbar{
+    background-color: #000;
+    width: 100%;
+    height: 70px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    font-size: 20px;
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(-100%);
+    border-bottom:1px solid #86858b;
+}
+
+.new-navbar.show {
+    transform: translateY(0);
+}
+
+.tabs
+{
+    display:flex;
+    justify-content: right;
+    align-items: center;
+    gap: 20px;
+   
+}

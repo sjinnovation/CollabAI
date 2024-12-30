@@ -1,0 +1,158 @@
+.hero-container {
+    height: 55vh;
+    width: 100%;
+    background-color: #070707;
+    background: radial-gradient(closest-side at left,#0e0a0a,);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 1350px;
+    gap: 3rem;
+    position: relative;
+
+}
+
+#typing {
+    font-size: 56px;
+    color: #ffffff;  
+    min-height: 50px;  
+    transition: all 0.4s ease;
+    margin-bottom: 2rem;
+    text-align: center;
+  
+}
+
+.carousel-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.carousel-wrapper {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+    flex: 0 0 calc(100% / 3);
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.carousel-slide-content {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    color: #ffffff;
+    text-align: center;
+    height: 300px;
+}
+
+.carousel-slide-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.carousel-slide-content p {
+    font-size: 1rem;
+}
+
+
+.typing-container {
+  display: flex;
+  align-items: center;
+  z-index:10
+}
+
+.cursor {
+  display: inline-block;
+  width: 4px;
+  height: 4rem;
+  background-color: white;
+  margin-left: 4px;
+  margin-bottom:25px;
+  animation: blink 1s step-end infinite;
+}
+
+
+
+.oval-background {
+    width: 300px;
+    height: 300px;
+    background-color:rgb(73, 68, 105);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-radius: 50%;
+    position: absolute;
+    filter: blur(11.5rem);
+  }
+
+  .search-bar input{
+    width: 700px;
+  }
+
+  .search
+  {
+    width:700px;
+  }
+
+  @media (max-width: 1024px)
+{
+  .search-bar .search
+  {
+      width:500px !important;
+  }
+}
+
+@media (max-width: 606px) {
+    .search-bar .search
+    {
+        width:300px !important;
+    }
+}
+  
+  @media (max-width: 768px) {
+    .carousel-slide {
+        flex: 0 0 100%;
+    }
+
+}
+
+@media (max-width:510px)
+{
+    .oval-background
+    {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+@media (max-width:1100px)
+{
+    #typing {
+        font-size: 3rem;
+    }
+
+}
+
+@media (max-width: 400px)
+{
+    #typing {
+        font-size: 2rem;
+    }
+}
+
+@keyframes blink {
+    from, to {
+      background-color: transparent;
+    }
+    50% {
+      background-color: white;
+    }
+  }

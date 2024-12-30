@@ -19,9 +19,13 @@ import {
   AssistantsChatPage,
   ChatPage,
   AssistantFileDownloadPage,
+  Form,
+  ProjectDetails,
+  Upload 
 } from "./Pages";
 
-
+import PortfolioHome from "./Pages/PortfolioHome";
+import PlatformManagementfeature from "./Pages/PlatformMangemenrfeature/PlatformMangamentfeature";
 import Layout from "./Pages/Layout";
 import AssistantLayout from "./Pages/Layout/AssistantLayout";
 import ConfigurationTabs from "./Pages/configration/index";
@@ -32,12 +36,16 @@ import TrackUsage from "./Pages/SuperAdmin/TrackUsage/TrackUsage";
 import TrackUsageComponent from "./Pages/SuperAdmin/TrackUsage/TrackUsageComponent";
 import PublicAssistant from "./Pages/ExploreGPTs";
 import ProtectedRoutes from "./component/ProtectedRoute/ProtectedRoute";
+import ProtectedRouteFeature from "./component/ProtectedRoute/ProtectedRouteFeature";
 import AssistantTypeList from "./Pages/AssistantType/index";
 import TaskCommands from "./Pages/SuperAdmin/TaskCommands/TaskCommands";import KnowledgeBase from "./Pages/KnowledgeBase";
 import { IntegrateApplications } from "./component/IntegrateApplications/IntegrateApplications";
 // import { IntegrateApplications } from "./component/Assistant/IntegrateApplications/IntegrateApplications";
 
 import ConnectionWithWorkboard from "./Pages/configration/ConnectionWithWorkboard";
+import ClientInfo from "./Pages/PortfolioManagement/ClientInfo";
+import PodInfo from "./Pages/PortfolioManagement/PodInfo";
+import ReviewsPage from "./Pages/PortfolioManagement/Reviews";
 
 function App() {
   // Hook to get the current location
@@ -53,8 +61,25 @@ function App() {
       <Route path="login" element={<LoginForm />} />
       <Route path="passwordReset/:token/:id" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
-
-  
+      <Route path="/Form" element={<Form/>}></Route>
+      <Route element={<ProtectedRouteFeature />}>
+      <Route
+                path="/platform-management-feature/*"
+                element={
+                    <PlatformManagementfeature>
+                        <Routes>
+                            <Route path="portfolio" element={<PortfolioHome />} />
+                            <Route path="projectdetails/:id" element={<ProjectDetails />} />
+                            <Route path="Client/:id" element={<ClientInfo />} /> 
+                            <Route path="PodInfo" element={<PodInfo />} />
+                            <Route path="Pod/:id" element={<PodInfo />} />
+                            <Route path="PodInfo" element={<PodInfo />} />
+                            <Route path="portfoliomanagement/Reviews" element={<ReviewsPage />} />
+                            <Route path="import" element={<Upload/>}/>
+                        </Routes>
+                    </PlatformManagementfeature>
+                }
+            /></Route>
    {/* For connecting workboard */}
       <Route path="ConnectionWithWorkboard" element={<ConnectionWithWorkboard />} />
  
@@ -72,7 +97,7 @@ function App() {
         <Route path="promptuserview" element={<PrompotUsersList />} />
         <Route path="/knowledge-base" element={<KnowledgeBase />} /> 
         <Route path="/integrate-apps" element={<IntegrateApplications/>} /> 
-
+     
 
 
         <Route element={<ProtectedRoutes />}>
@@ -127,8 +152,9 @@ function App() {
         path="assistants/download/:file_id"
         element={<AssistantFileDownloadPage />}
       />
-    </Routes>
+     
+
+</Routes>
   );
 }
-
 export default App;
