@@ -184,42 +184,6 @@ const ClientInfo = () => {
   const [reviewsEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [milestonesEmblaRef] = useEmblaCarousel({ loop: true }, [Autoplay()]);
 
-  const handleSearchSubmit = useCallback((e) => {
-    e.preventDefault();
-    const trimmedQuery = searchQuery.trim().toLowerCase();
-    if (trimmedQuery) {
-      const filtered = projects.filter((project) => {
-        const techStackIncludes = project.techStack.some((tech) =>
-          tech.name.toLowerCase().includes(trimmedQuery)
-        );
-        return (
-          project.name.toLowerCase().includes(trimmedQuery) ||
-          project.description.toLowerCase().includes(trimmedQuery) ||
-          project.status.toLowerCase().includes(trimmedQuery) ||
-          techStackIncludes
-        );
-      });
-      setFilteredProjects(filtered);
-      setSearchHistory((prev) => [...new Set([trimmedQuery, ...prev])].slice(0, 5));
-    } else {
-      setFilteredProjects(projects);
-    }
-  }, [searchQuery, projects]);
-  
-  
-
-  useEffect(() => {
-    if (searchQuery === "") {
-      setFilteredProjects(projects);
-    }
-  }, [searchQuery, projects]);
-
-  const clearSearch = useCallback(() => {
-    setSearchQuery("");
-    setFilteredProjects(projects);
-    setSearchHistory([]);
-  }, [projects]);
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -344,11 +308,12 @@ const ClientInfo = () => {
         </TabsList>
 
         <TabsContent isActive={activeTab === "work"}>
-          <SearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            handleSearchSubmit={handleSearchSubmit}
-          />
+        <SearchBar
+    searchQuery={searchQuery}
+    setSearchQuery={setSearchQuery}
+    projects={projects}
+    setFilteredProjects={setFilteredProjects}
+  />
           <div className="projects-carousel" ref={projectsEmblaRef}>
             <div className="projects-container1">
               {currentProjects.map((project) => (

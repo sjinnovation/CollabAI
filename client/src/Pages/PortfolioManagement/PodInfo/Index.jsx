@@ -56,7 +56,7 @@ const PodInfo = () => {
 
   return (
   
-    <div className="teamPage" style={{height:'1000px'}}>
+    <div className="teamPage">
       <div className="container1">
         <h1 className="title">
           Team Pods Overview
@@ -77,9 +77,17 @@ const PodInfo = () => {
           </div>
         </div>
         <div className="podGrid">
-          {filteredTeams.map((team) => (
-            <PodCard key={team._id} team={team} onClick={() => handleTeamClick(team._id)} />
-          ))}
+        {filteredTeams.length > 0 ? (
+          filteredTeams.map((team) => (
+            <PodCard
+              key={team._id}
+              team={team}
+              onClick={() => handleTeamClick(team._id)}
+            />
+          ))
+        ) : (
+          <div className="noTeamsMessage">No pod team found</div>
+        )}
         </div>
       </div>
 

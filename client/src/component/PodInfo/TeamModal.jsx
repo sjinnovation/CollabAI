@@ -143,10 +143,18 @@ export const TeamModal = ({ teamId, onClose }) => {
                 </div>
               </div>
               <div className="teamMembers">
-                {currentMembers.map((member) => (
-                  <TeamMemberCard key={member._id || member.username} member={member} />
-                ))}
-              </div>
+  {currentMembers.length > 0 ? (
+    currentMembers.map((member) => (
+      <TeamMemberCard
+        key={member._id || member.username}
+        member={member}
+      />
+    ))
+  ) : (
+    <div className="noTeamsMessage">No team member found</div>
+  )}
+</div>
+
               <div className="pagination1">
                 <button-container
                   onClick={() => setCurrentMemberPage(prev => Math.max(prev - 1, 1))}
@@ -178,9 +186,19 @@ export const TeamModal = ({ teamId, onClose }) => {
                 </div>
               </div>
               <div className="projectsGrid">
-              {currentProjects.map((project, index) => (
-  <ProjectCard key={project._id || project.name + index} project={project} />
-))}
+              <div className="projectList">
+  {currentProjects.length > 0 ? (
+    currentProjects.map((project, index) => (
+      <ProjectCard
+        key={project._id || project.name + index}
+        project={project}
+      />
+    ))
+  ) : (
+    <div className="noTeamsMessage">No projects found</div>
+  )}
+</div>
+
               </div>
               <div className="pagination1">
                 <button-container
