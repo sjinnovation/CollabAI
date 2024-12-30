@@ -1,5 +1,5 @@
 .hero-container {
-    height: 65vh;
+    height: 55vh;
     width: 100%;
     background-color: #070707;
     background: radial-gradient(closest-side at left,#0e0a0a,);
@@ -16,7 +16,7 @@
     max-width: 1350px;
     gap: 3rem;
     position: relative;
-    margin-top:100px;
+
 }
 
 #typing {

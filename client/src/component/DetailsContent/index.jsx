@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Layout, Circle, Calendar, Flag, FileText, DollarSign, Clock } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Circle, Calendar, Flag, FileText, DollarSign, Clock, Users } from 'lucide-react';
 import './styles.css';
-import { fetchProjectById ,getProjectTeamMembers} from '../../api/projectApi';
-import { useNavigate } from 'react-router-dom';
+import { fetchProjectById, getProjectTeamMembers } from '../../api/projectApi';
 
-
-const InfoBox = ({ icon: Icon, label, value, subValue }) => (
+const InfoBox = ({ icon: Icon, label, value }) => (
   <div className="info-box">
-    
     <div className="info-content">
-      <div style={{display:"flex",gap:"5px"}}>
-      <Icon className="icon" />
-      <span className="info-label">{label}</span>
+      <div className="info-header">
+        <Icon className="icon" size={20} />
+        <span className="info-label">{label}</span>
       </div>
-
       <span className="info-value">{value}</span>
-     
     </div>
   </div>
 );
@@ -24,8 +19,6 @@ const InfoBox = ({ icon: Icon, label, value, subValue }) => (
 const Badge = ({ children, className }) => (
   <span className={`badge ${className}`}>{children}</span>
 );
-
-
 
 export default function ProjectDetails() {
   const { id } = useParams();
@@ -36,9 +29,11 @@ export default function ProjectDetails() {
   const handleProjectClick = (id) => {
     navigate(`/platform-management-feature/Client/${id}`);
   };
+
   const handleTeamClick = (id) => {
     navigate(`/platform-management-feature/Pod/${id}`);
   };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -60,57 +55,65 @@ export default function ProjectDetails() {
         console.error('Error fetching project team members:', error);
       }
     };
-
     fetchData();
   }, [id]);
 
   if (!project) {
-    return <div>Loading project details...</div>;
+    return (
+      <div className="project-page">
+        <div className="project-details">
+          <div>Loading project details...</div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="project-page">
-      <div className="project-title" style={{  }}>
+      <div className="project-title">
         <h1>{project.name}</h1>
       </div>
 
       <div className="project-details">
         <div className="project-content">
-          <p className="project-contents " style={{ marginBottom: "2rem"}}>{project.description}</p>
+          <p className="project-contents">{project.description}</p>
 
           <div className="details-grid">
             <div className="detail-item">
-              <Circle className="icon" />
-              <span className="label">Status:</span>
-              <Badge className="status-badge">{project.status || 'In progress'}</Badge>
+              <Circle size={20} />
+              <span className="label">Status</span>
+              <Badge className="status-badge">{project.status || 'In Progress'}</Badge>
             </div>
 
             <div className="detail-item">
-              <span className="icon">👤</span>
-              <span className="label">Owner:</span>
-              <div className="owner-info" onClick={()=>handleProjectClick(project.client_id?._id)} >
-                <div className="avatar-placeholder" ></div>
+              <span className="label">Client</span>
+              <div 
+                className="owner-info" 
+                onClick={() => handleProjectClick(project.client_id?._id)}
+              >
+                <div className="avatar-placeholder" />
                 <span>{project.client_id?.name || 'Unknown'}</span>
               </div>
             </div>
 
             <div className="detail-item">
-              <Calendar className="icon" />
-              <span className="label">Dates:</span>
+              <Calendar size={20} />
+              <span className="label">Timeline</span>
               <span>
-                {project.start_time ? new Date(project.start_time).toLocaleDateString() : 'N/A'} → {project.end_time ? new Date(project.end_time).toLocaleDateString() : 'N/A'}
+                {project.start_time ? new Date(project.start_time).toLocaleDateString() : 'N/A'} 
+                {' → '} 
+                {project.end_time ? new Date(project.end_time).toLocaleDateString() : 'N/A'}
               </span>
             </div>
 
             <div className="detail-item">
-              <Flag className="icon" />
-              <span className="label">TechStack:</span>
-              <div>
-                {project.techStack?.map((tech, index) => (
+              <Flag size={20} />
+              <span className="label">Tech Stack</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {project.techStack?.map((tech) => (
                   <Badge 
                     key={tech._id} 
                     className="priority-badge"
-                    style={{ marginRight: '0.5rem' }}
                   >
                     {tech.name}
                   </Badge>
@@ -118,25 +121,27 @@ export default function ProjectDetails() {
               </div>
             </div>
 
-            <div className="detail-item summary">
-              <FileText className="icon" />
-              <span className="label">Team:</span>
-              <div className="summary-content">
-                {teammember?.map((member, index) => (
-                    <p key={member._id}>
-                        {member.user_id?.fname} {member.user_id?.lname} - {member.role_in_project}
-                    </p>
-                ))}
-                {/*{teammember?.map(()=>{
-                  }} <p>{project.summary || 'No summary available'}</p> */}
+            <div className="detail-item">
+              <Users size={20} />
+              <span className="label">Team</span>
+              <div 
+                className="owner-info"
+                onClick={() => handleTeamClick(project.team_id?._id)}
+              >
+                <span>{project.team_id?.teamTitle || 'No team assigned'}</span>
               </div>
             </div>
 
-            <div className="detail-item team">
-              <FileText className="icon" />
-              <span className="label">Team:</span>
-              <div className="summary-content" onClick={()=>handleTeamClick(project.team_id?._id)}>
-                <p style={{marginBottom:"0"}}>{project.team_id?.teamTitle || 'No team information available'}</p>
+            <div className="detail-item">
+              <FileText size={20} />
+              <span className="label">Members</span>
+              <div style={{ flex: 1 }}>
+                {teammember?.map((member) => (
+                  <div key={member._id} style={{ marginBottom: '4px' }}>
+                    {member.user_id?.fname} {member.user_id?.lname} 
+                    <span style={{ color: '#a1a1aa' }}> - {member.role_in_project}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -146,19 +151,16 @@ export default function ProjectDetails() {
               icon={DollarSign}
               label="Budget"
               value="$12,000"
-             
             />
             <InfoBox
               icon={Clock}
-              label="Hours taken"
+              label="Hours Spent"
               value={project.hr_taken || 'N/A'}
-              
             />
             <InfoBox
-              icon={Clock}
-              label="Team Members"
-              value="10"
-              
+              icon={Users}
+              label="Team Size"
+              value={teammember.length || 0}
             />
           </div>
         </div>
