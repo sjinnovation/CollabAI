@@ -1,6 +1,6 @@
 .project-page {
   padding-bottom: 50px;
-  background-color: #18181b;
+  background-color: #070707;
   min-height: 100vh;
 }
 
@@ -8,10 +8,11 @@
   color: #f4f4f5;
   padding: 24px;
   display: flex;
-  background: #18181b;
+  background: #070707;
   gap: 32px;
   max-width: 1400px;
   margin: 0 auto;
+  justify-content: center;
 }
 
 .project-content {

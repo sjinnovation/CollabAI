@@ -47,7 +47,7 @@ export default function ImportForm() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8011/api/import', {
+      const response = await fetch('http://localhost:4000/api/import', {
         method: 'POST',
         body: formData,
       });

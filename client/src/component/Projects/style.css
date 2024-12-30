@@ -5,6 +5,7 @@
     gap: 2.5rem;
     background: transparent;
     max-width: 1350px;
+    min-height: 20vh;
 }
 
 .projects-area {
@@ -28,6 +29,13 @@
         flex-direction: row;
     }
 }
+
+.no-projects-message
+{
+    color:white;
+    font-size: 1.2rem;
+}
+    
 
 /* List view styles */
 .projects-area.list-view {

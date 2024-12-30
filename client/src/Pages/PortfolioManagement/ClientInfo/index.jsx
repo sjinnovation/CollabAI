@@ -316,12 +316,17 @@ const ClientInfo = () => {
   />
           <div className="projects-carousel" ref={projectsEmblaRef}>
             <div className="projects-container1">
-              {currentProjects.map((project) => (
-                <div key={project._id} className="project-slide">
-                  <ProjectCard project={project} techStack={techStack} />
-                </div>
-                
-              ))}
+            {currentProjects.length > 0 ? (
+      currentProjects.map((project) => (
+        <div key={project._id} className="project-slide">
+          <ProjectCard project={project} techStack={techStack} />
+        </div>
+      ))
+    ) : (
+      <div className="no-projects-message">
+        <p>No projects found</p>
+      </div>
+    )}
             </div>
             <div className="pagination1">
               <button-container onClick={() => setCurrentProjectPage(prev => Math.max(prev - 1, 1))}

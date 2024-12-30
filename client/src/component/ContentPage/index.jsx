@@ -49,7 +49,6 @@ export default function ContentPage() {
             setIsLoading(true);
             try {
                 const response = await getAllProjects(sortBy);
-                console.log("API Response:", response);
 
                 const getUniqueValues = (arr) => [...new Set(arr.map(JSON.stringify))].map(JSON.parse);
 

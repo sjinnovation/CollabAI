@@ -24,7 +24,7 @@ const Projects = ({ viewType, projects }) => {
           />
         ))
       ) : (
-        <p className="no-projects-message">No projects available.</p>
+        <p className="no-projects-message" >No projects available.</p>
       )}
     </div>
   );

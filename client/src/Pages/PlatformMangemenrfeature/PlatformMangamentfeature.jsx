@@ -5,7 +5,7 @@ const PlatformManagementfeature = ({ children }) => {
   return (
     <>
       <NewNavbar />
-      <div className="my-feature-content" style={{backgroundColor:' black', height: '100%'}}>
+      <div className="my-feature-content" style={{backgroundColor:' black'}}>
         {children}
       </div>
     </>
