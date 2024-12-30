@@ -23,7 +23,7 @@
 @media (max-width: 760px) {
     .projects-area {
         grid-template-columns: repeat(1, 1fr);
-        display: flex;
+       
         justify-content: center;
         flex-direction: row;
     }

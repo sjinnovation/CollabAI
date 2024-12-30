@@ -12,7 +12,7 @@
 
 .panel{
     display:flex;
-  padding-top: 80px !important;
+  /* padding-top: 80px !important; */
     justify-content: space-between;
     align-items: center;
 
@@ -262,7 +262,7 @@ button.secondary:hover {
 {
   .filterbar
   {
-    gap:0px;
+    gap:1rem;
   }
 }
 
@@ -294,6 +294,10 @@ button.secondary:hover {
   {
     display: flex;
     justify-content: center;
+  }
+  .filterbar 
+  {
+    gap:2rem;
   }
 }
 

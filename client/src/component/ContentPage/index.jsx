@@ -51,7 +51,6 @@ export default function ContentPage() {
                 const response = await getAllProjects(sortBy);
                 console.log("API Response:", response);
 
-                // Create a helper function to get unique values
                 const getUniqueValues = (arr) => [...new Set(arr.map(JSON.stringify))].map(JSON.parse);
 
                 // Process tags more effectively
