@@ -66,7 +66,7 @@ const BotResponse = ({ chatPrompt, response }) => {
 
   const getMarkedContent = (content) => {
     const result = content.replace(/【.*?】/g, "").replace(/\[0\]/g, "").replace(/<div class="citations-container">.*?<\/div>/g, "");
-    const sanitizedContent = DOMPurify.sanitize(result);
+    const sanitizedContent = DOMPurify.default.sanitize(result);
     const tableHtml = { __html: marked(sanitizedContent) };
 
     return (
