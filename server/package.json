@@ -6,10 +6,10 @@
 	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "set NODE_ENV=local&& nodemon index.js",
-		"dev_start": "npm install&& export NODE_ENV=dev&& pm2 start index.js",
+		"start": "export NODE_ENV=local&& nodemon index.js",
+		"dev_start": "npm install --legacy-peer-deps && export NODE_ENV=dev&& pm2 start index.js",
 		"stop": "pm2 stop index.js",
-		"dev": "npm install&& export NODE_ENV=dev&& pm2 restart index.js",
+		"dev": "npm install --legacy-peer-deps && export NODE_ENV=dev&& pm2 restart index.js",
 		"prod_start": "npm install&& export NODE_ENV=prod&& pm2 start index.js",
 		"prod": "npm install&& export NODE_ENV=prod&& pm2 restart index.js"
 	},
