@@ -7,9 +7,9 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "export NODE_ENV=local&& nodemon index.js",
-		"dev_start": "npm install --legacy-peer-deps && export NODE_ENV=dev&& pm2 start index.js",
+		"dev_start": "npm install && export NODE_ENV=dev&& pm2 start index.js",
 		"stop": "pm2 stop index.js",
-		"dev": "npm install --legacy-peer-deps && export NODE_ENV=dev&& pm2 restart index.js",
+		"dev": "npm install && export NODE_ENV=dev&& pm2 restart index.js",
 		"prod_start": "npm install&& export NODE_ENV=prod&& pm2 start index.js",
 		"prod": "npm install&& export NODE_ENV=prod&& pm2 restart index.js"
 	},
@@ -19,8 +19,6 @@
 		"@anthropic-ai/sdk": "^0.24.0",
 		"@aws-sdk/client-s3": "^3.379.1",
 		"@google/generative-ai": "^0.2.1",
-		"@langchain/community": "^0.2.13",
-		"@langchain/openai": "^0.2.0",
 		"@pinecone-database/pinecone": "^2.2.2",
 		"aws-sdk": "^2.1645.0",
 		"bcrypt": "^5.1.0",
@@ -42,7 +40,6 @@
 		"joi": "^17.12.1",
 		"jsonwebtoken": "^9.0.0",
 		"jwt-decode": "^3.1.2",
-		"langchain": "^0.2.6",
 		"mammoth": "^1.8.0",
 		"mime": "^4.0.3",
 		"mime-types": "^2.1.35",
