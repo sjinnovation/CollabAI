@@ -55,9 +55,10 @@ const FavoriteAssistantList = ({ data }) => {
 
     },[searchQuery]);
 
-    const openAssistantNewPage = (assistantId, name) => {
-        navigate(`/agents/${assistantId}`);
-
+    const openAssistantNewPage = (assistantId, name, voiceAgent) => {
+        navigate(voiceAgent === true 
+            ? `/voice_agents/${assistantId}`
+            : `/agents/${assistantId}`);
     };
 
     const columns = [
@@ -87,7 +88,7 @@ const FavoriteAssistantList = ({ data }) => {
 
                 <Space size="middle">
                     <Tooltip title="Chat with Agent">
-                        <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><IoChatbubbleEllipsesOutline /></Button>
+                        <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name, record?.voiceAgent)}><IoChatbubbleEllipsesOutline /></Button>
                     </Tooltip>
 
                     <Tooltip title="Delete">

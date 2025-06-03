@@ -123,7 +123,9 @@ const AssistantList = ({ propsData }) => {
           <>
             {retrievingUniqueAssistant?.map((assistant, index) => (
               <Link
-                to={`/agents/${assistant?.assistant_id}`}
+                to={assistant.voiceAgent === true 
+                  ? `/voice_agents/${assistant?.assistant_id}`
+                  : `/agents/${assistant?.assistant_id}`}
                 onClick={() => {
                   setAssistantIdLinked(assistant?.assistant_id);
                   setAssistantSelected(true);

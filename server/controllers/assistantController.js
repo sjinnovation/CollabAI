@@ -34,7 +34,12 @@ import { findFileFromDBandDownload } from "./knowledgeBase.js";
 import { createOpenAiVectorStore, createOpenAiVectorStoreWithFileIds, deleteFilesFromVectorStoreUtils, getFileIdsFromVectorStore, updateOpenAiVectorStoreName, uploadFilesToVectorStore } from "../lib/vectorStore.js";
 import mongoose from "mongoose";
 import { fileSearchFileTypes } from "../utils/fileSearchFileExtensions.js";
-
+import InterviewOverview from "../models/interviewOverviewModel.js";
+import { getAssistantThreadById } from "../service/assistantService.js";
+import sendEmail from '../utils/mailGun.js';
+import {
+  processCompleteInterviewSubmission
+} from '../service/assistantService.js';
 
 
 const getFileExtension = (filePath) => {
@@ -69,7 +74,8 @@ export const createAssistant = async (req, res, next) => {
       assistantTypes,
       fileNameList = [],
       assistantBase,
-      knowledgeSource
+      knowledgeSource,
+      voiceAgent
     } = req.body;
     let createFileObject = true;
     const fileNameListParsed = fileNameList !== 'undefined' && fileNameList.length > 0 ? JSON.parse(fileNameList) : [];
@@ -164,7 +170,7 @@ export const createAssistant = async (req, res, next) => {
     }
 
     if (myAssistant) {
-      newAssistantInstance = await createAssistantInstanceV2(myAssistant, userId, category, description, image_url, tools.includes("function"), staticQuestions, userSelectedModel, assistantTypes);
+      newAssistantInstance = await createAssistantInstanceV2(myAssistant, userId, category, description, image_url, tools.includes("function"), staticQuestions, userSelectedModel, assistantTypes, voiceAgent);
       const storeKnowledgebaseReference = await storeKnowledgeBaseAssistantsReference(newAssistantInstance._id, myAssistant.id, fileNameListParsed, assistantInformation, knowledgeSource);
 
     }
@@ -1155,6 +1161,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
       assistantBase,
       knowledgeSource,
       deletedFileList=[],
+      voiceAgent,
 
     } = req.body;
     const files = req.files['files'] ?? [];
@@ -1341,6 +1348,7 @@ export const updateAssistantDataWithFile = async (req, res, next) => {
         instructions: myUpdatedAssistant.instructions,
         model: myUpdatedAssistant.model,
         tools: updateData.tools,
+        voiceAgent,
         static_questions: staticQuestions && staticQuestions !==undefined
           ? parseStaticQuestions(staticQuestions)
           : [],
@@ -1726,6 +1734,11 @@ export const getAssistantInfo = async (req, res,next) => {
       }
     }
     myAssistant.file_ids = existingFileIds;
+    if (assistantInfoFromOurDB.voiceAgent !== undefined) {
+        myAssistant.voiceAgent = assistantInfoFromOurDB.voiceAgent;
+    } else {
+        myAssistant.voiceAgent = false;
+    }
 
     let fileNames = await Promise.all(
       myAssistant?.file_ids?.map(fileId => retrieveOpenAIFileObject(fileId).then(fileInfo => fileInfo?.filename))
@@ -2139,4 +2152,70 @@ export const createVectorStoreForAllAssistantWhereStoreNotExist = async (req, re
       .json({ message: error.message });
   }
 };
+
+/**
+ * @async
+ * @function submitInterview
+ * @description Creates an interview overview by collecting all prompts from a thread
+ * @param {Object} req - Request object. Should contain assistant_id and thread_id in params
+ * @param {Object} res - Response object
+ * @returns {Response} 201 - Returns success message
+ * @throws {Error} Will throw an error if the interview overview creation fails
+ */
+export const submitInterview = async (req, res, next) => {
+  try {
+    const { assistant_id, thread_id } = req.params;
+    const { content, chatCount } = req.body;
+
+    // Process the complete interview submission using service
+    const result = await processCompleteInterviewSubmission(
+      assistant_id, 
+      thread_id, 
+      content, 
+      chatCount
+    );
+
+    return res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: 'Interview submitted successfully. HR team has been notified and you will receive a confirmation email shortly.',
+      data: {
+        interviewId: result.interviewOverview._id,
+        submissionDate: new Date().toISOString(),
+        status: 'submitted'
+      }
+    });
+  } catch (error) {
+    // Handle specific database errors
+    if (error.name === 'ValidationError') {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid data provided',
+        details: Object.values(error.errors).map(err => err.message)
+      });
+    }
+
+    if (error.name === 'CastError') {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid ID format provided'
+      });
+    }
+
+    // Handle custom service errors
+    if (error.message.includes('required') || error.message.includes('not found')) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    // Generic error response
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'An error occurred while processing your interview submission. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message })
+    });
+  }
+};
+
 

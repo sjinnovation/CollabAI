@@ -1,4 +1,4 @@
-import { axiosOpen, axiosSecureInstance } from "./axios";
+import { axiosOpen, axiosSecureInstance, axiosSecure } from "./axios";
 import axios from "axios";
 // [POST] - @desc: handles creating a new chat per assistant
 export const createChatPerAssistant = async (assistant_id, body) => {
@@ -75,5 +75,85 @@ export const uploadFilesForAssistant = async (assistant_id, body) => {
   } catch (error) {
     console.log("🚀 ~ uploadFilesForAssistant ~ error:", error);
     return;
+  }
+};
+
+// [POST] - @desc: handles saving interview data
+export const submitInterview = async (assistant_id, thread_id, body) => {
+  try {
+    // Input validation
+    if (!assistant_id || !thread_id) {
+      throw new Error('Assistant ID and Thread ID are required');
+    }
+
+    if (!body || !body.content) {
+      throw new Error('Interview content is required');
+    }
+
+    const response = await axiosSecureInstance.post(
+      `api/assistants/${assistant_id}/${thread_id}/interview/`,
+      body,
+      {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        validateStatus: function (status) {
+          return status >= 200 && status < 300;
+        }
+      }
+    );
+
+    return { 
+      success: true, 
+      data: response.data,
+      message: response.data.message || 'Interview submitted successfully'
+    };
+
+  } catch (error) {
+    let errorMessage = 'Failed to submit interview';
+    
+    if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Request timeout. Please try again.';
+    } else if (error.response) {
+      // Server responded with error status
+      const status = error.response.status;
+      const serverMessage = error.response.data?.message || error.response.data?.errorMessage;
+      
+      switch (status) {
+        case 400:
+          errorMessage = serverMessage || 'Invalid interview data provided';
+          break;
+        case 401:
+          errorMessage = serverMessage || 'Authentication required. Please log in again.';
+          break;
+        case 403:
+          errorMessage = 'You do not have permission to submit this interview';
+          break;
+        case 404:
+          errorMessage = 'Interview or assistant not found';
+          break;
+        case 429:
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+          break;
+        case 500:
+          errorMessage = 'Server error. Please try again later.';
+          break;
+        default:
+          errorMessage = serverMessage || `Server error (${status})`;
+      }
+    } else if (error.request) {
+      // Network error
+      errorMessage = 'Network error. Please check your connection.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    // Return error object instead of throwing
+    return { 
+      success: false, 
+      message: errorMessage,
+      error: error.response?.data || error.message
+    };
   }
 };

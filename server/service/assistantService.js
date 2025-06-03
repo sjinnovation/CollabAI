@@ -10,6 +10,8 @@ import { parseStaticQuestions } from "../utils/assistant.js";
 import { getAssistantIdByName } from "./assistantTypeService.js";
 import KnowledgeBaseAssistants from "../models/knowledgeBaseAssistants.js";
 import { getFileIdsFromVectorStore } from "../lib/vectorStore.js";
+import User ,{UserRole} from "../models/user.js";
+import sendEmail from "../utils/sendEmailViaOutlook.js";
 
 export const createAssistantInstance = async (assistant, userId, category, description, image_url, functionCalling, staticQuestions, userSelectedModel, assistantTypes) => {
   const getAssistantType = await getAssistantIdByName(assistantTypes);
@@ -34,7 +36,7 @@ export const createAssistantInstance = async (assistant, userId, category, descr
   return newAssistantInstance.save();
 }
 
-export const createAssistantInstanceV2 = async (assistant, userId, category, description, image_url, functionCalling, staticQuestions, userSelectedModel, assistantTypes) => {
+export const createAssistantInstanceV2 = async (assistant, userId, category, description, image_url, functionCalling, staticQuestions, userSelectedModel, assistantTypes, voiceAgent) => {
   const getAssistantType = await getAssistantIdByName(assistantTypes);
   const openai = await getOpenAIInstance()
   const vectorStoreId = assistant?.tool_resources?.file_search?.vector_store_ids[0];
@@ -66,6 +68,7 @@ console.log(uniqueFileIds);
     userId,
     category,
     description,
+    voiceAgent,
     image_url,
     functionCalling,
     static_questions: staticQuestions ? parseStaticQuestions(staticQuestions) : [],
@@ -275,4 +278,149 @@ export const updateChatPrompts = (messages) => {
 
     return message;
   });
+};
+
+export const validateInterviewSubmission = (assistant_id, thread_id, content) => {
+  if (!assistant_id || !thread_id) {
+    throw new Error('Assistant ID and Thread ID are required');
+  }
+
+  if (!content) {
+    throw new Error('Interview content is required');
+  }
+
+  return true;
+};
+
+export const getInterviewPromptsFromThread = async (thread_id) => {
+  try {    
+    const prompts = await AssistantThread.find({ thread_id });
+    
+    if (!prompts || prompts.length === 0) {
+      throw new Error('No interview data found for this thread');
+    }
+
+    return prompts;
+  } catch (error) {
+    throw new Error(`Failed to get interview prompts: ${error.message}`);
+  }
+};
+
+export const getUserFromPrompts = async (prompts) => {
+  try {
+    
+    const user_id = prompts[0].user;
+    if (!user_id) {
+      throw new Error('User information not found');
+    }
+
+    const user = await User.findOne({ _id: user_id })
+      .select('-password')
+      .populate('teams');
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user;
+  } catch (error) {
+    throw new Error(`Failed to get user information: ${error.message}`);
+  }
+};
+
+export const createInterviewOverviewRecord = async (userId, threadId, assistant_id, content, chatCount) => {
+  try {
+    const { default: InterviewOverview } = await import('../models/interviewOverviewModel.js');
+    
+    const interviewOverview = new InterviewOverview({
+      userId: userId,
+      threadId: threadId,
+      assistant_id: assistant_id,
+      overview: content,
+      submissionDate: new Date().toISOString(),
+      totalMessages: chatCount,
+      isDeleted: false
+    });
+
+    await interviewOverview.save();
+
+    return interviewOverview;
+  } catch (error) {
+    throw new Error(`Failed to create interview overview: ${error.message}`);
+  }
+};
+
+export const prepareInterviewEmailData = (user, content, chatCount, interviewOverview, thread_id) => {
+  let parsedContent = null;
+  let isJsonContent = false;
+  
+  try {
+    // Remove markdown code block markers if present
+    const cleanContent = content.replace(/```json\s*|\s*```/g, '').trim();
+    parsedContent = JSON.parse(cleanContent);
+    isJsonContent = true;
+  } catch (e) {
+    // Not JSON, keep as original content
+    parsedContent = content;
+  }
+  return {
+    name: `${user.fname} ${user.lname}`.trim(),
+    email: user.email,
+    content: isJsonContent ? parsedContent : content, 
+    submissionDate: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+    totalMessages: chatCount,
+    hrDashboardUrl: `${process.env.CLIENT_URL}/hr/dashboard`,
+    reviewUrl: `${process.env.CLIENT_URL}/hr/interviews/${interviewOverview._id}`,
+    supportUrl: `${process.env.CLIENT_URL}/support`,
+    thread_id: thread_id
+  };
+};
+
+export const sendInterviewNotificationEmail = async (emailData) => {
+  try {
+    const result = sendEmail("mohammad.ashikuzzaman@sjinnovation.com", "Interview Submission", {emailData}, "../utils/template/interviewSubmittedToHR.handlebars", false);
+    
+    return { success: true };
+  } catch (emailError) {
+    // Don't throw the error, just return failure
+    return { success: false, error: emailError };
+  }
+};
+
+export const processCompleteInterviewSubmission = async (assistant_id, thread_id, content, chatCount) => {
+  try {
+    // Validate input
+    validateInterviewSubmission(assistant_id, thread_id, content);
+
+    // Get interview prompts
+    const prompts = await getInterviewPromptsFromThread(thread_id);
+    const user = await getUserFromPrompts(prompts);
+
+    // Create interview overview record
+    const interviewOverview = await createInterviewOverviewRecord(
+      user._id, 
+      thread_id, 
+      assistant_id, 
+      content, 
+      chatCount
+    );
+
+    // Prepare email data
+    const emailData = prepareInterviewEmailData(user, content, chatCount, interviewOverview, thread_id);
+    const emailResult = await sendInterviewNotificationEmail(emailData);
+
+    return {
+      success: true,
+      interviewOverview,
+      user
+    };
+  } catch (error) {
+    throw error;
+  }
 };

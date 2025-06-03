@@ -4,16 +4,23 @@ import { FaRegEdit } from "react-icons/fa";
 import { Avatar ,Button} from "antd";
 import { botIconsMap } from "../../constants/chatPageConstants";
 import { PageTitleContext } from "../../contexts/TitleContext";
+import { Outlet, useLocation } from "react-router-dom";
 
 const NewChatWithSameAssistant = ({ assistantName ,assistantId}) => {
     const navigate = useNavigate();
     const newChatIcon = botIconsMap.newChat.icon;
     const { pageTitle, setPageTitle } = useContext(PageTitleContext);
+    const location = useLocation();
 
     return (
         <div
             onClick={() => {
-                navigate(`/agents/${assistantId}`, { replace: true  });
+                if (location.pathname.includes("/voice_agents/")) {
+                    navigate(`/voice_agents/${assistantId}`);
+                    window.location.reload();
+                } else {
+                    navigate(`/agents/${assistantId}`, { replace: true  });
+                }
             }}
             style={{ padding: 0}}
             className={`thread d-flex justify-content-between align-items-center`}

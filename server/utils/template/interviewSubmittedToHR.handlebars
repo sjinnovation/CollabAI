@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Overview Submitted to HR</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .title {
+            color: #dc3545;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .info-value {
+            color: #dc3545;
+        }
+        .candidate-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .conversation-preview {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .conversation-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 5px;
+        }
+        .user-message {
+            border-left: 3px solid #007bff;
+        }
+        .assistant-message {
+            border-left: 3px solid #28a745;
+        }
+        .message-label {
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .user-label {
+            color: #007bff;
+        }
+        .assistant-label {
+            color: #28a745;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin: 0 10px;
+        }
+        .cta-button:hover {
+            background-color: #c82333;
+        }
+        .secondary-button {
+            background-color: #6c757d;
+        }
+        .secondary-button:hover {
+            background-color: #545b62;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer-links {
+            margin-top: 15px;
+        }
+        .footer-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .hr-icon {
+            font-size: 48px;
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+        .priority-badge {
+            background-color: #ffc107;
+            color: #212529;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">CollabAI</div>
+            <div class="hr-icon">👥</div>
+            <h1 class="title">New Interview Overview Submitted</h1>
+            <p class="subtitle">A candidate has submitted their interview overview for HR review</p>
+            <div class="priority-badge">⚡ Requires HR Review</div>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Dear HR Team,</p>
+            
+            <p>A new interview overview has been submitted and is ready for your review. Please find the candidate details and interview summary below:</p>
+
+            <div class="candidate-info">
+                <h3 style="margin-top: 0; color: #2196f3;">👤 Candidate Information</h3>
+                <div class="info-item">
+                    <span class="info-label">Candidate Name:</span>
+                    <span class="info-value">{{emailData.name}}</span> 
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{emailData.email}}</span>
+                </div> 
+                <div class="info-item">
+                    <span class="info-label">Applied Position:</span>
+                    <span class="info-value">{{emailData.content.appliedPosition}}</span>
+                </div> 
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-top: 0; color: #dc3545;">📋 Interview Details</h3>
+                <div class="info-item">
+                    <span class="info-label">Interview ID:</span>
+                    <span class="info-value">{{emailData.thread_id}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Summary:</span>
+                    <span class="info-value">{{emailData.content.summary}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Expertise:</span>
+                    <span class="info-value">{{emailData.content.expertise}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Marks:</span>
+                    <span class="info-value">{{emailData.content.marks}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Recommendable:</span>
+                    <span class="info-value">{{emailData.content.recommendable}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Total Q&A Exchanges:</span>
+                    <span class="info-value">{{emailData.totalMessages}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Submission Date:</span>
+                    <span class="info-value">{{emailData.submissionDate}}</span>
+                </div>
+            </div>
+
+            {{#if conversationPreview}}
+            <h3>📝 Interview Preview:</h3>
+            <div class="conversation-preview">
+                {{#each conversationPreview}}
+                <div class="conversation-item user-message">
+                    <div class="message-label user-label">Candidate:</div>
+                    <div>{{this.userPrompt}}</div>
+                </div>
+                <div class="conversation-item assistant-message">
+                    <div class="message-label assistant-label">AI Interviewer:</div>
+                    <div>{{this.systemPrompt}}</div>
+                </div>
+                {{/each}}
+                {{#if hasMore}}
+                <p style="text-align: center; color: #6c757d; font-style: italic;">... and {{remainingCount}} more exchanges</p>
+                {{/if}}
+            </div>
+            {{/if}}
+
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>Review the complete interview transcript</li>
+                <li>Evaluate candidate responses</li>
+                <li>Schedule follow-up if needed</li>
+                <li>Update candidate account status in the system</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>HR Department - CollabAI</strong></p>
+            <p>This interview overview requires your attention and review.</p>
+            
+            <div class="footer-links">
+                <a href="{{hrDashboardUrl}}">HR Dashboard</a>
+                <a href="{{candidateProfileUrl}}">Candidate Profile</a>
+                <a href="{{supportUrl}}">Support</a>
+            </div>
+            
+            <p style="margin-top: 20px;">
+                © {{currentYear}} CollabAI. All rights reserved.<br>
+                This notification was sent to the HR team for interview review.
+            </p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -136,10 +136,11 @@ const SingleUserAssistants = ({ data }) => {
 
     return itemName.includes(query);
   });
-  const openAssistantNewPage = (assistant_id, name) => {
-
-    navigate(`/agents/${assistant_id}`);
-
+  const openAssistantNewPage = (assistant_id, name, voiceAgent) => {
+    console.log('v', voiceAgent)
+    navigate(voiceAgent === true 
+        ? `/voice_agents/${assistant_id}`
+        : `/agents/${assistant_id}`);
   };
 
   //------Columns----------//
@@ -174,13 +175,13 @@ const SingleUserAssistants = ({ data }) => {
       ),
     },
     {
-      title: "Action",
+      title: "Action dd",
       key: "action",
       align: "center",
       render: (_, record) => (
         <Space size="middle">
           <Tooltip title="Chat with Agent">
-            <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><AiOutlineArrowUp /></Button>
+            <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name, record?.voiceAgent)}><AiOutlineArrowUp /></Button>
           </Tooltip>
 
           <Button

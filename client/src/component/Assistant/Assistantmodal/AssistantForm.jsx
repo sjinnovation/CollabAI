@@ -362,7 +362,34 @@ const AssistantForm = ({ data }) => {
         </Select>
       </Form.Item>
 
-
+      <Form.Item
+        name="voiceAgent"
+        valuePropName="checked"
+        tooltip="Enable voice capabilities for this agent"
+        initialValue={editMode ? assistantData?.voiceAgent : false}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>Voice Agent</span>
+          <Tooltip title="Enable voice capabilities for this agent">
+            <Switch
+              checked={form.getFieldValue("voiceAgent")}
+              onChange={(checked) => {
+                form.setFieldsValue({ voiceAgent: checked });
+                setAssistantData((prevData) => ({
+                  ...prevData,
+                  voiceAgent: checked
+                }));
+              }}
+            />
+          </Tooltip>
+        </div>
+      </Form.Item>
 
 
       <Form.Item

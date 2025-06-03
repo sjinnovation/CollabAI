@@ -74,7 +74,8 @@ const initialAssistantState = {
   knowledgeSource: false,
   fileNames: [],
   FileList: [],
-  assistantTypes: null
+  assistantTypes: null,
+  voiceAgent: false
 };
 
 const initialFunctionCallingAssistantState = {
@@ -284,7 +285,8 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         fileNames: myAssistant?.fileNames,
         file_ids: file_ids,
         fileIdsWithKeysOfKnowledgeBase: myAssistant?.knowledgeBaseFileIdsAndKysOfOpenAI,
-        fileIdsWithName : myAssistant?.fileIdsWithName
+        fileIdsWithName : myAssistant?.fileIdsWithName,
+        voiceAgent : myAssistant?.voiceAgent
 
       };
       setAssistantData(filteredAssistantData);

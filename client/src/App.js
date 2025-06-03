@@ -17,6 +17,7 @@ import {
   TeamList,
   AssistantsList,
   AssistantsChatPage,
+  VoiceAgentPage,
   ChatPage,
   AssistantFileDownloadPage,
 } from "./Pages";
@@ -83,6 +84,17 @@ function App() {
             <Route
               path="agents/:assistant_id/:thread_id"
               element={<AssistantsChatPage />}
+            />
+        </Route>
+
+        <Route element={<ProtectedRoutes />}>
+            <Route
+              path="voice_agents/:assistant_id"
+              element={<VoiceAgentPage />}
+            />
+            <Route
+              path="voice_agents/:assistant_id/:thread_id"
+              element={<VoiceAgentPage />}
             />
         </Route>
 

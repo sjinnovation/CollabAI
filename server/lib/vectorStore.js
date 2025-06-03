@@ -1,6 +1,6 @@
 export const createOpenAiVectorStore = async (openai,storeName)=>{
   try {
-    const store = await openai.beta.vectorStores.create({
+    const store = await openai.vectorStores.create({
         name: storeName
     });
     return {success: true, store}
@@ -11,7 +11,7 @@ export const createOpenAiVectorStore = async (openai,storeName)=>{
 }
 
 export const createOpenAiVectorStoreWithFileIds = async (openai, storeName, file_ids)=>{
-  const vectorStore = await openai.beta.vectorStores?.create({
+  const vectorStore = await openai.vectorStores?.create({
         name: storeName,
         file_ids: file_ids,
         // expires_after: {
@@ -23,7 +23,7 @@ export const createOpenAiVectorStoreWithFileIds = async (openai, storeName, file
 }
 export const updateOpenAiVectorStoreName = async (openai, vectorStoreId, storeName)=>{
   try {
-    const vectorStore = await openai.beta.vectorStores.update(
+    const vectorStore = await openai.vectorStores.update(
       vectorStoreId,
       {
         name: storeName,
@@ -37,7 +37,7 @@ export const updateOpenAiVectorStoreName = async (openai, vectorStoreId, storeNa
 
 
 export const getFileIdsFromVectorStore = async (openai, vectorStoreId)=>{
-  const vectorStoreFiles = await openai.beta.vectorStores.files.list(
+  const vectorStoreFiles = await openai.vectorStores.files.list(
     vectorStoreId
   );
   // console.log(vectorStoreFiles);
@@ -54,7 +54,7 @@ export const uploadFilesToVectorStore = async (openai, vectorStoreId, newFileIds
     try {
       
       // Attempt to upload to the the vector store
-      const uploadedVectorStoreFile = await openai.beta.vectorStores.files.create(
+      const uploadedVectorStoreFile = await openai.vectorStores.files.create(
         vectorStoreId,
         {
           file_id: newFileId
@@ -72,7 +72,7 @@ export const deleteFilesFromVectorStoreUtils = async (openai, vectorStoreId, del
   for (const deletedFileId of deletedFileIds) {
     try {
       // Attempt to delete the file from the vector store
-      const deletedVectorStoreFile = await openai.beta.vectorStores.files.del(
+      const deletedVectorStoreFile = await openai.vectorStores.files.del(
         vectorStoreId,
         deletedFileId
       );

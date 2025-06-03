@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "export NODE_ENV=local&& nodemon index.js",
+		"start": "set NODE_ENV=local&& nodemon index.js",
 		"dev_start": "npm install && export NODE_ENV=dev&& pm2 start index.js",
 		"stop": "pm2 stop index.js",
 		"dev": "npm install && export NODE_ENV=dev&& pm2 restart index.js",

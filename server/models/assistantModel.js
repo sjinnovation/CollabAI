@@ -119,6 +119,11 @@ const AssistantSchema = mongoose.Schema(
             }
         ],
         
+        voiceAgent: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
 
     },
     {

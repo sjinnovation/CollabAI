@@ -17,6 +17,7 @@ import TeamList from "./SuperAdmin/Team/Teams";
 import AssistantsList from './SuperAdmin/Assistant/AssistantsList';
 import ChatPage from "./ChatPage";
 import AssistantsChatPage from "./AssistantsChatPage";
+import VoiceAgentPage from "./VoiceAgentPage";
 import AssistantFileDownloadPage from "./AssistantFileDownload";
 
 export {
@@ -37,5 +38,6 @@ export {
   AssistantsList,
   ChatPage,
   AssistantsChatPage,
+  VoiceAgentPage,
   AssistantFileDownloadPage
 };

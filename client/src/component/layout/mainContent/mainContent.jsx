@@ -28,9 +28,11 @@ const MainContent = () => {
         <Header />
         <section className="flex-grow-1 d-flex z-0">
           {/* Sidebar for chat thread */}
-          <div className={`thread-sidebar ${showMenu ? "open-sidebar" : ""}`}>
-            <ThreadSidebarWrapper />
-          </div>
+          {!location.pathname.includes("/voice_agents/") && (
+            <div className={`thread-sidebar ${showMenu ? "open-sidebar" : ""}`}>
+              <ThreadSidebarWrapper />
+            </div>
+          )}
 
           <div
             className={`main-chat-area-section flex-grow-1 ${

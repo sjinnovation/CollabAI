@@ -53,7 +53,9 @@ const AssistantTable = ({ data }) => {
 
   const redirectToAssistant = (record) => {
     const assistantId = record.assistant_id;
-    const url = `/agents/${assistantId}`;
+    const url = record.voiceAgent === true 
+      ? `/voice_agents/${assistantId}`
+      : `/agents/${assistantId}`;
     window.open(url, "_blank");
   };
 

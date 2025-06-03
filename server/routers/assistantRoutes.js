@@ -28,6 +28,7 @@ import {
   assistantClone,
   migrateAssistantsFromV1toV2,
   createVectorStoreForAllAssistantWhereStoreNotExist,
+  submitInterview,
 } from "../controllers/assistantController.js";
 import multer from 'multer';
 import authenticateUser from '../middlewares/login.js';
@@ -57,6 +58,7 @@ router.get("/:assistant_id/chats", authenticateUser, getChatPerAssistant);
 router.post("/:assistant_id/chats", authenticateUser, createChatPerAssistant);
 router.patch("/:assistant_id/teams", assignTeamToAssistant);
 router.route("/:assistant_id").patch(authenticateUser, updateAssistant).delete(authenticateUser, deleteAssistant);
+router.post("/:assistant_id/:thread_id/interview", authenticateUser, submitInterview);
 ///user/stats/
 router.get("/users/created/:userId", getAssistantsCreatedByUser);
 router.get("/:id/info", getAssistantById);
