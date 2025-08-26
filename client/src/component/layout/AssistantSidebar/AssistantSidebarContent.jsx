@@ -66,7 +66,7 @@ const AssistantSidebarContent = () => {
         prevThreads.filter((thread) => thread._id !== threadId)
       );
       setDeletedAssistantThreadId(null);
-      navigate(`/assistants/${assistant_name}/${assistant_id}`);
+      navigate(`/agents/${assistant_id}`);
     }
   };
 
@@ -162,6 +162,7 @@ const AssistantSidebarContent = () => {
       const threads = categorizeThreads(chatThread, "updatedAt");
       return threads;
     } else return {};
+    
   }, [chatThread, searchByTitle]);
 
   return (

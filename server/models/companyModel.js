@@ -28,6 +28,9 @@ const companySchema = mongoose.Schema({
     is_deleted: {
         type: Boolean,
         default: false,
+    },
+    brandLogo: {
+        type: String,
     }
  },{
    timestamps:true 

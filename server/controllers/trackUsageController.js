@@ -4,6 +4,7 @@ import { CommonMessages, TrackUsageMessage } from '../constants/enums.js';
 import { BadRequest } from '../middlewares/customError.js';
 import { UserRole } from '../models/user.js';
 import mongoose from 'mongoose';
+import { getTrackUsages, getAssistantUsages } from '../service/trackUsageService.js';
 
 /**
  * Asynchronous function for getting track usage data.
@@ -258,5 +259,44 @@ export const getAllTrackUsageDaily = async (req, res, next) => {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: CommonMessages.INTERNAL_SERVER_ERROR,
     });
+  }
+};
+
+export const getTrackUsage = async (req, res, next) => {
+   try {
+    const { page = 1, limit = 10 } = req.query;
+    const trackUsageData = await getTrackUsages({
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+    res.json({
+      status: 'success',
+      data: trackUsageData.docs,
+      total: trackUsageData.totalDocs,
+      page: trackUsageData.page,
+      pages: trackUsageData.totalPages,
+    });
+      } catch (error) {
+    console.error('Error in getAssistantUsage:', error);
+    next(error);
+  }
+};
+
+
+export const getAssistantUsage = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const assistantUsageData = await getAssistantUsages({
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+    res.json({
+      status: 'success',
+      data: assistantUsageData.docs,
+      pagination: assistantUsageData.pagination,
+    });
+  } catch (error) {
+    console.error('Error in getAssistantUsage:', error);
+    next(error);
   }
 };

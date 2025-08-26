@@ -2,8 +2,14 @@ import { getOpenAIInstance } from "../config/openAI.js";
 import { createOpenAIFileObject, deleteAssistantFileByID, retrieveAssistantFromOpenAI, retrieveOpenAIFile, retrieveOpenAIFileObject } from "../lib/openai.js";
 import FunctionDefinition from "../models/functionDefinitionModel.js";
 import { assistantFuncMap } from "./assistantFunctionMapper.js";
+import ServiceList from "../models/integration/serviceListModel.js";
+import  ServiceApi  from "../models/integration/serviceApiModel.js";
+import ServiceCredentials from "../models/integration/serviceCredentialsModel.js";
+import { Executer } from "../service/executer/index.js";
+import mongoose from "mongoose"
 import axios from 'axios';
 import fs from "fs";
+import { getFileIdsFromFileKey } from "../service/knowledgeBase.js";
 
 /**
  * Converts the assistant response into annotated text with citations added.
@@ -14,7 +20,7 @@ import fs from "fs";
 export const onTextDelta = async (textDelta) => {
   let finalResponse = "";
   let message = textDelta.value;
-  finalResponse += message;
+  message ? (finalResponse += message) : (finalResponse += "");
 
   if (textDelta?.annotations?.length) {
     const { annotations } = textDelta;
@@ -22,7 +28,7 @@ export const onTextDelta = async (textDelta) => {
       value: finalResponse,
       annotations,
     });
-    finalResponse += annotatedResponse;
+    finalResponse = annotatedResponse;
   }
 
   return finalResponse;
@@ -70,7 +76,7 @@ export const onToolCallDelta = async (toolCallDelta) => {
  * @param {boolean} [isDynamicFunctionCalling=false] - Indicates whether dynamic function calling is enabled. ( defaults to false )
  * @returns {Promise<Array>} - A promise that resolves to an array of tool outputs.
  */
-export const onToolCalls = async (assistant_id, toolCalls, isDynamicFunctionCalling = false) => {
+export const onToolCalls = async (assistant_id, toolCalls, isDynamicFunctionCalling = false, userId) => {
   const toolOutputs = [];
 
   const requiredActions = toolCalls;
@@ -98,26 +104,85 @@ export const onToolCalls = async (assistant_id, toolCalls, isDynamicFunctionCall
     const isLocalFunctionCallingAssistant =
       isDynamicFunctionCalling === false &&
       assistantFuncMap.hasOwnProperty(funcName);
+    
+          //check if function is from integerated service
+    const functionNameArray = funcName.split("_");
+    const endpoint_id = functionNameArray[functionNameArray.length - 1];
+    try {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(endpoint_id);
+      const api = isValidObjectId
+        ? await ServiceApi.findOne({ _id : endpoint_id })
+        : null;
+        console.log("🚀 ~ .on ~ api:", api);
+        if(api){
+        const service_id = api.service_id;
+        const service = await ServiceList.find({ _id : service_id });
 
-    if (isCustomFunctionCallingAssistant) {
-      const argumentsList = propertiesKeys.map((key) => argument[key]);
+        if (service) {
+          const slug = service[0].slug;
 
-      // Assuming argumentsList now is an array of values from the argument object based on propertiesKeys
-      const functionName = myAssistant.tools[0].function.name;
+          const creds = await ServiceCredentials.findOne({
+            userId: userId,
+            service_id: service_id,
+          });
+        
+          const credentials = creds.credentials;
+        
+          if (!credentials) {
+            throw new Error(`Credentials not found for service: ${slug}`);
+          }
+        
+          try {
+            const result = await Executer(
+              slug,
+              api.api_endpoint,
+              api.method,
+              creds.credentials,
+              argument,
+              creds.service_id,
+              creds._id,
+              creds.userId
+            );
+        
+            currOutput.output = JSON.stringify(result);
+          } catch (error) {
+            console.error("Error during API execution:", error.message);
+            currOutput.output = "This function doesn't exist.";
+          }
+        }        
+        
+      }else{
+        console.log("isCustomFunctionCallingAssistant : ",isCustomFunctionCallingAssistant);
+        // Else we handle local function calling if no API found
+        if (isCustomFunctionCallingAssistant) {
+          const argumentsList = propertiesKeys.map((key) => argument[key]);
+          
+          // Assuming argumentsList now is an array of values from the argument object based on propertiesKeys
+          const functionName = myAssistant.tools[0].function.name;
 
-      const functionMap = await createFunctionMap();
-      // Create the function call dynamically using the spread operator
-      if (typeof functionMap[functionName] === "function") {
-        const output = await functionMap[functionName](...argumentsList);
-        currOutput.output = JSON.stringify(output);
+
+          const functionMap = await createFunctionMap();
+          // Create the function call dynamically using the spread operator
+          if (typeof functionMap[functionName] === "function") {
+            const output = await functionMap[functionName](...argumentsList);
+            currOutput.output = JSON.stringify(output);
+            console.log("currOutput.output : ", currOutput.output);
+          }
+        } else if (isLocalFunctionCallingAssistant) {
+          const output = await assistantFuncMap[funcName](argument);
+          currOutput.output = JSON.stringify(output);
+          console.log("currOutput.output in isLocalFunctionCallingAssistant: ", currOutput.output);
+
+        }
       }
-    } else if (isLocalFunctionCallingAssistant) {
-      const output = await assistantFuncMap[funcName](argument);
-      currOutput.output = JSON.stringify(output);
+    } catch (error) {
+      console.error("Error during tool call execution:", error.message);
+      currOutput.output = "An error occurred while processing the function.";
     }
 
     toolOutputs.push(currOutput);
   }
+  console.log("toolOutputs:", toolOutputs);
 
   return toolOutputs;
 };
@@ -226,6 +291,18 @@ export const processAssistantGeneratedImage = async (img_file_id) => {
   return imgElement;
 };
 
+const fileCache = new Map();
+
+const annotationIndexTracker = {
+  usedIndices: new Map(),
+  currentIndex: 1,
+};
+
+export const resetAnnotationTracker = () => {
+  annotationIndexTracker.usedIndices = new Map();
+  annotationIndexTracker.currentIndex = 1;
+};
+
 /**
  * Annotates message content with citations for text and links for files.
  * @async
@@ -236,25 +313,49 @@ export const processAssistantGeneratedImage = async (img_file_id) => {
  * @throws {Error} Will throw an error if the citations cannot be retrieved or processed.
  */
 export const annotateMessageContent = async (messageContent) => {
-  const annotations = messageContent.annotations || [];
+  let assistantResponse = messageContent?.value || "";
+  const annotations = messageContent?.annotations || [];
+
   let citationPromises = [];
 
-  annotations.forEach((annotation, index) => {
-    messageContent.value = messageContent.value.replace(
-      annotation.text,
-      ` [${index}]`
-    );
+  for (let annotation of annotations) {
+    if (!annotationIndexTracker.usedIndices.has(annotation.text)) {
+      annotationIndexTracker.usedIndices.set(
+        annotation.text,
+        annotationIndexTracker.currentIndex++
+      );
+    }
+    const index = annotationIndexTracker.usedIndices.get(annotation.text);
 
-    if (annotation.file_citation) {
-      const promise = retrieveOpenAIFileObject(
-        annotation.file_citation.file_id
-      ).then((citedFile) => {
-        return `${index + 1}. ${annotation.file_citation.quote} from ${
-          citedFile.filename
-        }`;
-      });
+    let filename = "source file";
+    let fileId = null;
 
-      citationPromises.push(promise);
+    if (annotation?.file_citation?.file_id) {
+      fileId = annotation.file_citation.file_id;
+      try {
+        if (!fileCache.has(fileId)) {
+          const file = await retrieveOpenAIFileObject(fileId);
+          fileCache.set(fileId, file?.filename || "source file");
+        }
+        filename = fileCache.get(fileId);
+      } catch (err) {
+        console.warn(`Failed to get file name for file ID ${fileId}:`, err);
+      }
+
+      let chapter = null;
+      let line = null;
+      const match = annotation.text.match(/【(\d+):(\d+)†source】/);
+      if (match) {
+        chapter = match[1];
+        line = match[2];
+      }
+
+      let citationTitle = filename;
+      if (chapter) citationTitle += `, Chapter ${chapter}`;
+      if (line) citationTitle += `${chapter ? "" : ", "} Line ${line}`;
+
+      const linkTag = `<a href="/assistants/download/${fileId}" title="${citationTitle}" target="_blank"><sup>[${index}]</sup></a>`;
+      assistantResponse = assistantResponse.replace(annotation.text, linkTag);
     } else if (annotation.file_path) {
       const promise = retrieveOpenAIFileObject(
         annotation.file_path.file_id
@@ -268,19 +369,25 @@ export const annotateMessageContent = async (messageContent) => {
       });
 
       citationPromises.push(promise);
+
+      const linkTag = `<sup>[${index}]</sup>`;
+      assistantResponse = assistantResponse.replace(annotation.text, linkTag);
+    } else {
+      const linkTag = `<sup title='${filename}'>[${index}]</sup>`;
+      assistantResponse = assistantResponse.replace(annotation.text, linkTag);
     }
-  });
+  }
 
   const citations = await Promise.all(citationPromises);
 
   // Only add the citations-container div if there are any citations
   if (citations.length > 0) {
-    messageContent.value += `\n<div class="citations-container">${citations.join(
+    assistantResponse += `\n<div class="citations-container">${citations.join(
       ""
     )}</div>`;
   }
 
-  return messageContent.value;
+  return assistantResponse;
 };
 
 export const parseStaticQuestions = (staticQuestionsString) => {
@@ -311,7 +418,6 @@ export const deleteAssistantFilesAndFilterIds = async (
     for (const deletedFileId of deletedFileIds) {
       if(fileIds.includes(deletedFileId)){
         const responseOfFileIdsDelete = await deleteAssistantFileByID(openai, assistantId, deletedFileId);
-
       }
     }
     return fileIds.filter((fileId) => !deletedFileIds.includes(fileId));
@@ -321,14 +427,19 @@ export const deleteAssistantFilesAndFilterIds = async (
   }
 };
 
-export const uploadFiles = async (openai, files,assistantInformation = []) => {
-  const filePromises = files.map(async (file) => {
-    const uploadedFile = await createOpenAIFileObject(openai,file,"assistants",assistantInformation);
+export const uploadFiles = async (openai, files,assistantInformation = [],fileIdWithExtension=[],fileSearchIds=[]) => {
+  if(files?.length > 0){
+    const filePromises = files.map(async (file) => {
+      const uploadedFile = await createOpenAIFileObject(openai,file,"assistants",assistantInformation,fileIdWithExtension,fileSearchIds);
+  
+      return uploadedFile.id;
+    });
+  
+    return Promise.all(filePromises);
+  }else{
+    return [];
+  }
 
-    return uploadedFile.id;
-  });
-
-  return Promise.all(filePromises);
 };
 
 /**
@@ -341,16 +452,23 @@ export const uploadFiles = async (openai, files,assistantInformation = []) => {
  */
 export async function createFunctionMap() {
   try {
+    console.log("Creating function map...");
     // Get all function definitions from the database
     const definitions = await FunctionDefinition.find({});
-
+    const openai = await getOpenAIInstance();
     // Map function names to executable functions
     const functionMap = definitions.reduce((acc, def) => {
       try {
-        const funcDefinition = def.definition.replace("()", "(axios)");
+        const funcDefinition = def.definition.replace("()", "(axios,openai,definitions,ServiceApi,ServiceList,ServiceCredentials,Executer)");
 
-        const func = new Function("axios", `return async ${funcDefinition}`)(
-          axios
+        const func = new Function("axios","openai","definitions","ServiceApi","ServiceList","ServiceCredentials","Executer", `return async ${funcDefinition}`)(
+          axios,
+          openai,
+          definitions,
+          ServiceApi,
+          ServiceList,
+          ServiceCredentials,
+          Executer,
         );
 
         acc[def.name] = func;

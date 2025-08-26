@@ -30,7 +30,7 @@ promptRouter.post('/stream', authenticateUser, getGptStreamResponse);
 
 promptRouter.get("/userprompts/:userid", authenticateUser, getUserPrompts);
 
-promptRouter.get("/fetchprompts/:threadid", authenticateUser, fetchprompts);
+promptRouter.get("/fetchprompts/:threadid", fetchprompts);
 
 promptRouter.get(
   "/fetchchatthreads/:userid",

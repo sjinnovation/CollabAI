@@ -23,7 +23,11 @@ const NavPrompt = ({
   assistantId,
   assistantThreadId,
   assistantName,
+  chatLog,
   thread_mongo_id,
+  setLoadingThread,
+  isResponseThread = false,
+  projectIdFromPrompt = null
 }) => {
   const [editPrompt, setEditPrompt] = useState(false);
   const [activeEditPrompt, setActiveEditPrompt] = useState(false);
@@ -35,8 +39,7 @@ const NavPrompt = ({
   const [isThreadDeleting, setIsThreadDeleting] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const { pageTitle, setPageTitle } = useContext(PageTitleContext);
-  const { setDeletedAssistantThreadId } = useContext(AssistantContext);
-
+  const { setDeletedAssistantThreadId,isResponseThreadFound, setIsResponseThreadFound } = useContext(AssistantContext);
   const textAreaRef = useRef(null);
   const navigate = useNavigate();
 
@@ -44,8 +47,7 @@ const NavPrompt = ({
   const { setRemoveThreadId } = useContext(SidebarContext);
 
   // get currently selected thread id
-  const { thread_id: currentThreadId } = useParams();
-
+  const { projectId = null,thread_id: currentThreadId } = useParams();  
   const onClick = (e) => {};
 
   const items = [
@@ -75,12 +77,17 @@ const NavPrompt = ({
       danger: true,
     },
   ];
-
+  useEffect(() => {
+    setIsResponseThreadFound(isResponseThread);
+  }, [isResponseThread]);
+useEffect(()=>{
+  setPromptTitle(chatPrompt);
+  setLoadingThread(true);
+},[chatPrompt]);
   // -------------------------------- API Calls ----------------------------
 
   const handleEditPrompt = async () => {
     const editedValue = textAreaRef.current.value;
-    console.log(editedValue);
     try {
       await updatePrompt(
         threadId,
@@ -100,7 +107,8 @@ const NavPrompt = ({
         setRemoveThreadId,
         navigate,
         setShow,
-        setIsThreadDeleting
+        setIsThreadDeleting,
+        projectId
       );
     } catch (error) {
       console.error("Error clearing conversation:", error);
@@ -109,7 +117,6 @@ const NavPrompt = ({
 
   const handleUpdateThread = async () => {
     const editedValue = textAreaRef.current.value;
-    console.log(editedValue);
     try {
       await updateThread(
         thread_mongo_id,
@@ -179,6 +186,8 @@ const NavPrompt = ({
       navigate(
         `/agents/${assistantId}/${assistantThreadId}`
       );
+    }else if(isResponseThread){
+      navigate(`/projects/${projectIdFromPrompt}/${threadId}`);
     } else {
       navigate(`/chat/${threadId}`);
     }

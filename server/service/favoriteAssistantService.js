@@ -59,6 +59,22 @@ export const getSingleFavouriteAssistantByIdOrUserIdService = async (id, skip, l
     return { favoriteAssistantById, totalCount };
 };
 
+export const getSingleFavoriteAssistantWithoutSkipService = async (id, limit, page) => {
+    try {
+        const [favoriteAssistantById, totalCount] = await Promise.all([
+            FavouriteAssistant.find({ user_id: id })
+                .sort({ createdAt: -1 }),
+                // .limit(limit * page)
+                // .lean(),
+            FavouriteAssistant.countDocuments({ user_id: id }),
+        ]);
+        return { favoriteAssistantById, totalCount };
+    } catch (error) {
+        console.log(error);
+        return { favoriteAssistantById: [], totalCount: 0 };
+    }
+ }
+
 export const getFavouriteAssistantByAssistantIdAndUserIdService = async (assistant_id, user_id) => {
     return await FavouriteAssistant.findOne({ assistant_id, user_id });
 };

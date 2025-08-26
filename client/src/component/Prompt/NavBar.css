@@ -1,22 +1,96 @@
+.sidebar-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+.sidebar-main-content {
+  height: calc(80vh - 14px);
+  flex: 1 1 auto;
+  overflow-x: hidden;
+}
+
+.sidebar-main-content::-webkit-scrollbar {
+  width: 8px !important;
+}
+.sidebar-main-content::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  cursor: pointer;
+  height: 5px !important;
+  background: #888;
+}
+.sidebar-main-content:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-sidebar);
+}
+.sidebar-main-content::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.sidebar-main-content::-webkit-scrollbar-button {
+  display: none;
+}
+
+.rc-scrollbars {
+  overflow-x: hidden !important;
+}
+
+
+.nav-links-container {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: inherit;
+  z-index: 10;
+}
+
 .assistants-header {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap; /* Allows content to wrap onto the next line if needed */
-  }
-  
-  .assistant-name {
-    max-width: 100%; /* Sets maximum width of the assistant's name */
-    white-space: nowrap; /* Prevents the name from wrapping within the span */
-    overflow: hidden; /* Hides text that overflows the max-width */
-    text-overflow: ellipsis; /* Adds an ellipsis to indicate hidden text */
-    align-items: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+}
 
-  }
-  
-  .assistant-suffix {
-    flex-shrink: 0; /* Prevents the suffix from shrinking below its natural size */
-    white-space: nowrap; /* Keeps "assistant's threads" on one line */
-    align-items: center;
+.assistant-name {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-items: center;
+}
 
-  }
-  
+.assistant-suffix {
+  flex-shrink: 0;
+  white-space: nowrap;
+  align-items: center;
+}
+
+/* Adding hover and active animations for the specified sidebar items */
+.sidebar-item {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 0.5rem 0.875rem;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.sidebar-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item.active-class {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-text {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.sidebar-item:hover .sidebar-text {
+  color: #ffffff;
+}
+
+.sidebar-icon {
+  transition: transform 0.3s ease;
+}

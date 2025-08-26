@@ -1,22 +1,43 @@
 .sideMenu {
-  width: 270px;
+  width: 270px; /* Default width */
   background-color: var(--sidebar-color);
   height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
-  transform: translateX(0);
-  transition: all 0.3s ease;
+  transition: width 0.3s ease; /* Width pushes content */
   z-index: 100;
-  /* justify-content: space-between; */
 }
-/* .sideMenuResponsive {
-  width: 100%;
-  padding: 8px;
-  background-color: var(--sidebar-color);
-  height: 100%;
-} */
 
+/* Closed state */
+.sideMenu--closed {
+  width: 0;
+  /* overflow: hidden; */
+}
+
+/* Open state */
+.sideMenu--open {
+  width: 270px;
+}
+
+/* Inner wrapper - slides content */
+.sideMenu__inner {
+  width: 270px; /* Fixed width, no squeezing */
+  flex: 1;
+  transition: transform 0.4s ease; /* Slightly slower slide */
+  transform: translateX(0); /* Default position */
+}
+
+/* Slide out when closed */
+.sideMenu--closed .sideMenu__inner {
+  transform: translateX(-100%); /* Slides out */
+}
+
+.sideMenu--closed {
+  transition: width 0.4s ease; /* Delay width to let slide finish */
+}
+
+/* Button styling */
 .sideMenuButton {
   border: 1px solid hsl(0deg 0% 100% / 20%);
   border-radius: 5px;
@@ -35,10 +56,6 @@
   background-color: hsla(240, 9%, 59%, 0.1);
 }
 
-.z-999 {
-  z-index: 999;
-}
-
 .sideMenuButton span {
   font-size: 20px;
   font-weight: 500;
@@ -46,8 +63,63 @@
   padding-right: 10px;
 }
 
-@media screen and (max-width: 1024px) {
+/* Small tablets (up to 768px) */
+@media screen and (max-width: 768px) {
   .sideMenu {
-    display: none;
+    width: 0; /* Hidden by default */
   }
+  .sideMenu--open {
+    width: 270px;
+  }
+  .sideMenu .sideMenu__inner {
+    transform: translateX(-100%); /* Default hidden */
+  }
+  .sideMenu--open .sideMenu__inner {
+    transform: translateX(0); /* Slides in */
+  }
+}
+
+/* Bigger tablets (769px - 1024px) */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .sideMenu {
+    width: 0; /* Hidden by default */
+  }
+  .sideMenu--open {
+    width: 270px;
+  }
+  .sideMenu .sideMenu__inner {
+    transform: translateX(-100%); /* Default hidden */
+  }
+  .sideMenu--open .sideMenu__inner {
+    transform: translateX(0); /* Slides in */
+  }
+}
+
+/* Laptops and above (>1024px) */
+@media screen and (min-width: 1025px) {
+  .sideMenu {
+    width: 270px; /* Always visible */
+    transition: none; /* No toggle */
+  }
+  .sideMenu--closed,
+  .sideMenu--open {
+    width: 270px;
+    overflow: visible;
+  }
+  .sideMenu__inner {
+    transform: translateX(0); /* Always visible */
+    transition: none; /* No slide */
+  }
+  /* Force inner content to show, overriding closed state */
+  .sideMenu--closed .sideMenu__inner {
+    transform: translateX(0); /* Reset transform in desktop mode */
+  }
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.z-999 {
+  z-index: 999;
 }

@@ -1,0 +1,13 @@
+.assistant-table-container-wrapper { 
+    background-color: var(--main-bg-color) !important;
+    .ant-layout-sider {
+        border-right: 0 !important;
+    }
+    .ant-table-body {
+        max-height: none !important;
+        overflow-y: auto !important;
+        margin-bottom: 70px;
+    }
+}
+
+

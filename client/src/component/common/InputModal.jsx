@@ -1,34 +1,50 @@
 import { useEffect } from 'react';
-import { Modal, Form, Input } from 'antd';
+import { Modal, Form, Input, Button } from 'antd';
+import "./InputModal.css"
 
 export const InputModal = ({ propsData }) => {
-  const { title, data,placeholder, open, onCancel, onOk, okText, formItems, form } = propsData;
-  const [firstFormItem] = formItems;
-  const { name, label, rules } = firstFormItem;
+  const { title, data, placeholder, open, onCancel, onOk, okText, formItems, form } = propsData;
 
   useEffect(() => {
     if (open) {
-      form.setFieldsValue({ [name]: data });
+      const initialValues = formItems.reduce((acc, item) => {
+        acc[item.name] = data?.[item.name] || null;
+        return acc;
+      }, {});
+      form.setFieldsValue(initialValues);
     }
-  }, [open, data, name, form]);
+  }, [open, data, form, formItems]);
 
   return (
     <Modal
-      title={title}
-      open={open}
-      onCancel={onCancel}
-      onOk={() => form.submit()}
-      okText={okText}
-    >
-      <Form form={form} layout="vertical" onFinish={onOk}>
+    title={title}
+    open={open}
+    onCancel={onCancel}
+    footer={
+      <div className="modal-footer">
+        <div className="button-group">
+          <Button onClick={onCancel}>Cancel</Button>
+          <Button type="primary" onClick={() => form.submit()}>
+            {okText}
+          </Button>
+        </div>
+      </div>
+    }
+  >
+    <Form form={form} layout="vertical" onFinish={onOk}>
+      {formItems.map((item) => (
         <Form.Item
-          name={name}
-          label={label}
-          rules={rules}
+          key={item.name}
+          name={item.name}
+          label={item.label}
+          rules={item.rules}
         >
-          <Input placeholder={placeholder}/>
+          <Input placeholder={placeholder} />
         </Form.Item>
-      </Form>
-    </Modal>
+      ))}
+    </Form>
+  </Modal>
+  
+  
   );
 };

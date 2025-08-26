@@ -23,7 +23,8 @@ import AssistantSettings from "../../../component/Assistant/AssistantSettings";
 import AdminAssistantList from "../../../component/Assistant/AdminAssistantList";
 import FunctionCallingAssistantTable from "../../../component/Assistant/FunctionCallingAssistantTable";
 import { axiosSecureInstance } from "../../../api/axios";
-import { getUserID } from "../../../Utility/service";
+import UserFunctionCallingAssistantTable from "../../../component/Assistant/UserFunctionCallingAssistantTable";
+import { getUserID, getUserRole } from "../../../Utility/service";
 import "./defineFunctionModal.css";
 import {
   handleValidateFunction,
@@ -56,6 +57,11 @@ import { fetchPublicAssistant } from "../../../api/publicAssistant";
 import { getAssistantInfo } from "../../../Utility/assistant-helper";
 import { CHECK_SINGLE_ASSISTANTS_INFO } from "../../../constants/Api_constants";
 import { useContext } from "react";
+import "./AssistantsList.scss";
+import CommonLayout from "../../../component/layout/CommonStructure";
+import { agentPageSideMenuItems } from "../../../Utility/SideMenuItems/AgentPageSideMenu";
+import { FaPlus } from "react-icons/fa";
+import CreateFunctions from "../../../component/Assistant/CreateFunctions";
 //-----Constants-----//
 const userId = getUserID();
 
@@ -74,7 +80,10 @@ const initialAssistantState = {
   knowledgeSource: false,
   fileNames: [],
   FileList: [],
-  assistantTypes: null
+  assistantTypes: null,
+  imageType: "",
+  image_url: "",
+  dalleImageDescription: ""
 };
 
 const initialFunctionCallingAssistantState = {
@@ -112,13 +121,15 @@ const AssistantsList = () => {
   const [formattedPublicFilesData, setFormattedPublicFilesData] = useState([]);
 //----------for public assistants ---------------------
 
+const [userRole, setUserRole] = useState("");
+const [userIdForFunction, setUserIdForFunction] = useState("");
+
 const [publicAssistant, setPublicAssistant] = useState([]);
 const [isLoading, setIsLoading] = useState(true);
 const [loadMyAssistants,setLoadMyAssistants] = useState(false);
 const [favoriteAssistant, setFavoriteAssistant] = useState([]);
 const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
-
-
+const [selectedKey, setSelectedKey] = useState("1");
   //----------Side Effects-------//
   useEffect(()=>{
     handleFetchAllAssistants(1);
@@ -134,18 +145,15 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
     getAllKnowledgeBase()
       .then(response => {
         const fetchedRAGData = response;
-        const fetchPublicRAGFiles = fetchedRAGData.allPublicKnowledgeBase;
-        const formattedRAGFiles = formatToTreeData(fetchedRAGData.data);
-        const formattedPublicFiles = formatToTreeData(fetchPublicRAGFiles);
-        if (formattedRAGFiles && formattedRAGFiles.length > 0) {
-          setFormattedRAGdData(formattedRAGFiles);
+        if (fetchedRAGData?.treeData) {
+          setFormattedRAGdData(fetchedRAGData?.treeData);
 
         } else {
           console.warn("Formatted RAG Files are empty or undefined");
         }
 
-        if (formattedPublicFiles && formattedPublicFiles.length > 0) {
-          setFormattedPublicFilesData(formattedPublicFiles);
+        if (fetchedRAGData?.publicTreeData) {
+          setFormattedPublicFilesData(fetchedRAGData?.publicTreeData);
 
         } else {
           console.warn("Formatted Public Files are empty or undefined");
@@ -214,6 +222,8 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
     setIsModalClosed(true);
   };
 
+  const [showEditModalLoading, setShowEditModalLoading] = useState(false)
+
   useEffect(() => {
     if(!showModal){
       setIsModalClosed(true);
@@ -221,8 +231,13 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
     }
   }, [showModal]);
 
-  const getAllfunctions = () => {
-    getAllFunctionDefinitions(setFunctionDefinitionsList);
+  const transformName = (name) => {
+    return name.replace(/_[0-9a-fA-F]+$/, '').replace(/_/g, ' ');
+  };
+
+  const getAllfunctions = async () => {
+   const functionDefinitions = await getAllFunctionDefinitions();
+   setFunctionDefinitionsList(functionDefinitions)
   }
 
   const showEditModalHandler = async (assistant) => {
@@ -238,10 +253,12 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
       let myAssistant;
 
       try {
+        setShowEditModalLoading(true)
         const response = await axiosSecureInstance.get(CHECK_SINGLE_ASSISTANTS_INFO(assistant?.assistant_id));
         if (response) {
           myAssistant = response?.data;
         }
+        setShowEditModalLoading(false)
       } catch (error) {
         if (error.response && error.response.status === 404) {
           message.error("Agent not found in openAI");
@@ -252,12 +269,14 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         setIsEditPageLoading(false);
         setEditMode(false);
         setShowModal(false);
+        setShowEditModalLoading(false)
       }
-      
+
       const insertedFunctions = myAssistant?.tools?.filter(tool => tool?.type === "function") || [];
       const functionNames = insertedFunctions?.map((func) => func?.function?.name);
       const filteredData = functionDefinitionsList?.filter((obj) => functionNames?.includes(obj?.name)) || [];
       const functionList = filteredData?.map(obj => (JSON.stringify(obj))) || [];
+
       let knowledgeBaseInfo = [];
       if (myAssistant?.knowledgeBaseInfo) {
         for (let info of myAssistant?.knowledgeBaseInfo) {
@@ -267,11 +286,28 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
 
       }
       const file_ids = myAssistant?.file_ids.filter((id) => !myAssistant?.knowledgeBaseFileIds?.includes(id));
+
+      if (myAssistant.connectApps.length > 0) {
+        const apps = myAssistant.connectApps;
+        for (let i = 0; i < apps.length; i++) {
+
+          if ('googleDrive' in apps[i]) {
+            myAssistant.googleDrive = apps[i].googleDrive || false;
+          }
+
+          if ('workBoard' in apps[i]) {
+            myAssistant.workBoard = apps[i].workBoard || false;
+          }
+        }
+      }
       let filteredAssistantData = {
         assistant_id: myAssistant?.id,
         name: assistant?.name,
         instructions: myAssistant?.instructions,
         description: assistant?.description,
+        imageType: assistant?.imageType,
+        image_url: assistant?.image_url,
+        dalleImageDescription: assistant?.dalleImageDescription,
         userId: userId,
         model: myAssistant?.model,
         tools: myAssistant?.tools?.map(({ type }) => type) || [],
@@ -284,8 +320,13 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         fileNames: myAssistant?.fileNames,
         file_ids: file_ids,
         fileIdsWithKeysOfKnowledgeBase: myAssistant?.knowledgeBaseFileIdsAndKysOfOpenAI,
-        fileIdsWithName : myAssistant?.fileIdsWithName
-
+        fileIdsWithName : myAssistant?.fileIdsWithName,
+        googleDrive : myAssistant.googleDrive,
+        workBoard: myAssistant.workBoard,
+        connectApps : myAssistant.connectApps,
+        enableSync : myAssistant?.enableSync? myAssistant?.enableSync : false,
+        plugins : myAssistant?.plugins ? myAssistant?.plugins : [],
+        selectedassistantIds : myAssistant?.selectedassistantIds ? myAssistant?.selectedassistantIds : [],
       };
       setAssistantData(filteredAssistantData);
       setIsEditPageLoading(false);
@@ -302,11 +343,25 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         myAssistant = response?.data;
       }
 
-      const insertedFunctions = myAssistant?.tools?.filter(tool => tool?.type === "function");
+      const insertedFunctions = myAssistant?.tools?.filter(tool => tool?.type === "function") || [];
       const functionNames = insertedFunctions?.map((func) => func?.function?.name);
-      const filteredData = functionDefinitionsList?.filter((obj) => functionNames?.includes(obj?.name));
+      const filteredData = functionDefinitionsList?.filter((obj) => 
+        functionNames?.some((name) => transformName(name) === obj.name)
+      ) || [];
       const functionList = filteredData.map(obj => (JSON.stringify(obj)));
-      
+      if (myAssistant.connectApps.length > 0) {
+        const connectedAppsList = myAssistant.connectApps;
+        for (let i = 0; i < connectedAppsList.length; i++) {
+
+          if ('googleDrive' in connectedAppsList[i]) {
+            myAssistant.googleDrive = connectedAppsList[i].googleDrive || false;
+          }
+
+          if ('workBoard' in connectedAppsList[i]) {
+            myAssistant.workBoard = connectedAppsList[i].workBoard || false;
+          }
+        }
+      }      
       let knowledgeBaseInfo = [];
       if (myAssistant?.knowledgeBaseInfo) {
         for (let info of myAssistant?.knowledgeBaseInfo) {
@@ -321,9 +376,13 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         name: assistant?.name,
         instructions: myAssistant?.instructions,
         description: assistant?.description,
+        imageType: assistant?.imageType,
+        dalleImageDescription: assistant?.dalleImageDescription,
         userId: userId,
         model: myAssistant?.model,
         tools: myAssistant?.tools?.map(({ type }) => type) || [],
+        assistantApiId: myAssistant?.assistantApiId || [],
+        assistantApiServiceids: myAssistant?.assistantApiServiceids || [],
         category: myAssistant?.category,
         assistantTypes: myAssistant?.assistantTypes,
         static_questions: myAssistant?.static_questions,
@@ -333,7 +392,13 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
         fileNames: myAssistant?.fileNames,
         file_ids: file_ids,
         fileIdsWithKeysOfKnowledgeBase: myAssistant?.knowledgeBaseFileIdsAndKysOfOpenAI,
-        fileIdsWithName : myAssistant?.fileIdsWithName
+        fileIdsWithName : myAssistant?.fileIdsWithName,
+        googleDrive : myAssistant?.googleDrive,
+        workBoard: myAssistant?.workBoard,
+        connectApps : myAssistant?.connectApps,
+        enableSync : myAssistant?.enableSync? myAssistant?.enableSync : false,
+        plugins : myAssistant?.plugins ? myAssistant?.plugins : [],
+        selectedassistantIds : myAssistant?.selectedassistantIds ? myAssistant?.selectedassistantIds : [],
       };
 
       // Update the state with the new data
@@ -346,8 +411,17 @@ const {isEditPageLoading,setIsEditPageLoading} = useContext(FileContext);
 
   //Function Defining
   const [showDefineFunctionsModal, setShowDefineFunctionsModal] = useState();
-  const toggleDefineFunctionsModal = () => {
-    setShowDefineFunctionsModal(!showDefineFunctionsModal);
+  const toggleDefineFunctionsModal = (onCloseCallback) => {
+    setShowDefineFunctionsModal((prevState) => {
+      const nextState = !prevState;
+
+      // Execute callback when modal is closing
+      if (!nextState && onCloseCallback) {
+        onCloseCallback();
+      }
+
+      return nextState;
+    });
   };
   const handleFunctionNameChange = (value) => {
     setFunctionName(value);
@@ -378,28 +452,50 @@ function FunctionName(param1, param2) {
   const [functionName, setFunctionName] = useState("");
   const [functionsParameterNames, setFunctionsParameterNames] = useState([]);
   const [assistantName, setAssistantName] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [definitionToValidate, setDefinitionToValidate] = useState("");
+  useEffect(() => {
+    // Runs every time refreshTrigger changes
+    getAllfunctions();
+  }, [refreshTrigger]);
 
   const handleAssistantNameChange = (value) => {
     setAssistantName(value);
   };
 
+  const toCamelCase = (str) => {
+    return str
+      .split(' ')
+      .map((word, index) => {
+        if (index === 0) {
+          return word.toLowerCase();
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join('');
+  };
+
   const [functionDefinition, setFunctionDefinition] = useState(
-    `function ${functionName ? functionName : "FunctionName"
-    }(${functionsParameterNames.map(param => param.name).join(', ')}) {
+    `function ${functionName ? functionName : "FunctionName"}(${functionsParameterNames
+      .map(param => toCamelCase(param.name.replace(/'/g, '')))
+      .join(', ')}) {
     try {
-        //Write your Function Logic
+      //Write your Function Logic
       
+      return 1;
     } catch (error) {
       console.log(error);
     }
   }`
   );
+  
   useEffect(() => {
     setFunctionDefinition(`function ${functionName ? functionName : "FunctionName"
       }(${functionsParameterNames.map(param => param.name).join(', ')}) {
     try {
         //Write your Function Logic
       
+        return 1;
     } catch (error) {
       console.log(error);
     }
@@ -415,6 +511,8 @@ function FunctionName(param1, param2) {
   };
 
   useEffect(() => {
+    setUserIdForFunction(getUserID());
+    setUserRole(getUserRole());
     fetchAllAssistant(setAllAssistants);
     getAllfunctions()
   }, []);
@@ -423,24 +521,19 @@ function FunctionName(param1, param2) {
     fetchFunctionNamesPerAssistant(assistantName, setAssistantFunctionNames);
   }, [assistantName]);
 
-  return (
-    <>
-      <div className="mt-5">
-        <div className="container">
-          <div className="d-flex align-items-center justify-content-between">
-            <div className="col-8 d-flex align-items-center justify-content-between">
-              <Title level={2}>Agent Lists</Title>
-            </div>
-            <div className="d-flex align-items-center justify-content-end">
-              <div className="col-2 d-flex justify-content-end">
-                <Button className="" onClick={handleClose}>
-                  + Agent
-                </Button>
-              </div>
-            </div>
-          </div>
-          <Tabs defaultActiveKey="1">
-            {renderTabPane("1", "My Agents", AdminAssistantList, {
+  const refreshTable = async () => {
+    setIsLoading(true);
+    await getAllfunctions().finally(() => {
+      setIsLoading(false);
+    });
+  };
+
+  const renderContent = () => {
+    switch (selectedKey) {
+      case "1":
+        return (
+          <AdminAssistantList
+            data={{
               setAdminUserAssistants,
               adminUserAssistants,
               totalCount,
@@ -454,10 +547,15 @@ function FunctionName(param1, param2) {
               personalAssistantSearchQuery,
               setPersonalAssistantSearchQuery,
               handlePublicAssistantAdd,
-              getAssistantInfo
+              getAssistantInfo,
+            }}
+          />
+        );
 
-            })}
-            {renderTabPane("2", "Public Agents", PublicAssistantList, {
+      case "2":
+        return (
+          <PublicAssistantList
+            data={{
               adminUserAssistants,
               loader,
               handleDeleteAssistant,
@@ -467,14 +565,20 @@ function FunctionName(param1, param2) {
               handlePublicAssistantAdd,
               getFavoriteAssistant,
               handleDeletePublicAssistant,
-              publicAssistant, 
-              setPublicAssistant, 
+              publicAssistant,
+              setPublicAssistant,
               setIsLoading,
               isLoading,
               setLoadMyAssistants,
-              updateLoader
-            })}
-            {renderTabPane("3", "Favorite Agents", FavoriteAssistantList, {
+              updateLoader,
+            }}
+          />
+        );
+
+      case "3":
+        return (
+          <FavoriteAssistantList
+            data={{
               adminUserAssistants,
               loader,
               handleDeleteAssistant,
@@ -485,11 +589,17 @@ function FunctionName(param1, param2) {
               getFavoriteAssistant,
               handleDeleteFavoriteAssistant,
               favoriteAssistant,
-              setFavoriteAssistant,        
-              isLoading, 
-              setIsLoading
-            })}
-            {renderTabPane("4", "Organizational Agents", AssistantTable, {
+              setFavoriteAssistant,
+              isLoading,
+              setIsLoading,
+            }}
+          />
+        );
+
+      case "4":
+        return (
+          <AssistantTable
+            data={{
               assistants,
               setAssistants,
               loader,
@@ -504,38 +614,75 @@ function FunctionName(param1, param2) {
               orgAssistantSearchQuery,
               setOrgAssistantSearchQuery,
               handlePublicAssistantAdd,
-              getAssistantInfo
-            })}
-            {renderTabPane(
-              "5",
-              "Function Definitions",
-              FunctionCallingAssistantTable,
-              {
-                functionCallingAssistants,
-                setFunctionCallingAssistants,
-                loader,
-                handleDeleteAssistant,
-                handleUpdateAssistant,
-                showEditModalHandler,
-                handleFetchFunctionCallingAssistants,
-                updateLoader,
-                setActiveKey,
-                toggleDefineFunctionsModal,
-              }
-            )}
+              getAssistantInfo,
+            }}
+          />
+        );
 
-            {renderTabPane("6", "User Agents", UserAssistantList, {
+      case "5":
+        return (
+          <CreateFunctions
+          functionCallingAssistants={functionCallingAssistants}
+          setFunctionCallingAssistants={setFunctionCallingAssistants}
+          loader={loader}
+          handleDeleteAssistant={handleDeleteAssistant}
+          handleUpdateAssistant={handleUpdateAssistant}
+          showEditModalHandler={showEditModalHandler}
+          handleFetchFunctionCallingAssistants={handleFetchFunctionCallingAssistants}
+          updateLoader={updateLoader}
+          userId={userIdForFunction}
+          userRole={userRole}
+          refreshTrigger={refreshTrigger}
+          setRefreshTrigger={setRefreshTrigger}
+          toggleDefineFunctionsModal={toggleDefineFunctionsModal}
+      />
+        );  
+    
+
+      case "7":
+        return (
+          <UserAssistantList
+            data={{
               userAssistants,
               loader,
               handleDeleteAssistant,
-            })}
-            {renderTabPane("7", "Settings", AssistantSettings, {
-              loader,
-              teamList,
-              handleFetchTeams,
-            })}
-          </Tabs>
-          <div className="row">
+              showEditModalHandler,
+              showEditModalLoading
+            }}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleChangeSideMenu = ({ key }) => {
+    setSelectedKey(key);
+  };
+
+  const headerContent = (
+    <Button
+      size="small"
+      className="plusNewButton m-0"
+      type="primary"
+      block
+      icon={<FaPlus />}
+      onClick={handleClose}
+    >
+      Create Agent
+    </Button>
+  );
+
+  return (
+<div className="assistant-table-container-wrapper">
+      <CommonLayout
+        sideMenuItems={agentPageSideMenuItems}
+        handleChangeSideMenu={handleChangeSideMenu}
+        activeKey={selectedKey}
+        HeaderContentChildren={headerContent}
+      >
+        {renderContent()}
+        <div className="row">
             <div className="col">
               <CreateAssistantModal
                 data={{
@@ -561,10 +708,16 @@ function FunctionName(param1, param2) {
               />
             </div>
           </div>
-        </div>
-
         {/* Function Definition Model */}
         <FunctionDefinitionModel
+          refresh={refreshTable}
+          onCreateSuccess={() => {
+            // Make sure to call the methods that refresh your Assistants data
+            handleFetchUserCreatedAssistants();
+            handleFetchFunctionCallingAssistants();
+            handleFetchAllAssistants(1);
+            refreshTable();
+          }}
           data={{
             showDefineFunctionsModal,
             toggleDefineFunctionsModal,
@@ -580,6 +733,9 @@ function FunctionName(param1, param2) {
             setFunctionName,
             setFunctionDefinition,
             setShowDefineFunctionsModal,
+            refreshTrigger,
+            setRefreshTrigger,
+            setDefinitionToValidate,
           }}
         />
 
@@ -591,6 +747,7 @@ function FunctionName(param1, param2) {
             renderParameterInputs,
             functionsParameterNames,
             parameterValues,
+            setParameterValues,
             handleParameterChange,
             validateConsole,
             handleValidateFunction,
@@ -599,54 +756,10 @@ function FunctionName(param1, param2) {
             functionName,
           }}
         />
-      </div>
-    </>
+      </CommonLayout>
+    </div>
   );
 };
-/**
- * Creates and returns a TabPane.
- * @param {string} key - The key.
- * @param {string} label - The label.
- * @param {JSX.Element} component - The component.
- * @param {object} data - The data.
- * @returns {JSX.Element} The TabPane.
- */
-const renderTabPane = (key, label, Component, data) => (
-  <Tabs.TabPane
-    key={key}
-    tab={
-      <span>
-        <IconComponent label={label} />
-        {label}
-      </span>
-    }
-  >
-    <Component data={data} />
-  </Tabs.TabPane>
-);
 
-/**
- * Returns the corresponding icon based on the label.
- * @param {string} label - The label.
- * @returns {JSX.Element} The icon.
- */
-const IconComponent = ({ label }) => {
-  switch (label) {
-    case "My Agents":
-      return <MdOutlineAssistant className="me-2" />;
-    case "Public Agents":
-      return <GlobalOutlined className="me-2" />;
-    case "Favorite Agents":
-      return <HeartOutlined className="me-2" />;
-    case "Organizational Agents":
-      return <BuildFilled className="me-2" />;
-    case "Function Definitions":
-      return <BuildFilled className="me-2" />;
-    case "User Agents":
-      return <UserDeleteOutlined className="me-2" />;
-    case "Settings":
-      return <SettingOutlined className="me-2" />;
-  }
-};
 
 export default AssistantsList;

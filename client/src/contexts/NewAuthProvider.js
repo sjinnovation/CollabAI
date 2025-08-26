@@ -16,4 +16,4 @@ export const NewAuthProvider = ({ children }) => {
     )
 }
 
-export default NewAuthContext;
+export default NewAuthContext; 

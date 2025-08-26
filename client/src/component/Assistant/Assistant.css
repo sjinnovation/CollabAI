@@ -7,3 +7,358 @@
     width: 100%;
     height: 100%;
 }
+
+  .search-bar {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background-color: #333;
+    color: white;
+    font-size: 14px;
+  }
+
+  .search-bar::placeholder {
+    color: #bbb;
+  }
+
+  .select-button {
+    padding: 12px 18px;
+    background-color: #007a5a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+
+  .select-button:hover {
+    background-color: #005a3b;
+  }
+
+  .select-button:active {
+    transform: scale(0.98);
+  }
+
+  .create-agent-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .create-agent-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .create-agent-button:hover {
+    background-color: #0056b3;
+  }
+
+.embed-input {
+    width: 100%;
+    margin-right: 8px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+
+  .copy-button {
+    margin-left: 8px;
+  }
+
+  .custom-embed-button {
+    margin-left: -2px;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .custom-embed-button:hover {
+    background-color: #0b5ed7;
+  }
+
+    .search-bar {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background-color: #1f1f1f;
+      color: white;
+      font-size: 14px;
+    }
+
+    .search-bar::placeholder {
+      color: white;
+      font-style: italic;
+    }
+
+    .select-button {
+      padding: 12px 18px;
+      background-color: #1f1f1f;
+      color: white;
+      border: 1px solid #2952bf;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .select-button:hover {
+      background-color: #2952bf;
+      color: #1f1f1f;
+    }
+
+    .select-button:active {
+      transform: scale(0.98);
+    }
+
+    .create-agent-button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .create-agent-button {
+      padding: 10px 20px;
+      background-color: #2952bf;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .create-agent-button:hover {
+      background-color: #1f3d73;
+      color: white;
+    }
+
+  .selected-channel {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+  }
+
+  .channel-info {
+    display: flex;
+    flex-direction: column;
+    margin-right: 15px;
+  }
+
+  .channel-text {
+    font-size: 14px;
+    color: green;
+    font-weight: bold;
+  }
+
+  .channel-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #2e4a7d;
+    margin-top: 5px;
+  }
+
+  .channel-status {
+    display: flex;
+    align-items: center;
+  }
+
+  .checkmark {
+    font-size: 20px;
+    color: green;
+    margin-left: 10px;
+  }
+
+  .searchbox-wrapper{
+    position: relative;
+    height: 50px;
+    display: flex;
+    align-items: center;
+  }
+
+  .searchbox-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    min-height: 50px;
+    gap: 20px;
+}
+
+.searchbox-wrapper {
+    display: flex;
+    align-items: center;
+    width: 260px;
+}
+
+.pagination-wrapper {
+  min-width: 250px;
+  text-align: right;
+}
+
+  .searchbox-agent{
+    position: absolute;
+    margin-top: 35px;
+    z-index: 10;
+    }
+
+  .searchbox-agent-loading-state{
+    position: relative;
+    margin-top: 0px;
+    z-index: 10;
+  }
+
+  .mt-6 {
+    margin-top: 60px !important;
+  }
+
+  .searchbox-agent-public{
+    position: absolute;
+    margin-top: 25px;
+    z-index: 10;
+ }
+
+ .searchbox-agent-public-loading-state {
+  position: absolute;
+  margin-top: 0px;
+  z-index: 10;
+ }
+
+ .agent-page-section-wrapper {
+  position: relative;
+ }
+  .searchbox-agent-user{
+    position: absolute;
+    margin-top: 40px;
+    z-index: 10;
+  }
+
+  .searchbox-agent-user-loading-state {
+    position: absolute;
+    top: 30px;
+    z-index: 10;
+  }
+
+  .searchbox-agent-myagent{
+    position: absolute;
+    margin-top: 15px;
+    z-index: 10;
+  }
+
+  .create-function-button{
+    display: flex;
+    justify-content: flex-start;
+    max-width: 0 0 16%;
+    position: absolute;
+    margin-top: 20px;
+    z-index: 10;
+  }
+
+  .create-function-button-loading{
+    position: absolute;
+    top: -40px;
+    z-index: 10;
+  }
+
+  .user-assistant-list-whole-container{
+    position: relative;
+  }
+
+
+  .user-agent-searchbox{
+    position: absolute;
+    margin-top: 15px;
+    z-index: 10;
+  }
+
+  .expand-button-user{
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+  }
+
+
+  .li.ant-dropdown-menu-item.ant-dropdown-menu-item-selected {
+    background-color: #f0f0f0 !important;
+  }
+
+
+  .li.ant-dropdown-menu-item.ant-dropdown-menu-item-selected.dark-mode{
+    background-color: var(--dropdown-selector) !important;
+  }
+
+
+  .ant-dropdown-menu-item.ant-dropdown-menu-item-selected {
+    background-color: #f0f0f0 !important ;
+  }
+
+
+  .ant-dropdown {
+    .ant-table-filter-dropdown {
+      .ant-dropdown-menu {
+        .ant-dropdown-menu-item.ant-dropdown-menu-item-selected {
+          background-color: var(--dropdown-selector) !important;
+        }
+      }
+    }
+  }
+
+  .modeltools-column {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .action-items{
+    display: flex;
+    align-items: "center";
+    gap: "8px";
+  }
+
+.type-css{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flex-wrap-style {
+  flex-wrap: wrap;
+}
+
+@media screen and (max-width: 1024px) {
+  .my-agent-page{
+    overflow-x: hidden;
+  }
+  .searchbox-container {
+    margin-bottom: 5px;
+  }
+   .pagination-overflow-hidden .ant-pagination-total-text {
+    width: auto;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .pagination-overflow-hidden.ant-pagination {
+    flex-wrap: wrap;
+  }
+  .pagination-overflow-hidden .ant-pagination-total-text {
+    width: 7rem;
+  }
+}

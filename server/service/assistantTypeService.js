@@ -9,7 +9,7 @@ export const createSingleAssistantTypesService = async (name) => {
 
     const searchText = cleanText(name);
     const regex = new RegExp(searchText, 'i'); // Case-insensitive search
-    const isExistingType = await AssistantTypes.findOne({ name: regex }).lean();
+    const isExistingType = await AssistantTypes.findOne({ name: regex, delete: false }).lean();
     if (!isExistingType) {
         const data = await AssistantTypes.create({ name: name });
         return data;

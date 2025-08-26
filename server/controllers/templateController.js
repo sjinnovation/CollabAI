@@ -182,7 +182,7 @@ export const deleteTemplate = async (req, res, next) => {
 		const template = await Template.findById(id);
 
 		if (template) {
-			await template.remove();
+			await Template.deleteOne({ _id: id });
 
 			res.status(StatusCodes.OK).json({
 				message: TemplateMessages.TEMPLATE_DELETED_SUCCESSFULLY,

@@ -1,15 +1,45 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Dropdown, Menu } from "antd";
 import { HiShare } from "react-icons/hi2";
 import { ThemeContext } from "../../contexts/themeConfig";
-import { BiLogoGmail } from "react-icons/bi";
+import { BiLogoGmail, BiLogoLinkedin } from "react-icons/bi";
+import LinkedInPostPopup from '../Linkedin/LinkedinPostPopup.tsx';
+import { toast } from "react-toastify";
 
-const ShareDropdown = ({ handleShareContent, chatPrompt, response }) => {
+const ShareDropdown = ({ handleShareContent, handleLinkedinShareContent, chatPrompt, response }) => {
   const { theme } = useContext(ThemeContext);
+  const [isLinkedinPopupOpen, setIsLinkedinPopupOpen] = useState(false);
 
   // Function to handle click event on menu item
   const handleClick = (item) => {
-    handleShareContent(chatPrompt, response);
+    if (item.key === "gmail") {
+      handleShareContent(chatPrompt, response);
+    } else if (item.key === "linkedin") {
+      setIsLinkedinPopupOpen(true);
+    }
+  };
+
+  const handleLinkedinClose = () => {
+    setIsLinkedinPopupOpen(false);
+  };
+
+  const handleLinkedinShare = async (chatPrompt, editedText) => {
+    try {
+      await handleLinkedinShareContent(chatPrompt, editedText);
+      setIsLinkedinPopupOpen(false);
+    } catch (error) {
+      if (error.message.includes('authorization expired')) {
+        toast.error('LinkedIn session expired. Please try again to re-authorize.', {
+          position: "bottom-left",
+          autoClose: 5000,
+        });
+      } else {
+        toast.error('Failed to share to LinkedIn. Please try again.', {
+          position: "bottom-left",
+          autoClose: 3000,
+        });
+      }
+    }
   };
 
   const menuStyle = {
@@ -30,6 +60,11 @@ const ShareDropdown = ({ handleShareContent, chatPrompt, response }) => {
       label: "Draft in Gmail",
       icon: <BiLogoGmail style={iconStyle} />,
     },
+    {
+      key: "linkedin",
+      label: "Post on LinkedIn",
+      icon: <BiLogoLinkedin style={iconStyle} />,
+    },
   ];
 
   // Create a Menu component with the defined menu items
@@ -44,6 +79,7 @@ const ShareDropdown = ({ handleShareContent, chatPrompt, response }) => {
   );
 
   return (
+    <>
     <Dropdown overlay={menu} trigger={["click"]} placement="topLeft">
       <button className="share-icon">
         <HiShare
@@ -52,6 +88,14 @@ const ShareDropdown = ({ handleShareContent, chatPrompt, response }) => {
         />
       </button>
     </Dropdown>
+     <LinkedInPostPopup
+     isOpen={isLinkedinPopupOpen}
+     onClose={handleLinkedinClose}
+     onShare={handleLinkedinShare}
+     initialText={response}
+     chatPrompt={chatPrompt}
+   />
+   </>
   );
 };
 

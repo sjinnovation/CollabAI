@@ -14,7 +14,7 @@ import MessageContainer from "../../component/Chat/MessageContainer";
 
 // hooks & contexts
 import useAssistantsChatPage from "../../Hooks/useAssistantsChatPage";
-
+import { Modal, Button } from "antd";
 // services & helpers
 import { getUserRole } from "../../Utility/service";
 import ConversationStarter from "./ConversationStarter";
@@ -24,21 +24,28 @@ import { getSingleAssistant } from "../../api/assistantChatPageApi";
 import NewChatWithSameAssistant from "../../component/Prompt/NewChatWithSameAssistant";
 import { getAssistantInfo } from "../../Utility/assistant-helper";
 import { PageTitleContext } from "../../contexts/TitleContext";
+import { checkServiceUser } from "../../api/api_endpoints";
+import { useNavigate } from "react-router-dom";
 // api
 
 const AssistantsChatPage = () => {
   const { assistant_id, thread_id } = useParams();
   const [assistantName, setAssistantName] = useState("");
+  const [connectedApps,setConnectedApps] =  useState([]);
   const { pageTitle, setPageTitle } = useContext(PageTitleContext)
-
+  const [assistantServiceIds, setAssistantServiceIds] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
+  const [missingApps, setMissingApps] = useState([]);
+  const navigate = useNavigate();
   // ----- STATES ----- //
   const [showScrollToBottomButton, setShowScrollToBottomButton] =
     useState(false);
-
+    const { confirm } = Modal;
   // ----- REFS ----- //
   const fileInputRef = useRef(null);
   const chatLogWrapperRef = useRef(null);
-
+  
   //  ----- REF HANDLERS ----- //
   const scrollToBottom = () => {
     if (chatLogWrapperRef.current) {
@@ -48,7 +55,6 @@ const AssistantsChatPage = () => {
       });
     }
   };
-
   // ----- HOOK & CONTEXT VARIABLES ----- //
   const {
     // STATES,
@@ -58,7 +64,7 @@ const AssistantsChatPage = () => {
     selectedFiles,
     inputPrompt,
     assistantAllInfo,
-
+    selectedFileAppWithFileId,
     // BOOLEANS
     isMessageFetching,
     isFirstMessage,
@@ -72,33 +78,66 @@ const AssistantsChatPage = () => {
     setSelectedFiles,
     SetIsUploadingFile,
     setInputPrompt,
+    setSelectedFileAppWithFileId,
     // API CALLS,
     handleFetchAssistantChats,
     handleFetchAssistantInfo,
     handleCreateAssistantChat,
     handleUploadFilesForAssistant,
+    stopGeneratingResponse
     // HANDLERS,
   } = useAssistantsChatPage({ assistant_id, thread_id, scrollToBottom });
-
+  const getInfo=async ()=>{
+    const response = await getSingleAssistant(assistant_id);
+    setConnectedApps(response.assistant.connectApps);
+  }
   // ---------- constants ---------
   const userRole = getUserRole();
   const [isAssistantExistInOpenAI,setIsAssistantExistInOpenAI] = useState(false);
-
+  
   const fetchAssistantData = async (assistant_id) => {
-    const response = await getSingleAssistant(assistant_id);
-    setAssistantName(response?.assistant.name);
+    try {
+        const response = await getSingleAssistant(assistant_id);
+        if (response?.assistant) {
+            const assistantName = response.assistant.name;
+            const assistantApiIds = response.assistant.assistantApiServiceids || [];
+            const userId = response.assistant.userId?._id || null;
+            setAssistantName(assistantName);
+            setAssistantServiceIds(assistantApiIds);
+            setUserId(userId);
+            CheckServiceUser(assistantApiIds,userId);
+        }
+    } catch (error) {
+        console.error("Error fetching assistant data:", error);
+    }
+};
+
+
+  // Function to check the service user response
+  const CheckServiceUser = async (assistantServiceIds, userId) => {
+    try {
+      const response = await checkServiceUser(assistantServiceIds, userId);
+      if (response?.data?.data?.length > 0) {
+        handleModalOk(response.data.data); // Store missing app names
+      }
+    } catch (error) {
+      console.error("Error fetching assistant data:", error);
+    }
   };
+  useEffect( () => {
+    if (assistant_id !== undefined) {
+      setAssistantName('');
+      handleFetchAssistantInfo();
+      fetchAssistantData(assistant_id);
+      if (getAssistantInfo(assistant_id)) {
+        setIsAssistantExistInOpenAI(true);
+      } else {
+        setIsAssistantExistInOpenAI(false);
 
-  useEffect(() => {
-	setAssistantName('');
-	handleFetchAssistantInfo();
-	fetchAssistantData(assistant_id);
-  if(getAssistantInfo(assistant_id)){
-    setIsAssistantExistInOpenAI(true);
-  }else{
-    setIsAssistantExistInOpenAI(false);
+      }
+    }
+    getInfo();
 
-  }
   }, [assistant_id]);
   useEffect(() => {
     const scrollableDiv = chatLogWrapperRef.current;
@@ -151,6 +190,10 @@ const AssistantsChatPage = () => {
     setInputPrompt(starter);
   };
 
+  const handleWorkflowChange = () => {
+    handleFetchAssistantInfo(assistant_id);
+  };
+
   const handleScrollToBottomButton = () => {
     const scrollableDiv = chatLogWrapperRef.current;
 
@@ -168,7 +211,6 @@ const AssistantsChatPage = () => {
   let isChatLogEmpty = chatLog.length === 0 ? true : false;
 
   useEffect(() => {
-    console.log(assistant_id)
     setPageTitle((prevState) => ({
         ...prevState,
         [`/agents/${assistant_id}`]: assistantName 
@@ -180,8 +222,32 @@ const AssistantsChatPage = () => {
     }))
     }
   }, [assistant_id, assistantName, setPageTitle, thread_id]);
+  const handleModalOk = (missingApps) => {
+    confirm({
+      title: "Apps Not Connected",
+      content: (
+        <div>
+          <p>Some required apps are not connected. You need to connect them first.</p>
+          <ul>
+            {missingApps.map((app, index) => (
+              <li key={index}>{app}</li>
+            ))}
+          </ul>
+        </div>
+      ),
+      okText: "Go to Profile",
+      okType: "primary",
+      onOk() {
+        navigate("/profile", { state: { activeTabKey: "6" } }); // Pass Integrate Applications tab key
+      },
+      cancelButtonProps: { style: { display: "none" } },
+    });
+  };
+  
+  
   
   return (
+
     <>
       <section className="assistantChatBox d-flex flex-column justify-content-between">
         {/* <Typography.Title
@@ -197,6 +263,7 @@ const AssistantsChatPage = () => {
           <div
             id="assistantScrollableDiv"
             key="assistantScrollableDiv"
+            className={isGeneratingResponse ? 'assistant-response-wrapper' : ''}
             ref={chatLogWrapperRef}
           >
             <InfiniteScroll
@@ -249,7 +316,7 @@ const AssistantsChatPage = () => {
             }}
           />
         ) : null}
-        {isChatLogEmpty ? (
+        {false ? (
           <ConversationStarter
             states={{
               assistant_id,
@@ -268,7 +335,14 @@ const AssistantsChatPage = () => {
             isGeneratingResponse,
             hasFileAttachmentAccess,
             inputPrompt,
-            assistant_id
+            assistant_id,
+            assistantAllInfo,
+            connectedApps,
+            selectedFileAppWithFileId,
+            assistant_id,
+            assistantData,
+            handleSelectStarter,
+            isChatLogEmpty
           }}
           refs={{ fileInputRef }}
           actions={{
@@ -276,15 +350,22 @@ const AssistantsChatPage = () => {
             onFileUpload: handleUploadFilesForAssistant,
             handleKeyDown,
             setSelectedFiles,
+            setSelectedFileAppWithFileId,
             handleFileRemove,
             handleFileChange,
             onInputPromptChange: handleInputPromptChange,
+            onWorkflowChange: handleWorkflowChange,
+            stopGeneratingResponse
           }}
         />
         {/* -----[END] CHAT BOX - SUBMIT INPUT ----- */}
       </section>
     </>
+
+
+
   );
+
 };
 
 export default React.memo(AssistantsChatPage);

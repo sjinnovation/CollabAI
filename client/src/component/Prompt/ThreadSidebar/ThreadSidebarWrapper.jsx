@@ -10,14 +10,15 @@ import { getChatThread } from "../../../api/threadApiFunctions";
 import { SidebarContext } from "../../../contexts/SidebarContext";
 import { useNavigate } from "react-router-dom";
 import { Empty } from "antd";
+import { IoIosArrowBack } from "react-icons/io";
 
-const ThreadSidebarWrapper = () => {
+const ThreadSidebarWrapper = ({  folderId = null,  projectName = null  }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [chatThread, setChatThread] = useState([]);
-  const { showMenu, setShowMenu, threadRestore, setThreadRestore } = useContext(SidebarContext);
+  const { showMenu, setShowMenu, threadRestore, setThreadRestore, setShowProjectSidebar } = useContext(SidebarContext);
   const [count, setCount] = useState(0);
-  const [threadLength, setThreadLength] = useState(0);
+  const [loadingThread, setLoadingThread] = useState(false);
   const userid = getUserID();
   const {
     deletedAssistantThreadId,
@@ -26,6 +27,7 @@ const ThreadSidebarWrapper = () => {
     assistantSelected,
     assistantIdLinked,
     addAssistantName,
+    isResponseThreadFound
   } = useContext(AssistantContext);
 
   // context values
@@ -35,38 +37,44 @@ const ThreadSidebarWrapper = () => {
   const handleGetChatThread = async () => {
     setCount((prevState) => prevState + 1);
     try {
-      const { success, data, error } = await getChatThread(
-        userid,
-        setChatThread
-      );
+      if (!userid) {
+        console.error("User ID is required.");
+        return null;
+      }
+      const result = await getChatThread(userid, setChatThread, assistantIdLinked, folderId);
+      if (!result) {
+        console.error("Failed to fetch chat thread: No response received.");
+        return;
+      }
+
+      const { success, data, error } = result;
 
       if (success) {
-        setThreadLength(data?.length);
         setChatThread(data);
-        if (count > 1) {
-          if (data.length > threadLength) {
-            if (threadRestore === true) {
-              console.log(threadRestore);
-              setThreadRestore(false);
-              return false;
-            }
-
-            setShowMenu(true);
-            setThreadLength(data?.length);
-          } else {
-            // setShowMenu(false);
-            setThreadLength(data?.length);
-          }
-          console.log("ok");
-        }
+        // if (count > 1) {
+        //   if (data.length > threadLength && !folderId) {
+        //     if (threadRestore) {
+        //       setThreadRestore(false);
+        //       return false;
+        //     }
+        //     setShowMenu(!showMenu);
+        //     setShowProjectSidebar(false);
+        //     setThreadLength(data?.length);
+        //   } else {
+        //     setThreadLength(data?.length);
+        //   }
+        // }
       } else {
         setChatThread([]);
         console.error("Error fetching chat thread:", error);
       }
+    } catch (error) {
+      console.error("Unexpected error:", error);
     } finally {
       setTriggerUpdateThreads(false);
     }
   };
+
 
   const handleRemoveThread = (threadId) => {
     if (chatThread.length && threadId) {
@@ -79,16 +87,26 @@ const ThreadSidebarWrapper = () => {
 
   useEffect(() => {
     handleGetChatThread();
-  }, [triggerNavContent, triggerUpdateThreads, deletedAssistantThreadId]);
+  }, [triggerNavContent, triggerUpdateThreads, deletedAssistantThreadId, folderId]);
 
   useEffect(() => {
     if (removeThreadId) {
       handleRemoveThread(removeThreadId);
     }
     if (deletedAssistantThreadId) {
-      navigate("/chat");
+      if (assistantIdLinked) {
+        navigate(
+          `/agents/${assistantIdLinked}`
+        );
+      } else if (isResponseThreadFound) {
+        navigate("/projects");
+      }
+      else {
+        navigate("/chat");
+      }
     }
   }, [removeThreadId, deletedAssistantThreadId]);
+
 
   // Function to handle search term change
   const handleSearch = (e) => {
@@ -97,8 +115,20 @@ const ThreadSidebarWrapper = () => {
 
   // Filter data based on search term
   const filteredData =
-    assistantSelected == false
+    assistantSelected === false
       ? chatThread?.filter((thread) => {
+        if (thread.prompttitle) {
+          return thread?.prompttitle
+            ?.toLowerCase()
+            ?.includes(searchTerm?.toLowerCase());
+        } else {
+          return thread?.description
+            ?.toLowerCase()
+            ?.includes(searchTerm?.toLowerCase());
+        }
+      })
+      : chatThread?.filter((thread) => {
+        if (assistantIdLinked == thread.assistant_id) {
           if (thread.prompttitle) {
             return thread?.prompttitle
               ?.toLowerCase()
@@ -108,26 +138,14 @@ const ThreadSidebarWrapper = () => {
               ?.toLowerCase()
               ?.includes(searchTerm?.toLowerCase());
           }
-        })
-      : chatThread?.filter((thread) => {
-          if (assistantIdLinked == thread.assistant_id) {
-            if (thread.prompttitle) {
-              return thread?.prompttitle
-                ?.toLowerCase()
-                ?.includes(searchTerm?.toLowerCase());
-            } else {
-              return thread?.description
-                ?.toLowerCase()
-                ?.includes(searchTerm?.toLowerCase());
-            }
-          }
-        });
+        }
+      });
 
   const renderMonthlyPrompts = (monthlyPrompts) => {
     return Object.entries(monthlyPrompts).map(([monthYear, prompts]) => (
       <div key={monthYear} className="mb-4">
-        <div className="d-flex w-100 align-items-center">
-          <hr style={{ width: "15%" }} />
+        {Object.entries(monthlyPrompts)?.length > 0 ? (<div className="d-flex w-100 align-items-center">
+          <hr style={{ width: "50%" }} />
           <small
             style={{
               fontSize: "0.75rem",
@@ -139,23 +157,32 @@ const ThreadSidebarWrapper = () => {
           >
             {monthYear}
           </small>
-          <hr style={{ width: "100%" }} />
-        </div>
+          <hr style={{ width: "50%" }} />
+        </div>) : <></>}
+
         {prompts.map(
           (data, index) =>
-            data.promptresponse && (
-              <NavPrompt
-                key={data.threadid}
-                chatPrompt={data?.prompttitle ?? data.description}
-                threadId={data.threadid}
-                threadIndex={index}
-                assistantId={data.assistant_id}
-                assistantThreadId={data.thread_id}
-                assistantName={data.name}
-                chatLog={chatThread}
-                setChatLog={setChatThread}
-              />
-            )
+            <>
+              {/* removed condition  (data.promptresponse) */}
+              {(
+                <NavPrompt
+                  key={data.threadid}
+                  chatPrompt={data?.prompttitle ?? data.description}
+                  threadId={data.threadid}
+                  threadIndex={index}
+                  assistantId={data.assistant_id}
+                  assistantThreadId={data.thread_id}
+                  assistantName={data.name}
+                  chatLog={chatThread}
+                  setChatLog={setChatThread}
+                  setLoadingThread={setLoadingThread}
+                  isResponseThread={data?.isResponseThread || false}
+                  projectIdFromPrompt={data?.folderId || null}
+                />
+
+              )}
+            </>
+
         )}
       </div>
     ));
@@ -166,22 +193,25 @@ const ThreadSidebarWrapper = () => {
       return renderMonthlyPrompts(prompts);
     } else {
       return (
-        <div key={category} className="mb-4">
-          <div className="d-flex w-100 align-items-center">
-            <hr style={{ width: "15%" }} />
-            <small
-              style={{
-                fontSize: "0.75rem",
-                lineHeight: "1rem",
-                padding: "0.5rem",
-                whiteSpace: "nowrap",
-              }}
-              className="text-capitalize text-secondary"
-            >
-              {category}
-            </small>
-            <hr style={{ width: "100%" }} />
-          </div>
+        <div key={category} className="mb-1">
+          {prompts?.length > 0 ? (
+            <div className="d-flex w-100 align-items-center">
+              <hr style={{ width: "50%" }} />
+              <small
+                style={{
+                  fontSize: "0.75rem",
+                  lineHeight: "1rem",
+                  padding: "0.5rem",
+                  whiteSpace: "nowrap",
+                }}
+                className="text-capitalize text-secondary"
+              >
+                {category}
+              </small>
+              <hr style={{ width: "50%" }} />
+            </div>
+          ) : <></>}
+
           {prompts.map(
             (data, index) =>
               (data.promptresponse || data.description) && (
@@ -196,6 +226,9 @@ const ThreadSidebarWrapper = () => {
                   chatLog={chatThread}
                   setChatLog={setChatThread}
                   thread_mongo_id={data._id}
+                  setLoadingThread={setLoadingThread}
+                  isResponseThread={data?.isResponseThread || false}
+                  projectIdFromPrompt={data?.folderId || null}
                 />
               )
           )}
@@ -213,16 +246,21 @@ const ThreadSidebarWrapper = () => {
 
   return (
     <>
-      <div className="add-assistant-name-container mx-4 pt-3">
+      <div className="add-assistant-name-container mx-4 pt-3 add-assistant-flex">
         {" "}
         <p>
           {assistantIdLinked
             ? `${addAssistantName}'s thread`
-            : "Agent and Multi-provider threads"}
+            : folderId?`${projectName}'s threads`:"Multi-Provider , Agent and Projects Threads"}
         </p>{" "}
+        <div className="thread-title-icon">
+          <IoIosArrowBack onClick={() => {
+            setShowMenu((prevState) => !prevState);
+          }} className="projectSide-bar-icon projectSide-bar-icon-arrow" />
+        </div>
       </div>
 
-      <div class="input-group input-group-sm mb-1 px-3">
+      <div class="input-group input-group-sm mb-1 px-3 thread-search-wrapper">
         <span class="input-group-text thread-search" id="basic-addon1">
           <FaSearch />
         </span>
@@ -236,7 +274,7 @@ const ThreadSidebarWrapper = () => {
           onChange={handleSearch}
         />
       </div>
-      <Scrollbars
+      {/* <Scrollbars
         autoHide
         autoHideTimeout={1000}
         autoHideDuration={200}
@@ -252,6 +290,9 @@ const ThreadSidebarWrapper = () => {
           />
         )}
       >
+
+      </Scrollbars> */}
+      <div className="chat-history-wrapper">
         <div
           style={{
             padding: "0.875rem",
@@ -267,7 +308,7 @@ const ThreadSidebarWrapper = () => {
               <br />
               <br />
               <pre className="thread-no-data">
-                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
               </pre>
             </>
           ) : (
@@ -275,14 +316,14 @@ const ThreadSidebarWrapper = () => {
               {Object.entries(categorizedChatThreads).map(
                 ([category, prompts]) =>
                   (Array.isArray(prompts) && prompts.length) ||
-                  (typeof prompts === "object" && Object.keys(prompts).length)
+                    (typeof prompts === "object" && Object.keys(prompts).length)
                     ? renderPromptsByCategory(prompts, category)
                     : null
               )}
             </>
           )}
         </div>
-      </Scrollbars>
+      </div>
     </>
   );
 };

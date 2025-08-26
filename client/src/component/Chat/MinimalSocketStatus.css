@@ -1,0 +1,73 @@
+/* Add to your existing CSS file */
+.simple-chat-status {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.simple-chat-status.active {
+  border-left: 3px solid #4CAF50;
+}
+
+.simple-chat-status.inactive {
+  border-left: 3px solid #f44336;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.status-dot.online {
+  background: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+.status-dot.offline {
+  background: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.3);
+}
+
+.status-text {
+  font-weight: 600;
+  color: #333;
+}
+
+.last-activity {
+  font-size: 10px;
+  color: #666;
+  margin-left: 8px;
+}
+
+.socket-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.socket-test-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  color: inherit;
+}

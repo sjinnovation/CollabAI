@@ -13,6 +13,7 @@ export const retrievalFileTypes = [
   ".rb",
   ".tex",
   ".txt",
+  ".ai",
 ];
 
 export const codeInterpreterFileTypes = [
@@ -42,6 +43,7 @@ export const codeInterpreterFileTypes = [
   ".xlsx",
   ".xml",
   ".zip",
+  ".ai"
 ];
 
 export const ASSISTANT_FILE_CREATION_NOTE = `Before uploading a file, enable the "file_search" or "Code Interpreter" option.`;

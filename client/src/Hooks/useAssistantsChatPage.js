@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 // libraries
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // hooks & contexts
 import { AssistantContext } from '../contexts/AssistantContext';
@@ -14,9 +14,12 @@ import {
 	createChatPerAssistant,
 	getAssistantChatsPerThread,
 	getSingleAssistant,
+	stopGeneratingResponseForAssistant,
 	uploadFilesForAssistant,
 } from '../api/assistantChatPageApi';
 import { insertDataToAssistantUsage } from '../api/track-usage-api-functions';
+import { FileContext } from '../contexts/FileContext';
+import { SidebarContext } from '../contexts/SidebarContext';
 
 // init constants
 const initialChatMetaData = {
@@ -24,8 +27,14 @@ const initialChatMetaData = {
 	first_id: false,
 	last_id: false,
 };
+const initialAppValues ={
+  "appName":'',
+  "fileIdOrUrl":'',
+  "fileName" :'',
+}
 
-const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
+const useAssistantsChatPage = ({ assistant_id=null, thread_id=null, scrollToBottom=null }) => {
+  const prevThreadId = thread_id;
   // ----- STATES ----- //
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploadingFile, SetIsUploadingFile] = useState(false);
@@ -36,11 +45,19 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
   const [isFirstMessage, setIsFirstMessage] = useState(false);
   const [assistantData, setAssistantData] = useState(null);
   const [assistantAllInfo, setAssistantAllInfo] = useState(null);
+  const [assistantAllData, setAssistantAllData] = useState(null);
   // loading states
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isMessageFetching, setIsMessageFetching] = useState(false);
+  const {selectedFileAppWithFileId,setSelectedFileAppWithFileId}= useContext(FileContext);
+  const {setShowMenu} = useContext(SidebarContext)
+
+  const [runIdToStopRun, setRunIdToStopRun] = useState("");
+  const [threadIdToStopRun, setThreadIdToStopRun] = useState("");
+
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { triggerUpdateThreads, setTriggerUpdateThreads } =
     useContext(AssistantContext);
 
@@ -60,7 +77,10 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       setChatMetaData(initialChatMetaData);
       setIsFirstMessage(false);
     }
-    handleFetchAssistantInfo(assistant_id);
+    if(assistant_id){
+      handleFetchAssistantInfo(assistant_id);
+
+    }
 
     return () => {
       console.log("[UNMOUNT] assistants");
@@ -133,6 +153,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       const response = await getSingleAssistant(assistant_id);
       setAssistantData(response?.assistant?.static_questions);
       setAssistantAllInfo(response?.assistant);
+      setAssistantAllData(response?.assistant);
     } catch (error) {
       console.log(error);
     }
@@ -141,7 +162,35 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
   const handleCreateAssistantChat = async (event) => {
     try {
       event.preventDefault();
-      const userPrompt = inputPrompt.trim();
+      let userPrompt = inputPrompt.trim();
+      const pattern = /\[\[comment:\s*([^\]]+)\]\]/g;
+      const checkPrompt = userPrompt
+
+      let matchedComments = '';
+      let cleanText = checkPrompt.replace(pattern, (match, p1) => {
+        matchedComments = p1.trim(); // Capture the comment part (p1) and trim any extra spaces
+        return ''; // Removing the matched portion from the text
+      });
+
+      let promptWithFileIdOrUrl = '';
+
+      if(selectedFileAppWithFileId.appName !== '' && selectedFileAppWithFileId.appName === 'WorkBoard'){
+        if(matchedComments !== ''){
+          promptWithFileIdOrUrl = selectedFileAppWithFileId.fileName !==''?'WorkBoardUpdateComment :'+matchedComments+',appName : '+selectedFileAppWithFileId.appName+',fileIdOrUrl :'+selectedFileAppWithFileId.fileIdOrUrl+' ,fileName :'+selectedFileAppWithFileId.fileName +' : '+' show me the latest comments only':userPrompt;
+        }else{
+          promptWithFileIdOrUrl = selectedFileAppWithFileId.fileName !==''?'WorkBoardUpdateComment :'+matchedComments+',appName : '+selectedFileAppWithFileId.appName+',fileIdOrUrl :'+selectedFileAppWithFileId.fileIdOrUrl+' ,fileName :'+selectedFileAppWithFileId.fileName +' : '+userPrompt :userPrompt;
+
+        }
+
+      }else if(selectedFileAppWithFileId.appName !== '' && selectedFileAppWithFileId.appName === 'GoogleDrive'){
+        promptWithFileIdOrUrl = 'appName : '+selectedFileAppWithFileId.appName+',fileIdOrUrl : https://drive.google.com/file/d/1JYFyZnVjx9CD8yx3U6aHsQcmoK7kAJ3a/view ,fileName :cdfhdghyer5y45 : '+userPrompt ;
+      }else if(selectedFileAppWithFileId.appName !== '' && selectedFileAppWithFileId.appName === 'ImportWebPages'){
+        promptWithFileIdOrUrl = selectedFileAppWithFileId.fileName !==''?'appName : '+selectedFileAppWithFileId.appName+',fileIdOrUrl :'+selectedFileAppWithFileId.fileIdOrUrl+' ,fileName :'+selectedFileAppWithFileId.fileName +' : '+userPrompt :userPrompt;
+      }else{
+        promptWithFileIdOrUrl = userPrompt;
+      }
+
+      userPrompt = selectedFileAppWithFileId.fileName !==''?selectedFileAppWithFileId.fileName +' : '+userPrompt :userPrompt;
       
       // default terminations
       if (isGeneratingResponse || !userPrompt) return;
@@ -151,7 +200,7 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       setInputPrompt("");
       prependToChatLog(userPrompt, msg_id);
       await insertDataToAssistantUsage(assistant_id)
-      const reqBody = { question: userPrompt, msg_id };
+      const reqBody = { question: promptWithFileIdOrUrl, msg_id };      
       if (thread_id) reqBody.thread_id = thread_id;
 
       if (assistant_id) reqBody.assistant_id = assistant_id;
@@ -197,11 +246,13 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       msg_id,
       thread_id: ast_thread_id,
       isCompleted,
-      assistant_id
+      assistant_id,
+      runId
     } = response;
     console.log("🚀 ~ onChatCreatedEvent ~ response:", response)
-
     if (success) {
+      setRunIdToStopRun(runId)
+      setThreadIdToStopRun(ast_thread_id)
       const chat = {
         userPrompt: question,
      		response: promptResponse,
@@ -214,9 +265,13 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
       appendBotResponseToChat(chat);
 
 			if(isCompleted) {
-				if (!thread_id) handleFirstThreadMessage(chat);
+				if (!thread_id || (prevThreadId !== ast_thread_id)) handleFirstThreadMessage(chat);
+      setRunIdToStopRun('')
+      setThreadIdToStopRun('')
 			}
     } else {
+      setRunIdToStopRun('')
+      setThreadIdToStopRun('')
       setIsGeneratingResponse(false);
       return setErrorMessage(message);
     }
@@ -253,7 +308,11 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
   const handleFirstThreadMessage = (chat) => {
     setIsFirstMessage(true);
     setTriggerUpdateThreads(true);
-    navigate(`/agents/${chat.assistant_id}/${chat.thread_id}`, { replace: true });
+    const currentSearch = location.search;
+    if (location.pathname.startsWith("/agents/")) { 
+      setShowMenu(true)
+    }
+    navigate(`/agents/${chat.assistant_id}/${chat.thread_id}${currentSearch}`, { replace: true });
   };
 
   // [POST] - @desc: handles uploading files to the assistant
@@ -279,6 +338,15 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
     }
   };
 
+  const stopGeneratingResponse = async() => {
+    const payload = {
+      threadId: threadIdToStopRun,
+      runId: runIdToStopRun
+    }
+    const response = await stopGeneratingResponseForAssistant(payload)
+    return response
+  };
+
   return {
     // STATES,
     chatLog,
@@ -287,6 +355,10 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
     selectedFiles,
     inputPrompt,
     assistantAllInfo,
+    assistantAllData,
+    selectedFileAppWithFileId,
+    runIdToStopRun,
+    threadIdToStopRun,
     // BOOLEANS
     isMessageFetching,
     isFirstMessage,
@@ -301,11 +373,13 @@ const useAssistantsChatPage = ({ assistant_id, thread_id, scrollToBottom }) => {
     setSelectedFiles,
     SetIsUploadingFile,
     setInputPrompt,
+    setSelectedFileAppWithFileId,
     // API CALLS,
     handleFetchAssistantChats,
     handleFetchAssistantInfo,
     handleCreateAssistantChat,
     handleUploadFilesForAssistant,
+    stopGeneratingResponse
     // HANDLERS,
   };
 };

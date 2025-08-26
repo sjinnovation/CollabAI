@@ -1,9 +1,12 @@
 import { useState, createContext } from "react";
 
-export const PageTitleContext = createContext();
+export const PageTitleContext = createContext({
+  pageTitle: {},  
+  setPageTitle: () => {}  
+});
 
 function TitleContextProvider(props) {
-  const [pageTitle, setPageTitle] = useState({});
+  const [pageTitle, setPageTitle] = useState({}); 
 
 
   const contextData = {

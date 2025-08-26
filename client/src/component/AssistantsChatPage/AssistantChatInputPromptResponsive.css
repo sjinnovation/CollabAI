@@ -1,0 +1,110 @@
+/* responsive.css */
+.form-style-assistant {
+  padding: 0 10px;
+}
+
+/* Mobile (up to 768px) */
+@media (max-width: 768px) {
+  .parent-container {
+    position: unset !important;
+  }
+
+  .responsive-form {
+
+    box-sizing: border-box;
+    max-width: calc(100% - 16px);
+  }
+
+  .sidebar-open .responsive-form {
+    width: auto; /* Maintain full width, sidebar likely overlays */
+    max-width: calc(100% - 16px); /* Ensure no overflow */
+  }
+
+  .sidebar-open .responsive-shortcut-text {
+    max-width: calc(100% - 216px); /* Adjust for 200px sidebar + 16px */
+  }
+
+  .responsive-select-container-whole {
+    padding: 6px;
+  }
+
+  .responsive-select-container {
+    flex-direction: row; /* Kept your row layout */
+    gap: 8px;
+  }
+
+  .responsive-select-bot,
+  .responsive-select-tags {
+    width: 100% !important; /* Override Ant Design widths */
+  }
+
+  .responsive-input-textarea {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    max-height: 150px;
+  }
+
+  .responsive-actions-container {
+    gap: 6px;
+    padding: 0 6px 6px;
+  }
+
+  .responsive-send-icon,
+  .responsive-send-icon-outline {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Modal */
+  .responsive-modal .ant-modal {
+    width: 90vw !important;
+    max-width: 400px;
+  }
+
+  .responsive-modal .ant-modal-body {
+    padding: 16px;
+  }
+}
+
+/* Tablet (769px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .parent-container {
+    position: unset !important;
+  }
+
+  .responsive-form {
+    box-sizing: border-box;
+  }
+
+  .sidebar-open .responsive-form {
+    width: calc(100% - 232px); /* Sidebar (200px) + padding (32px) */
+    max-width: calc(56rem - 200px); /* Respect original max-width */
+  }
+
+  .sidebar-open .responsive-shortcut-text {
+    max-width: calc(100% - 232px); /* Adjust for 200px sidebar + 32px */
+  }
+
+  .responsive-select-container {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .responsive-select-bot {
+    width: 35% !important;
+  }
+
+  .responsive-select-tags {
+    width: 55% !important;
+  }
+
+  .responsive-input-textarea {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .responsive-modal .ant-modal {
+    width: 80vw !important;
+    max-width: 600px;
+  }
+}

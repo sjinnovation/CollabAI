@@ -9,6 +9,7 @@ import { getOpenAIInstance } from "../../config/openAI.js";
 import { PromptMessages } from "../../constants/enums.js";
 import { handleOpenAIError } from "../../utils/openAIErrors.js";
 import {
+  addMessageToThread,
   createAssistantThreadInDb,
   getAssistantByAssistantID,
   validateUserPromptForAssistant,
@@ -19,9 +20,9 @@ import {
   streamRunInThread,
   submitToolOutputsAndStream,
 } from "../../lib/openai.js";
+import { getUserDetails } from "../../service/userService.js";
 import { onTextDelta, onToolCallDelta, onToolCalls } from "../../utils/assistant.js";
 import { calculateCostFromTokenCounts, createTrackUsage } from "../../service/trackUsageService.js";
-
 
 /**
  * Creates an assistant chat and initiates streaming of responses from the assistant.
@@ -37,6 +38,7 @@ export const createAssistantChatAndStream = async function (payload) {
 
   try {
     const { question, thread_id, assistant_id } = payload;
+    console.log("payload : ",payload);
 
     // Constructing the final response object to emit to the client
     const result = {
@@ -47,7 +49,9 @@ export const createAssistantChatAndStream = async function (payload) {
       isCompleted: false,
       message: PromptMessages.CHAT_CREATION_SUCCESS,
       thread_id: thread_id ? thread_id : null,
+      runId: ''
     };
+
     const validationResult = validateUserPromptForAssistant({ question });
 
     if (validationResult.error) {
@@ -61,57 +65,97 @@ export const createAssistantChatAndStream = async function (payload) {
     const openai = await getOpenAIInstance();
 
     // Step 1: create a thread if doesn't exist for the requested user
-   if (!result.thread_id) {
+    let threadObjectId = null;
+    console.log("result.thread_id : ",result?.thread_id, " thread_id : ", thread_id);
+    if (!result.thread_id) {
       const thread = await createAssistantThread(openai);
       result.thread_id = thread.id;
 
-      await createAssistantThreadInDb(
+      const dbThreadCreate = await createAssistantThreadInDb(
         assistant_id,
         socket.user.userId,
         thread.id,
         question.substring(0, 50)
       );
+      threadObjectId = dbThreadCreate._id;
     }
 
     // Step 1.2: check if assistant exists in database
     const existingAssistant = await getAssistantByAssistantID(assistant_id);
 
-    // Step 2: now we have a threadId, create a message in the thread
-    await createMessageInThread(openai,assistant_id, result.thread_id, question,socket.user.userId);
-    
+    const messageResponse = await createMessageInThread(
+      openai,
+      assistant_id,
+      result.thread_id,
+      question,
+      socket.user.userId
+    );
+
+    let currentToolBuffer = '';
+    let completeCodeInterpreterOutput = '';
+
     const triggerClientUpdate = () => {
+      console.log("Emitting to client: resSocketEvent :",resSocketEvent, " result :", result);
       socket.emit(resSocketEvent, {
         ...result,
       });
     }
+    
+    const closeCurrentResponse = () => {
+      if (currentToolBuffer) {
+        const wrappedResponse = `<interpretedMessage>\n${currentToolBuffer}\n</interpretedMessage>`;
+        completeCodeInterpreterOutput += wrappedResponse;
+        result.codeInterpreterOutput = completeCodeInterpreterOutput;
+        currentToolBuffer = '';
+        triggerClientUpdate();
+      }
+    };
 
     const observeRunStream = (stream) => {
       stream
         .on("textDelta", async (textDelta) => {
           let response = await onTextDelta(textDelta);
-          if (response) result.promptResponse += response;
-
+          if (response) {
+            result.promptResponse += response;
+            result.promptResponse = textDelta?.annotations?.length ? result.promptResponse.replace(/[-.\di\s]*\[\s*.*?\]\(.*?\)/g, '') : result.promptResponse; 
+          }
+          const currentRun = stream.currentRun();
+          result.runId = currentRun.id;
           triggerClientUpdate();
         })
         .on("toolCallDelta", async (toolCallDelta) => {
           let response = await onToolCallDelta(toolCallDelta);
-          if (response) result.codeInterpreterOutput += response;
-
+          if (response) {
+            currentToolBuffer += response;
+            result.codeInterpreterOutput = completeCodeInterpreterOutput + `<interpretedMessage>\n${currentToolBuffer}`;
+          }
+          const currentRun = stream.currentRun();
+          result.runId = currentRun.id;
           triggerClientUpdate();
         })
         .on("end", async () => {
           const currentRun = stream.currentRun();
+          result.runId = currentRun.id;
           if (
             currentRun.status === "requires_action" &&
             currentRun.required_action.type === "submit_tool_outputs" 
           ) {
-            const toolCalls =
-              currentRun.required_action.submit_tool_outputs.tool_calls;
+            closeCurrentResponse();
+            let toolCalls = currentRun.required_action.submit_tool_outputs.tool_calls;
+              const userDetails = await getUserDetails(socket.user.userId);
+
+
+              toolCalls = toolCalls.map(item => {
+                const args = JSON.parse(item.function.arguments);
+                item.function.arguments = JSON.stringify(args);
+                return item;
+              });
               
               const toolOutputs = await onToolCalls(
                 assistant_id,
                 toolCalls,
-                existingAssistant?.functionCalling
+                existingAssistant?.functionCalling,
+                userDetails._id
               );
             
             const runStreamAfterToolSubmit = submitToolOutputsAndStream(
@@ -123,9 +167,15 @@ export const createAssistantChatAndStream = async function (payload) {
             
             observeRunStream(runStreamAfterToolSubmit);
           } else {
+            closeCurrentResponse();
             result.isCompleted = true;
-          }
-          
+            // Step 3: Update the AssistantThread with msg_id and codeInterpreterOutput
+            await addMessageToThread(
+              result.thread_id,
+              messageResponse.id,
+              result.codeInterpreterOutput || null
+            );
+          }          
           triggerClientUpdate();
         }).on("done", async (data) => {
           result.isCompleted = true;
@@ -166,14 +216,11 @@ export const createAssistantChatAndStream = async function (payload) {
   } catch (error) {
     console.error("Error in createChat handler:", error);
     let message = PromptMessages.CHAT_CREATION_ERROR;
-    
+
     // Specific error handling for OpenAI errors
     if (error instanceof OpenAI.APIError) {
       message = handleOpenAIError(error).message;
     }
-    
-    console.log("🚀 ~ createAssistantChatAndStream ~ message:", message)
-    
 
     // Emitting error to the client
     socket.emit(resSocketEvent, {

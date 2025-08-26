@@ -15,21 +15,21 @@ const allowedFileTypesCheck = (selectedTools, fileName) => {
     const fileExtension = `.${fileName.split(".").pop().toLowerCase()}`;
     let allowedFileTypes = [];
 
-    const flatSelectedTools = Array.isArray(selectedTools)
+    const flatSelectedTools = selectedTools?(Array.isArray(selectedTools)
         ? selectedTools.flat()
-        : selectedTools;
+        : selectedTools):[];
 
-    if (flatSelectedTools.includes("code_interpreter")) {
+    if (flatSelectedTools?.includes("code_interpreter")) {
         allowedFileTypes = [...allowedFileTypes, ...codeInterpreterFileTypes];
     }
-    if (flatSelectedTools.includes("file_search")) {
+    if (flatSelectedTools?.includes("file_search")) {
         allowedFileTypes = [...allowedFileTypes, ...retrievalFileTypes];
     }
 
     const uniqueAllowedFileTypes = [
-        ...new Set(allowedFileTypes.map((type) => type.toLowerCase())),
+        ...new Set(allowedFileTypes.map((type) => type?.toLowerCase())),
     ];
-    const isFileAllowed = uniqueAllowedFileTypes.includes(fileExtension);
+    const isFileAllowed = uniqueAllowedFileTypes?.includes(fileExtension);
 
     if (!isFileAllowed) {
         return false;
@@ -37,17 +37,39 @@ const allowedFileTypesCheck = (selectedTools, fileName) => {
     return true;
 }
 
-
-
-
-
-
-
-
-export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedTools,knowledgeSource}) => {
-
-    const { selectedFile, setSelectedFile, folderStructure, setFolderStructure, selectedFolders, setSelectedFolders } = useContext(FileContext);
+export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData , selectedTools, knowledgeSource, selectedFile, setSelectedFile, selectedFileKeys =[], setDeletedFileList, setDeleteFileIds, assistantData, editMode }) => {
+    const { folderStructure, setFolderStructure, selectedFolders, setSelectedFolders } = useContext(FileContext);
     const [publicFilesStructure, setPublicFilesStructure] = useState([]);
+
+    const handleFileSelectionUpdate = (key, title) => {
+        // Remove from deletedFileList and deleteFileIds when file is selected
+        if (!selectedFile?.some(file => file.key === key)) {
+            setDeletedFileList(prev => prev.filter(deletedKey => deletedKey !== key));
+            // If in edit mode, also update deleteFileIds
+            if (editMode) {
+                const fileIds = assistantData?.fileIdsWithKeysOfKnowledgeBase?.filter((f) => f.key === key);
+                if (fileIds?.[0]?.file_id) {
+                    setDeleteFileIds(prev => prev.filter(id => id !== fileIds[0].file_id));
+                }
+            }
+        }
+
+        setSelectedFile((prevSelectedFiles = []) => {
+            if (prevSelectedFiles?.some(file => file.key === key)) {
+                // When deselecting, add to deletedFileList and deleteFileIds if in edit mode
+                if (editMode) {
+                    setDeletedFileList(prev => [...prev, key]);
+                    const fileIds = assistantData?.fileIdsWithKeysOfKnowledgeBase?.filter((f) => f.key === key);
+                    if (fileIds?.[0]?.file_id) {
+                        setDeleteFileIds(prev => [...prev, fileIds[0].file_id]);
+                    }
+                }
+                return prevSelectedFiles?.filter(file => file.key !== key);
+            } else {
+                return [...prevSelectedFiles, { key, title }];
+            }
+        });
+    };
 
     const handleRightClick = ({ node }) => {
         const { key, title } = node;
@@ -72,7 +94,6 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
     const handleFolderSelect = (selectedKeys, info) => {
         const { selected, node } = info;
         const { key, title } = node;
-
         if (!title.includes(".")) {
             if (selected) {
                 selectAllFilesInFolder(node);
@@ -101,16 +122,22 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
             const newFiles = [...prevSelectedFiles];
             fileKeys.forEach(fileKey => {
                 const existingFile = newFiles.find(file => file.key === fileKey);
+                if(selectedFileKeys.includes(fileKey)){
+                    return message.error(`${getTitleByKey(fileKey)} is already uploaded in Attached Files`);
+                }
                 if (!existingFile) {
-                    if(knowledgeSource){
-                        newFiles.push({ key: fileKey, title: getTitleByKey(fileKey) });
-
-                    }else{
-                        if(allowedFileTypesCheck(selectedTools,getTitleByKey(fileKey))){
-                            newFiles.push({ key: fileKey, title: getTitleByKey(fileKey) });
+                    const fileTitle = getTitleByKey(fileKey);
+                    if(knowledgeSource || allowedFileTypesCheck(selectedTools, fileTitle)) {
+                        // Remove from deletedFileList and deleteFileIds when file is selected
+                        setDeletedFileList(prev => prev.filter(deletedKey => deletedKey !== fileKey));
+                        if (editMode) {
+                            const fileIds = assistantData?.fileIdsWithKeysOfKnowledgeBase?.filter((f) => f.key === fileKey);
+                            if (fileIds?.[0]?.file_id) {
+                                setDeleteFileIds(prev => prev.filter(id => id !== fileIds[0].file_id));
+                            }
                         }
+                        newFiles.push({ key: fileKey, title: fileTitle })
                     }
-
                 }
             });
             return newFiles;
@@ -126,6 +153,17 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
             return prevSelectedFolders.filter(folderKey => folderKey !== key);
         });
 
+        // When deselecting files, add them to deletedFileList and deleteFileIds if in edit mode
+        if (editMode) {
+            fileKeys.forEach(fileKey => {
+                setDeletedFileList(prev => [...prev, fileKey]);
+                const fileIds = assistantData?.fileIdsWithKeysOfKnowledgeBase?.filter((f) => f.key === fileKey);
+                if (fileIds?.[0]?.file_id) {
+                    setDeleteFileIds(prev => [...prev, fileIds[0].file_id]);
+                }
+            });
+        }
+
         setSelectedFile(prevSelectedFiles => {
             return prevSelectedFiles?.filter(file => !fileKeys.includes(file.key));
         });
@@ -139,7 +177,9 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
                 keys.push(node.key);
             } else if (node.children) {
                 node.children.forEach(child => traverse(child));
+
             }
+
         };
 
         traverse(node);
@@ -150,8 +190,8 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
         const getNodeTitle = (nodes) => {
             for (let node of nodes) {
 
-                if (node.key === key) {
-                    return node.title;
+                if (node._id === key) {
+                    return node.name;
                 } else if (node.children) {
                     const title = getNodeTitle(node.children);
                     if (title) {
@@ -167,32 +207,19 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
 
     const toggleFileSelection = (node) => {
         const { key, title } = node;
-        if(knowledgeSource){
-            setSelectedFile((prevSelectedFiles = []) => {
-                if (prevSelectedFiles?.some(file => file.key === key)) {
-                    return prevSelectedFiles?.filter(file => file.key !== key);
-                } else {
-                    return [...prevSelectedFiles, { key, title }];
-                }
-            });
-        }else{
-            if(allowedFileTypesCheck(selectedTools,title)){
-                setSelectedFile((prevSelectedFiles = []) => {
-                    if (prevSelectedFiles?.some(file => file.key === key)) {
-                        return prevSelectedFiles?.filter(file => file.key !== key);
-                    } else {
-                        return [...prevSelectedFiles, { key, title }];
-                    }
-                });
-    
-            }else{
+        if (knowledgeSource) {
+            handleFileSelectionUpdate(key, title);
+        } else {
+            if (selectedFileKeys.includes(key)) {
+                return message.error(`${title} is already uploaded in Attached Files`);
+            }
+            if (allowedFileTypesCheck(selectedTools, title)) {
+                handleFileSelectionUpdate(key, title);
+            } else {
                 return message.error(`Unsupported file type: ${title} select the files that are supported for your tools enabled.`);
             }
         }
-
-
     };
-
 
     const renderTreeNodes = (data) => {
         const nodes = Array.isArray(data) ? data : [];
@@ -200,10 +227,10 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
             .filter(item => item?.type !== 'folder' || (item?.children && item?.children?.length > 0)) // Filter out empty folders
             .map(item => (
                 <TreeNode
-                    title={item?.type === 'folder' ? item?.title : item?.name.split('/').pop()}
-                    key={item?.key}
+                    title={item?.type === 'folder' ? item?.name : item?.name.split('/').pop()}
+                    key={item?._id}
                     icon={item?.type === 'folder' ? <FolderOpenOutlined /> : <FileOutlined />}
-                    className={selectedFolders.includes(item?.key) ? 'selected-node' : ''}
+                    className={selectedFolders.includes(item?._id) ? 'selected-node' : ''}
                 >
                     {item?.children && item?.children?.length > 0 ? renderTreeNodes(item?.children) : null}
                 </TreeNode>
@@ -218,6 +245,7 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
     useEffect(() => {
         if (selectedFile?.length === 0) {
             setSelectedFolders([]);
+            setSelectedFile([]);
 
         }
 
@@ -230,7 +258,7 @@ export const RAGTree = ({ formattedRAGdData, formattedPublicFilesData ,selectedT
 
     return (
         <div>
-            {formattedPublicFilesData && formattedPublicFilesData?.length > 0 ? <Title level={2} className="treeName" >Organizational files</Title> : ''}
+            {formattedPublicFilesData && formattedPublicFilesData?.length > 0 ? <Title style={{fontWeight:"600", fontSize:"22px"}} className="treeName" >Organizational files</Title> : ''}
 
 
             <Tree

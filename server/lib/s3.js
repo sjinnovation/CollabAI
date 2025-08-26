@@ -1,10 +1,12 @@
 import fs from 'fs';
-import mime from "mime-types";
+// import mime from "mime-types";
+import mime from "mime";
 import path from 'path';
 import config from "../config.js";
 import AWS from "aws-sdk";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { getSignedUrl } from '../service/fluxImageGeneratorService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -93,9 +95,13 @@ export const uploadToS3Bucket = async (name,fileBuffer, type,userId) => {
       Key: params.Key,
       Expires: expirationTimeInSeconds,
     };
+    let s3SignedUrl = '';
+    if(uploadResult){
+      s3SignedUrl =await getSignedUrl(s3FileName);
+    }
 
 
-    return uploadResult;
+    return s3SignedUrl;
   } catch (err) {
     console.error('Error uploading image to S3:', err);
     return null;
@@ -183,34 +189,55 @@ export const deleteAllFilesFromS3Bucket = async (Prefix) => {
 
 
 // Function to ensure that a directory path exists
-const ensureDirectoryExistence = (filePath) => {
+export const ensureDirectoryExistence = (filePath) => {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true, mode: 0o777 });
   }
 }
-export const downloadFileFromS3 = async (userId, fileName)=>{
+
+export const downloadFileFromS3 = async (userId, fileName) => {
   const s3Key = `knowledgeBase/${userId}/${fileName}`;
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: s3Key,
   };
-  const isKeyExistInS3=await s3.headObject(params).promise();
-  const directoryPath = path.join(__dirname, '../docs', 'downloads');
-  const filePath = path.join(directoryPath, fileName);
-  ensureDirectoryExistence(filePath);
 
-  const file = fs.createWriteStream(filePath, { mode: 0o666 });
-if(isKeyExistInS3){
-  return new Promise((resolve, reject) => {
-    s3.getObject(params)
-      .createReadStream()
-      .pipe(file)
-      .on('finish', () => resolve(filePath))
-      .on('error', (error) => reject(error));
-  });
-}else{
-  return '';
-}
+  try {
+    // Check if the object exists in S3
+    await s3.headObject(params).promise();
 
+    const directoryPath = path.join(__dirname, '../docs', 'downloads');
+    const filePath = path.join(directoryPath, fileName);
+    ensureDirectoryExistence(filePath);
+    
+    // Ensure the directory exists
+    fs.mkdirSync(directoryPath, { recursive: true });
+
+    const file = fs.createWriteStream(filePath, { mode: 0o666 });
+    console.log("Starting S3 download...");
+
+    // Create a read stream from S3 and pipe it to the file
+    await new Promise((resolve, reject) => {
+      const s3Stream = s3.getObject(params).createReadStream();
+      s3Stream.on('error', (error) => {
+        console.error("Error retrieving object from S3:", error);
+        reject(error);
+      });
+      s3Stream.pipe(file)
+        .on('finish', () => {
+          console.log('File download finished successfully:', filePath);
+          resolve(filePath);
+        })
+        .on('error', (error) => {
+          console.error("Error during file stream piping:", error);
+          reject(error);
+        });
+    });
+
+    return filePath;
+  } catch (error) {
+    console.error("Error downloading file from S3:", error);
+    return '';
+  }
 };

@@ -1,0 +1,26 @@
+@media screen and (max-width: 1024px) {
+  .trash-btn-position {
+    position: unset !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    margin-left: 0px !important;
+    gap: 10px;
+  }
+
+  .trash-btn-delete {
+    /* margin-top: 10px !important; */
+    margin-left: 0px !important;
+  }
+
+  .trash-table-position {
+    margin-top: 1rem !important;
+  }
+
+  .profile-container .trash-container .ant-pagination {
+    margin-top: 7px !important;
+  }
+
+  .ant-table-wrapper .ant-table-selection-column {
+    padding-inline-end: 0px !important;
+  }
+}

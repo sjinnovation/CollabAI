@@ -1,0 +1,11 @@
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: center;
+  }
+  
+ .modal-footer .button-group {
+    display: flex;
+    gap: 12px;
+  }

@@ -11,7 +11,7 @@ const AdminNavLinks = () => {
     <div>
       <NavLinks
         svg={<CgProfile size={22} />}
-        text="My Profile"
+        text="Account Settings"
         link="/profile"
       />
       {checkAccess ? (
@@ -30,7 +30,7 @@ const AdminNavLinks = () => {
             </svg>
           }
           text="My Agents"
-          link="/users-agents"
+          link="/myAgents"
         />
       ) : null}
     </div>

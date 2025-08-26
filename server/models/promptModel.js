@@ -1,5 +1,4 @@
 import mongoose, { Schema } from 'mongoose';
-import MeetingType from '../models/meetingTypeModel.js';
 
 const promptSchema = mongoose.Schema(
 	{
@@ -42,20 +41,30 @@ const promptSchema = mongoose.Schema(
 		},
 		botProvider: {
 			type: String,
-			enum: ['gemini', 'openai', 'claude'],
+			enum: ['openai', 'gemini', 'claude', 'deepseek', 'huggingface'],
 		},
-
-		tags: [
-			{
-				type: mongoose.Schema.Types.ObjectId,
-				ref: 'meetingType',
-			},
-		],
+		isResponseThread : {
+			type: Boolean,
+			require: false,
+			default: false,
+		},
+		folderId :{
+			type: String,
+			required: false,
+			default : null
+		},
+		msgId: {
+			type: String,
+			required: false,
+			default : null
+		}
 	},
 	{
 		timestamps: true,
 	}
 );
+
+promptSchema.index({ threadid: 1, userid: 1 });
 
 const promptModel = mongoose.model('prompt', promptSchema);
 

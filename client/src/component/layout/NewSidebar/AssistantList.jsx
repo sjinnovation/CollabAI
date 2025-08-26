@@ -1,22 +1,19 @@
-import Scrollbars from "rc-scrollbars";
 import { IoIosMore } from "react-icons/io";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { Avatar, Button } from "antd";
-import { PushpinOutlined } from "@ant-design/icons";
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { ThemeContext } from "../../../contexts/themeConfig";
+import { Link } from "react-router-dom";
+import { Avatar, Button, message, Spin } from "antd";
+import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
+import { useContext, useMemo, useState } from "react";
 import {
   addPinnedAssistant,
   deletePinnedAssistant,
 } from "../../../api/pinnedAssistant";
-import { getUserID, getUserRole } from "../../../Utility/service";
+import { getUserID } from "../../../Utility/service";
 import "./AssistantList.css";
-import { BsRobot } from "react-icons/bs";
 import agentPlaceholder from "../../../assests/images/agents-placeholder.png";
+import { AssistantContext } from "../../../contexts/AssistantContext";
 
 const AssistantList = ({ propsData }) => {
-  const { theme } = useContext(ThemeContext);
-  const navigate = useNavigate();
+  const { searchQuery } = useContext(AssistantContext);
   const {
     assistants,
     setAssistants,
@@ -28,38 +25,31 @@ const AssistantList = ({ propsData }) => {
     setAssistantIdLinked,
     handleFetchAssistants,
   } = propsData;
-  const { assistant_id: ast_id_from_params } = useParams();
+
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredUser, setHoveredUser] = useState(null);
-  const role = getUserRole()
+  const [seeAllMode, setSeeAllMode] = useState(false);
 
-  const filteredAssistantListWithTrue = useMemo(
-    () => assistants.filter((assistant) => assistant?.is_pinned === true),
-    [assistants]
-  );
+  const sortedUniqueAssistants = useMemo(() => {
+    const unique = assistants.filter(
+      (assistant, index, self) =>
+        index === self.findIndex((a) => a?.name === assistant?.name)
+    );
+    return unique.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      const aLastUsed = new Date(a.lastUsed);
+      const bLastUsed = new Date(b.lastUsed);
+      return bLastUsed - aLastUsed;
+    });
+  }, [assistants]);
 
-  const filteredAssistantListWithFalse = useMemo(
-    () => assistants.filter((assistant) => assistant?.is_pinned === false),
-    [assistants]
-  );
-
-  const fullAssistantRearrangedList = useMemo(
-    () => [...filteredAssistantListWithTrue, ...filteredAssistantListWithFalse],
-    [filteredAssistantListWithTrue, filteredAssistantListWithFalse]
-  );
-
-  const retrievingUniqueAssistant = useMemo(
-    () =>
-      fullAssistantRearrangedList.filter(
-        (assistant, index, self) =>
-          index ===
-          self.findIndex(
-            (anyAssistant) => anyAssistant?.name === assistant?.name
-          )
-      ),
-
-    [fullAssistantRearrangedList]
-  );
+  const displayAssistants = useMemo(() => {
+    if (!seeAllMode && page === 1) {
+      return sortedUniqueAssistants.slice(0, 6);
+    }
+    return sortedUniqueAssistants;
+  }, [sortedUniqueAssistants, page, seeAllMode]);
 
   const handlePinButtonClick = async (
     assistantId,
@@ -68,6 +58,16 @@ const AssistantList = ({ propsData }) => {
     event
   ) => {
     event.preventDefault();
+    // Enforce maximum 3 pinned agents.
+    if (!currentPinStatus) {
+      const pinnedCount = assistants.filter(
+        (assistant) => assistant?.isPinned
+      ).length;
+      if (pinnedCount >= 3) {
+        message.warning("Maximum 3 agents can be pinned");
+        return;
+      }
+    }
     setIsLoading(true);
     const updatePinStatus = !currentPinStatus;
     try {
@@ -81,15 +81,20 @@ const AssistantList = ({ propsData }) => {
           updatePinStatus
         );
       }
-
-      // Update the assistants list in the parent component
-      const updatedAssistants = assistants?.map((assistant) =>
+      const updatedAssistants = assistants.map((assistant) =>
         assistant?.assistant_id === assistantId
-          ? { ...assistant, is_pinned: updatePinStatus }
+          ? { ...assistant, isPinned: updatePinStatus }
           : assistant
       );
-
       setAssistants(updatedAssistants);
+      if (updatePinStatus) {
+        const newPinnedCount = updatedAssistants.filter(
+          (assistant) => assistant?.isPinned
+        ).length;
+        if (newPinnedCount === 3) {
+          message.info("3 agents are now pinned");
+        }
+      }
     } catch (error) {
       console.error("Failed to update pin status:", error);
     } finally {
@@ -97,106 +102,142 @@ const AssistantList = ({ propsData }) => {
     }
   };
 
-  return (
-    <div>
-      {/* <Scrollbars
-        autoHide
-        autoHideTimeout={1000}
-        autoHideDuration={200}
-        style={{ width: "245px", height: "22vh", border: "none" }}
-        renderThumbVertical={({ style, ...props }) => (
+  // Render the list of agents.
+  const listContent = (
+    <>
+      {displayAssistants.map((assistant, index) => (
+        <Link
+          to={`/agents/${assistant?.assistant_id}`}
+          onClick={() => {
+            setAssistantIdLinked(assistant?.assistant_id);
+            setAssistantSelected(true);
+          }}
+          rel="noreferrer"
+          key={index}
+          style={{ textDecoration: "none" }}
+        >
           <div
-            style={{
-              ...style,
-              cursor: "pointer",
-              backgroundColor: "rgba(255,255,255,.25)",
-            }}
-            {...props}
-          ></div>
-        )}
-      >
-       
-      </Scrollbars> */}
-       {loading ? (
-          <p>...</p>
-        ) : retrievingUniqueAssistant?.length ? (
-          <>
-            {retrievingUniqueAssistant?.map((assistant, index) => (
-              <Link
-                to={`/agents/${assistant?.assistant_id}`}
-                onClick={() => {
-                  setAssistantIdLinked(assistant?.assistant_id);
-                  setAssistantSelected(true);
-                }}
-                rel="noreferrer"
-                key={index}
-                style={{ textDecoration: "none" }}
-              >
-                <div
-                  className="navPrompt assistant-list sidebar-item"
-                  onMouseEnter={() => setHoveredUser(assistant)}
-                  onMouseLeave={() => setHoveredUser(null)}
-                >
-                  {assistant?.image_url ? (
-                    <Avatar className="agent-image" size={20} src={assistant?.image_url} />
-                  ) : (
-                    <img
-                      className="sidebar-icon"
-                      width={20}
-                      height={20}
-                      src={agentPlaceholder}
-                      alt=""
-                    />
-                  )}
-
-                  <p className="sidebar-text agents-name">{assistant?.name}</p> 
-
-                  {hoveredUser === assistant || assistant?.is_pinned ? (
-                    <PushpinOutlined
-                      checked={assistant?.is_pinned}
-                      onClick={(e) =>
-                        handlePinButtonClick(
-                          assistant?.assistant_id,
-                          assistant?._id,
-                          assistant?.is_pinned,
-                          e
-                        )
-                      }
-                      style={{
-                        marginLeft: "5px",
-                        color: assistant?.is_pinned ? "green" : "gray",
-                      }}
-                      disabled={loading || isLoading}
-                    />
-                  ) : (
-                    <PushpinOutlined
-                      checked={assistant?.is_pinned}
-                      style={{
-                        marginLeft: "5px",
-                        color: assistant?.is_pinned ? "green" : "gray",
-                        visibility: "hidden",
-                      }}
-                      disabled={loading || isLoading}
-                    />
-                  )}
-                </div>
-              </Link>
-            ))}
-
-            {page < totalPage && (
-              <Button
-                className="mb-1 w-100 custom-show-btn"
-                // onClick={() => actions.setPage(page + 1)}
-                onClick={() => {
-                  navigate(role === 'superadmin' ? '/agentsList' : '/users-agents')
-                }}
-              >
-                <IoIosMore />
-                See More
-              </Button>
+            className="navPrompt assistant-list sidebar-item px-2"
+            onMouseEnter={() =>
+              !assistant?.isPinned && setHoveredUser(assistant)
+            }
+            onMouseLeave={() => !assistant?.isPinned && setHoveredUser(null)}
+          >
+            {assistant?.image_url ? (
+              <Avatar
+                className="agent-image"
+                size={20}
+                src={assistant?.image_url}
+              />
+            ) : (
+              <img
+                className="sidebar-icon"
+                width={20}
+                height={20}
+                src={agentPlaceholder}
+                alt=""
+              />
             )}
-          </>
-        ) : null}
+            <p className="sidebar-text agents-name">{assistant?.name}</p>
+            {assistant?.isPinned ? (
+              <PushpinFilled
+                onClick={(e) =>
+                  handlePinButtonClick(
+                    assistant?.assistant_id,
+                    assistant?._id,
+                    assistant?.isPinned,
+                    e
+                  )
+                }
+                style={{
+                  marginLeft: "5px",
+                  color: "#1890ff",
+                  cursor: "pointer",
+                }}
+              />
+            ) : (
+              <PushpinOutlined
+                className="pin-icon"
+                onClick={(e) =>
+                  handlePinButtonClick(
+                    assistant?.assistant_id,
+                    assistant?._id,
+                    assistant?.isPinned,
+                    e
+                  )
+                }
+                style={{
+                  marginLeft: "5px",
+                  color: "gray",
+                  cursor: "pointer",
+                }}
+                disabled={loading || isLoading}
+              />
+            )}
+          </div>
+        </Link>
+      ))}
+    </>
+  );
+
+  // Render listContent in a div, relying on parent Scrollbars
+  const contentWrapper = (
+    <div style={{ width: "245px" }}>
+      {listContent}
+      {seeAllMode && loading && (
+        <div style={{ textAlign: "center", padding: "10px" }}>
+          <Spin size="small" className="assistant-list-spinner" />
+          <div className="assistant-list-loading-text">Loading more agents...</div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Render the toggle button if there's no search query and more than 6 assistants.
+  const renderInitialButton = () => {
+    if (searchQuery && searchQuery?.trim() !== "") return null;
+    if (sortedUniqueAssistants.length > 6) {
+      return seeAllMode ? (
+        loading ? (
+          ''
+        ) : (
+          <Button
+            className="mb-1 w-100 custom-show-btn"
+            onClick={() => {
+              setSeeAllMode(false);
+              actions.setPage(1);
+            }}
+          >
+            See Less
+          </Button>
+        )
+      ) : (
+        <Button
+          className="mb-1 w-100 custom-show-btn"
+          onClick={() => {
+            setSeeAllMode(true);
+            if (totalPage > 1) {
+              actions.setPage(2);
+            }
+          }}
+        >
+          <IoIosMore style={{ marginRight: "4px" }} /> See More
+        </Button>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="frequentlyUsedAgents">
+      {loading && page === 1 ? (
+        <p className="frequentlyUsedAgents-loading-text">Loading...</p>
+      ) : (
+        <>
+          {contentWrapper}
+          {renderInitialButton()}
+        </>
+      )}
     </div>
   );
 };

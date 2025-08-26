@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 const getUserID = () => {
   return localStorage.getItem("userID");
 };
@@ -17,8 +19,17 @@ const getUserToken = () => {
 const isLoggedIn = () => {
   return localStorage.getItem("userID") || false;
 };
+
+const clearAllCookies = ()=>{
+  const allCookies = Cookies.get();
+  for (const cookieName in allCookies) {
+    Cookies.remove(cookieName);
+  }
+}
 const logout = () => {
   localStorage.clear();
+  sessionStorage.clear();
+  clearAllCookies();
 };
 
 const getUserTeamID = () => {

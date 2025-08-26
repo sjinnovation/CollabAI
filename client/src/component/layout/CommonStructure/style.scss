@@ -1,0 +1,51 @@
+.commonParentLayout {
+    width: 100%;
+    height: 100vh ;
+    justify-content: space-between;
+    background-color: var(--main-bg-color) !important;
+    .side-top-section {
+        margin-bottom: 20px;
+    }
+    .ant-layout-sider {
+        border-right: 0px !important;
+    }
+    .ant-menu-item {
+        margin: 0 0 5px 0 !important;
+        width: 100%;
+        padding: 0 16px !important;
+
+        .ant-menu-title-content {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--theme-toggler-dark);
+        }
+        .ant-menu-item-icon {
+            color: var(--theme-toggler-dark);
+            font-size: 18px !important;
+        }
+        &.ant-menu-item-selected,
+        &:active,
+        &:hover {
+            background-color: var(--sidemenu-selected-item);
+            border-radius: 4px !important;
+        }
+    }
+}
+
+@media only screen and (max-width: 1024px) {
+  .ant-layout-sider-collapsed.agent-list-sideMenu {
+    display: none !important;
+  }
+
+  .ant-layout-sider-collapsed.agent-list-sideMenu .ant-menu-item-icon {
+    display: none !important;
+  }
+
+  .ant-layout-sider-collapsed.track-usage-sideMenu {
+    display: none !important;
+  }
+
+  .ant-layout-sider-collapsed.track-usage-sideMenu .ant-menu-item-icon {
+    display: none !important;
+  }
+}

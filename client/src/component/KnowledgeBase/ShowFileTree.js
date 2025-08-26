@@ -11,7 +11,7 @@ export const ShowFileTree = ({ dataProps }) => {
             <div className="file-tree-wrapper">
                 {(isAdmin) ? (
                     <>
-                        {folderStructure.length > 0 ? <Title level={3} className="treeName">Organizational Files</Title> : ''}
+                        {folderStructure?.length > 0 ? <Title level={3} className="treeName">Organizational Files</Title> : ''}
                         <FileTree
                             dataProps={{ folderStructure: publicFilesStructure, setFolderStructure: setPublicFilesStructure, selectedFolder: null, setSelectedFolder: null, selectedFile, setSelectedFile, isAdmin }}
                         />

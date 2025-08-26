@@ -6,8 +6,7 @@ import { BellFilled } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import "./welcomeCard.css";
 
-const USER_DATA_CHANGED_EVENT = 'userDataChanged';
-
+const USER_DATA_CHANGED_EVENT = "userDataChanged";
 
 const WelcomeCard = () => {
   // show card will hide and show depends on the user filed
@@ -15,21 +14,24 @@ const WelcomeCard = () => {
   const [animateOut, setAnimateOut] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [userInfo, setUserInfo] = useState({});
+  const [showButton, setShowButton] = useState(false);
   const navigate = useNavigate();
   const userId = getUserID();
+  
+
+  const fetchLatestUserData = useCallback(() => {
+    return retrieveUserProfile(userId).then((user) => {
+      setUserInfo(user);
+      updateChecklist(user);
+      return user;
+    });
+  }, [userId]);
 
   useEffect(() => {
-    const getUserInfo = () => {
-      retrieveUserProfile(userId).then((user) => {
-        setUserInfo(user);
-        updateChecklist(user);
-      });
-    };
-  
-    getUserInfo(); // Initial call to get user info
+    fetchLatestUserData();
   
     const handleUserDataChange = () => {
-      getUserInfo();
+      fetchLatestUserData();
     };
   
     window.addEventListener(USER_DATA_CHANGED_EVENT, handleUserDataChange);
@@ -37,8 +39,7 @@ const WelcomeCard = () => {
     return () => {
       window.removeEventListener(USER_DATA_CHANGED_EVENT, handleUserDataChange);
     };
-  }, [userId]);
-
+  }, [fetchLatestUserData]);
 
   const initialChecklist = [
     {
@@ -59,23 +60,42 @@ const WelcomeCard = () => {
 
   const [checklist, setChecklist] = useState(initialChecklist);
 
-  const updateChecklist = (user) => {
+  const updateChecklist = (user = {}) => {
+    // Assign a default name if fname is undefined
+    if (!user) {
+      return null;
+  }
+    const profileFieldsToCheck = ['fname', 'lname', 'email', 'designation', 'responsibility', 'companyInformation'];
+    const chatFieldsToCheck = ['desiredAiResponse', 'userPreferences'];
+  
+    const calculatePercentage = (filledFields, totalFields) => {
+      const rawPercentage = (filledFields / totalFields) * 100;
+      return Math.ceil(rawPercentage / 10) * 10;
+    };
+  
+    const profileFilledFields = profileFieldsToCheck.filter(field => Boolean(user[field])).length;
+    const profileCompletionPercentage = calculatePercentage(profileFilledFields, profileFieldsToCheck.length);
+  
+    const chatFilledFields = chatFieldsToCheck.filter(field => Boolean(user[field])).length;
+    const chatCompletionPercentage = calculatePercentage(chatFilledFields, chatFieldsToCheck.length);
+
     const updatedChecklist = initialChecklist.map((item) => {
       if (item.text === "Update Your Information") {
         return {
           ...item,
-          completed: Boolean(user.fname && user.lname && user.email),
+          completed: profileCompletionPercentage,
         };
       } else if (item.text === "Update Customize Chat") {
         return {
           ...item,
-          completed: Boolean(user.desiredAiResponse && user.userPreferences),
+          completed: chatCompletionPercentage,
         };
       } else {
         return item;
       }
     });
     setChecklist(updatedChecklist);
+ 
   };
 
   const handleSkip = () => {
@@ -98,9 +118,18 @@ const WelcomeCard = () => {
     navigate(path, { state: { activeTabKey: key } });
   };
 
-  const completedCount = checklist.filter((item) => item.completed).length;
-  const completionRate = Math.round((completedCount / checklist.length) * 100);
-  const allCompleted = checklist.every((item) => item.completed);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowButton(true);
+    }, 3000);
+
+    return () => clearTimeout(timer); 
+  }, []);
+
+  const completedCount = checklist.reduce((sum, item) => sum + item.completed, 0);
+  const completionRate = Math.round(completedCount / checklist.length);
+  const allCompleted = checklist.every(item => item.completed === 100);
 
   return (
     <div className="background-color-card">
@@ -112,14 +141,14 @@ const WelcomeCard = () => {
           title={
             <div className="card-title">
               <h5>Welcome to CollabAI</h5>
-              <span style={{ fontSize: '12px', marginBottom: '5px'}}>
+              <span style={{ fontSize: "12px", marginBottom: "5px" }}>
                 Complete the following steps to update your information
               </span>
             </div>
           }
           bordered={true}
         >
-          <Progress percent={completionRate} className="progress-bar"/>
+          <Progress percent={completionRate} className="progress-bar" />
           {allCompleted ? (
             <>
               <p>Thank You For Updating All Your Information!</p>
@@ -140,17 +169,18 @@ const WelcomeCard = () => {
                   }}
                 >
                   <Checkbox
-                    checked={item.completed}
+                    checked={item.completed === 100}
                     style={{
-                      textDecoration: item.completed ? "line-through" : "none",
-                      color: item.completed ? "#888" : "inherit",
-                      opacity: item.completed ? 0.7 : 1,
+                      textDecoration:
+                        item.completed === 100 ? "line-through" : "none",
+                      color: item.completed === 100 ? "#888" : "inherit",
+                      opacity: item.completed === 100 ? 0.7 : 1,
                     }}
                   >
                     {item.text}
                   </Checkbox>
 
-                  {!item.completed && (
+                  {item.completed < 100 && (
                     <Button
                       type="primary"
                       size="small"
@@ -168,13 +198,11 @@ const WelcomeCard = () => {
           )}
         </Card>
       ) : (
-        !allCompleted && (
-         
-            <Button type={"primary"} onClick={handleShowCard}>
-              Update Information
-              <BellFilled style={{ color: "white", marginLeft: "8px" }} />
-            </Button>
-
+       !allCompleted && showButton && (
+          <Button type={"primary"} onClick={handleShowCard}>
+            Update Information
+            <BellFilled style={{ color: "white", marginLeft: "8px" }} />
+          </Button>
         )
       )}
     </div>

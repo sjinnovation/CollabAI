@@ -10,3 +10,7 @@ npm-debug.log*
 .npm/
 .env
 .env.local
+.env.dev
+.env.prod
+
+public/logo/*

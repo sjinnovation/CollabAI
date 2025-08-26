@@ -1,6 +1,10 @@
-export const  FETCH_ALL_ASSISTANTS = (page, searchQuery=false) => `api/assistants/users?page=${searchQuery ? '1' : page}&pageSize=${searchQuery ? '20' : '6' }${searchQuery ? `&searchQuery=${searchQuery}` : ""}`;
+export const  FETCH_ALL_ASSISTANTS = (page, searchQuery=false) => `api/assistants/users?page=${searchQuery ? '1' : page}&pageSize=${searchQuery ? '20' : '8' }${searchQuery ? `&searchQuery=${searchQuery}` : ""}`;
 export const  FETCH_ASSISTANT_THREADS = (assistant_id) => `api/assistants/threads?assistant_id=${assistant_id}`;
 export const  UPDATE_ASSISTANT_THREADS = (thread_mongo_id) => `/api/assistants/threads/${thread_mongo_id}`;
 export const  DELETE_ASSISTANT_THREADS = (thread_mongo_id) => `/api/assistants/threads/${thread_mongo_id}`;
 export const  SEARCH_ASSISTANTS = (searchQuery) => `api/assistants/users?searchQuery=${searchQuery}`;
+
+// n8n workflow related endpoints
+export const FETCH_N8N_WORKFLOWS = () => `/api/assistants/fetch-n8n-workflows`;
+export const SAVE_SELECTED_WORKFLOWS = (assistant_id) => `/api/assistants/${assistant_id}/n8n-workflows/selected`;
 

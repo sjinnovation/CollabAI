@@ -1,0 +1,166 @@
+.project-sidebar-wrapper {
+  width: 100%;
+  max-width: 16rem;
+  height: 100%; /* Change this */
+  border-right: 1px solid var(--border-color);
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: flex; /* Add this */
+  flex-direction: column; /* Add this */
+}
+
+.project-sidebar-title {
+  color: var(--light-dark);
+  margin: 0;
+}
+
+.project-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  height: 56px; /* Add this or adjust as needed */
+
+}
+
+.project-sidebar-title-icon {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+}
+
+.project-sidebar-icon {
+  margin: 0 10px;
+}
+
+/* Project Sidebar Content */
+.project-sidebar-content {
+  padding: 8px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Header for "Projects" and "+" button */
+.folder-design {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 1.5rem;
+  padding-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.folder-design small {
+  font-size: 14px;
+  color: var(--chat-box-text-color);
+  margin: 0;
+}
+
+.folder-design p {
+  font-size: 22px;
+  color: var(--chat-box-text-color);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Search Wrapper (Adapted from .thread-search-wrapper) */
+.folder-search-wrapper {
+  margin: 10px 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.folder-search {
+  background-color: var(--sidebar-search);
+  color: var(--sidebar-text-color);
+  border: none;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.folder-search:focus {
+  outline: none;
+  box-shadow: none;
+  background-color: var(--sidebar-search);
+}
+
+/* Folder List (Adapted from .chat-history-wrapper) */
+.folder-list {
+  height: 75vh;
+  overflow-y: auto;
+  border: none;
+}
+
+.folder-list::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.folder-list::-webkit-scrollbar-thumb {
+  border-radius: 4px ;
+  cursor: pointer;
+}
+
+.folder-list::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* Folder Item (Adapted from ThreadSidebar items) */
+.folder-item {
+  margin-bottom: 0.25rem;
+  padding: 8px 0;
+}
+
+.folder-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--chat-box-text-color);
+}
+
+.side-folder-design {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.side-folder-design span {
+  font-size: 14px;
+}
+
+.side-folder-design svg {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Dropdown Button */
+.botton-folder {
+  color: var(--sidebar-text-color);
+  padding: 0;
+}
+
+.botton-folder:hover {
+  color: var(--chat-box-text-color);
+}
+
+/* No Folders Message */
+.folder-no-data {
+  text-align: center;
+  color: var(--chat-box-text-color);
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+/* Horizontal Rule */
+hr {
+  border-color: var(--border-color);
+  opacity: 0.2;
+  margin: 0.5rem 0;
+}
+
+
+.align-items-center {
+  align-items: center;
+}
+
+.projectSide-bar-icon {
+  color: var(--light-dark);
+}

@@ -3,7 +3,7 @@ import { getUserID } from "../../Utility/service";
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
-import { BsRobot } from "react-icons/bs";
+import { BsRobot, BsThreeDotsVertical  } from "react-icons/bs";
 import DebouncedSearchInput from "../../Pages/SuperAdmin/Organizations/DebouncedSearchInput";
 import { CustomSpinner } from "../common/CustomSpinner";
 import "./Assistant.css";
@@ -16,12 +16,16 @@ import {
     Modal,
     Tooltip,
     Switch,
-    Spin
+    Spin,
+    Dropdown,
+    Menu
 } from "antd";
 import { RxCross2 } from "react-icons/rx";
 import axios from "axios";
 import { fetchSingleFavoriteAssistant, deleteFavoriteAssistant } from "../../api/favoriteAssistant";
 import { showDeleteFavConfirm } from "../../Utility/showModalHelper";
+import { AiOutlineDelete } from "react-icons/ai";
+import ProfileHeader from "../Proflie/ProfileHeader";
 const { confirm } = Modal;
 
 const FavoriteAssistantList = ({ data }) => {
@@ -39,6 +43,8 @@ const FavoriteAssistantList = ({ data }) => {
 
 
     const [totalCount,setTotalCount] = useState();
+    const [pageSize, setPageSize] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(()=>{
             // Fetch all the favorite assistants
@@ -59,13 +65,31 @@ const FavoriteAssistantList = ({ data }) => {
         navigate(`/agents/${assistantId}`);
 
     };
+    const createActionMenu = (record) => {
+        return (
+          <Menu>
+           {<Menu.Item key="chat">
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}>
+                  <IoChatbubbleEllipsesOutline /> Chat with Agent
+              </span>
+            </Menu.Item>}
+            {<Menu.Item key="delete" danger>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                    onClick={() => showDeleteFavConfirm(record, handleDeleteFavoriteAssistant, favoriteAssistant, setFavoriteAssistant)}
+                >
+              <AiOutlineDelete /> Delete
+              </span>
+            </Menu.Item>}
+          </Menu>
+        );
+    };
 
     const columns = [
         {
             title: "Agent",
             dataIndex: "name",
             key: "name",
-            align: "center",
+            align: "left",
             render: (_, { name, image_url }) => (
                 <Space size="middle" className="d-flex align-items-center">
                     <div className="assistantImageDiv">
@@ -86,11 +110,18 @@ const FavoriteAssistantList = ({ data }) => {
             render: (_, record) => (
 
                 <Space size="middle">
-                    <Tooltip title="Chat with Agent">
+                                          <Dropdown overlay={createActionMenu(record)} trigger={['click']}>
+                            <a onClick={(e) => e.preventDefault()}>
+                                <Space>
+                                    <BsThreeDotsVertical />
+                                </Space>
+                            </a>
+                      </Dropdown>
+                    {/* <Tooltip title="Chat with Agent">
                         <Button onClick={() => openAssistantNewPage(record?.assistant_id, record?.name)}><IoChatbubbleEllipsesOutline /></Button>
-                    </Tooltip>
+                    </Tooltip> */}
 
-                    <Tooltip title="Delete">
+                    {/* <Tooltip title="Delete">
                         <Button
                             onClick={() => showDeleteFavConfirm(record, handleDeleteFavoriteAssistant, favoriteAssistant, setFavoriteAssistant)}
                             danger
@@ -102,7 +133,7 @@ const FavoriteAssistantList = ({ data }) => {
                                 loader.ASSISTANT_DELETING
                             }
                         />
-                    </Tooltip>
+                    </Tooltip> */}
 
                 </Space>
             ),
@@ -114,6 +145,7 @@ const FavoriteAssistantList = ({ data }) => {
 
     return (
         <>
+            <ProfileHeader title="Favorite Agents" subHeading="List of favorite agents." />
             <div className="mb-3">
                 <DebouncedSearchInput
                     data={{
@@ -124,19 +156,22 @@ const FavoriteAssistantList = ({ data }) => {
                 />
             </div>
 
-                <Table
+            <Table
                     loading={isLoading}
-                    bordered={true}
                     columns={columns}
                     dataSource={favoriteAssistant}
                     scroll={{ y: '50vh' }}
                     pagination={{
-                        pageSize: 10,
-                        total: totalCount,
-                        onChange: (page) => {
-                            fetchSingleFavoriteAssistant(setFavoriteAssistant, setIsLoading,setTotalCount,page,searchQuery);
-                        }
-                      
+                      current: currentPage,
+                      pageSize: pageSize,
+                      showSizeChanger: true,
+                      position: ["topRight"],
+                      onShowSizeChange: (current, size) => {
+                        setPageSize(size);
+                        setCurrentPage(1); 
+                      },
+                      onChange: (page) => setCurrentPage(page),
+                      showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
                     }}
                 />
 

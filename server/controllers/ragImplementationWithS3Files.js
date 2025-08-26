@@ -1,5 +1,4 @@
 import { getOpenAIInstance } from "../config/openAI.js";
-import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from "openai";
 import { getEmbedding } from "./preprocessOfRAG.js";
 import { StatusCodes } from "http-status-codes";

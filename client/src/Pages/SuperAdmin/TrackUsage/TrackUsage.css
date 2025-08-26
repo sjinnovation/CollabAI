@@ -1,15 +1,105 @@
-.usage-report-container {
-    display: flex;
-    justify-content: space-between;
-    
+.usage-page-whole{
+  height: calc(100vh - 80px);
+  overflow: auto;
 }
 
-.total-usage-report-container{
-    height: 50px;
-    color: aliceblue;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 10px;
+.track-usage-styles .usage-report-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
+.track-usage-styles .total-usage-report-container {
+  height: 50px;
+  color: aliceblue;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 10px;
+}
+
+.track-usage-styles .controls-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.track-usage-styles .controls-container input {
+  width: fit-content;
+}
+
+.track-usage-styles .export-btn {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.track-usage-styles .export-btn:hover {
+  background-color: #218838 !important;
+  border-color: #1e7e34 !important;
+}
+
+.track-usage-styles .custom-table .ant-table-row-selected > td {
+  background-color: transparent !important;
+}
+
+.custom-sort-menu .ant-menu-item {
+  transition: all 0.3s;
+}
+
+.custom-sort-menu .ant-menu-item-active {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: white !important;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .track-usage-styles .usage-report-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .track-usage-styles .controls-container {
+    flex-direction: column;
+    align-items: stretch;
+    width: 300px;
+  }
+
+  .track-usage-styles .total-usage-report-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.custom-table .ant-table-row-selected > td {
+  background-color: transparent !important;
+}
+
+.custom-table .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.custom-table .ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.custom-table .ant-checkbox:hover .ant-checkbox-inner,
+.custom-table .ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: #1890ff;
+}
+
+@media screen and (max-width: 1024px) {
+  .usage-page-whole{
+    overflow: hidden;
+  }
+  .track-usage-icon-size {
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}

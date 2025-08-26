@@ -1,12 +1,253 @@
 /* styles.css */
 
 .scrollable-list {
-    max-height: 61vh;
-    overflow-y: auto;
-    margin-bottom: 20px;
+  max-height: 61vh;
+  overflow-y: auto;
+  margin-bottom: 20px;
 }
 
-.editConfigInputField, 
-.editConfigSelectField {
-    width: 290px;
+.editConfigInputField,
+.editConfigSelectField,
+.select-field {
+  width: 290px;
+}
+
+.config-select,
+.config-slider {
+  width: 300px;
+}
+
+.field-width,
+.token-input {
+  width: 80%;
+}
+
+/* Border */
+.custom-list.ant-list-bordered {
+  border: none;
+}
+
+.custom-list .ant-list-item {
+  /* border-bottom: 1px solid #f0f0f0; */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* border: none; */
+}
+  /* .custom-list .ant-list-item:last-child {
+    border-bottom: none;
+  } */
+
+.custom-list .ant-list-header {
+  /* border-bottom: 1px solid #f0f0f0; */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Common styles */
+.config-container {
+  padding-bottom: 5rem;
+  /* width: 70%; */
+  .ant-list-item {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+}
+
+.config-container-w {
+  width: 70%;
+}
+
+.custom-list-max-token {
+  width: 70%;
+}
+
+.text-end {
+  text-align: end;
+}
+
+.edit-button {
+  margin-right: 8px;
+}
+
+.list-header {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.divider-h1 {
+  border-bottom: 1px solid rgba(5,5,5,0.06);
+}
+
+.item-title {
+  font-weight: bold;
+}
+
+.subtitle,
+.subtitle-container {
+  margin-top: 8px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.subtitle-container {
+  margin-bottom: 30px;
+  padding-top: 1px;
+}
+
+.ant-slider-mark-text:first-child {
+  left: 0px !important;
+}
+
+.slider-label-left {
+  position: absolute;
+  left: 5%;
+  white-space: nowrap;
+}
+
+.slider-label-right {
+  white-space: nowrap;
+}
+
+.prompt-caching {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.prompt-caching-title {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.prompt-caching-title.light-theme {
+  color: #000;
+}
+
+.prompt-caching-title.dark-theme {
+  color: #fff;
+}
+
+.prompt-caching-switch {
+  margin-left: 10px;
+}
+
+/* expandable text */
+.expandable-text {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 5px 0;
+  width: 100%;
+  font-family: 'DM Sans';
+}
+
+.expandable-text.expanded {
+  flex-direction: column;
+}
+
+.expandable-text.light {
+  color: #000;
+}
+
+.expandable-text.dark {
+  color: #fff;
+}
+
+.text-container {
+  font-size: smaller;
+  color: #888;
+  font-family: "DM Sans", sans-serif;
+  p {
+    margin:  8px 0;
+  }
+}
+
+.text-container-expanded {
+  max-height: none;
+}
+
+.text-container-collapsed {
+  max-height: calc(var(--max-lines) * 1.2em);
+}
+
+.show-more-button {
+  color: #1890ff;
+  cursor: pointer;
+  font-weight: bold;
+  white-space: nowrap;
+  flex: auto;
+}
+
+/* edit/cancel spacing */
+.linkedin-btn-space {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px ;
+}
+
+/* from usage css for Advance ai parameters config */
+.usage-container {
+  position: relative;
+  width: 1;
+}
+
+.usage-report-container{
+  color: aliceblue;
+  gap: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: start !important;
+  margin: 0;
+  padding: 0;
+  z-index: 99999999999999 !important;
+  .typo-card {
+      border-color: var(--border-color);
+      .ant-card-body {
+          padding: 5px 10px !important;
+      }
+  }
+}
+
+.scrollable-list {
+  max-height: 61vh;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.advance-ai-parameters-container {
+  width: 70%;
+  height: 100%;
+  position: relative;
+  .ant-list-item {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+ }
+
+ .advance-config-tab {
+  right: 0px;
+ }
+
+@media screen and (max-width: 1024px) {
+  .advance-config-tab {
+    position: unset !important;
+    display: flex;
+  }
+  .text-start-small {
+    text-align: start !important;
+    margin-top: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .advance-ai-parameters-container {
+    width: calc(100vw - 270px);
+  }
+  .ant-slider-mark-text:first-child {
+    top: unset;
+  }
+
+  .connect-apps-container {
+    flex-wrap: wrap;
+  }
 }

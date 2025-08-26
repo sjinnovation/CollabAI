@@ -1,7 +1,10 @@
 .file-list {
     list-style-type: none; 
     padding: 0; 
-    margin: 0; 
+    margin: 0;
+    margin-right: 10px;
+    max-height: 450px;
+    overflow-y: auto; 
   }
   
 .file-list-item {
@@ -10,12 +13,27 @@
   align-items: center; 
   padding: 8px 0; 
   position: relative;
-  border-bottom: 1px solid #ddd; 
+  /* border-bottom: 1px solid #ddd;  */
 }
 
 .file-list-item:last-child {
   border-bottom: none; 
 }
+
+.file-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  gap: 8px; /* Optional spacing between text and button */
+}
+
+.file-name {
+  flex: 1; /* Take all remaining space */
+  word-break: break-word; /* Allow long names to wrap */
+  overflow-wrap: break-word;
+}
+
 
   
   
@@ -25,9 +43,16 @@
   }
   
 
-  .delete-button {
+  /* .delete-button {
     display: none;
     margin: 0; 
+  } */
+
+  .delete-button {
+    display: inline-block; 
+    position: relative; 
+    margin-right: 10px;
+    margin-left: 10px; 
   }
   
  
@@ -38,6 +63,57 @@
 
   .delete-button .ant-btn {
     padding: 0; 
-    line-height: 1; 
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+  }
+
+  .active-collab-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+  
+  .active-collab-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+  }
+  
+  .active-collab-form {
+    margin-bottom: 8px;
+  }
+  
+  .select-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+  }
+  
+  .select-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .confirm-button-container {
+    margin-top: 5px;
+  }
+  
+  .confirm-button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .confirm-button:hover {
+    background-color: #45a049;
   }
   

@@ -1,7 +1,8 @@
 // ----- [ TAB RESPONSIVE ] MEDIA QUERIES ----- //
 @media screen and (max-width: 1024px) {
     .chat-box {
-      position: static;
+      // if needed we will use it later
+      // position: static;
     }
     .chatPromptWrapper {
       padding: 12px;
@@ -51,7 +52,7 @@
       // border-radius: 20%;
     }
   }
-  
+
   @media screen and (min-width: 768px) {
     .inputPromptWrapper {
       position: absolute;

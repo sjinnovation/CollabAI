@@ -1,6 +1,9 @@
 import {
+  API_SETTINGS_BRAND_LOGO,
   API_SETTINGS_ENABLE_PERSONALIZE_ASSISTANT,
   API_SETTINGS_SLUG,
+  DELETE_BRAND_LOGO,
+  FETCH_COMPANY_INFO,
 } from "../constants/Api_constants";
 import { axiosSecureInstance } from "./axios";
 
@@ -29,5 +32,35 @@ export const updateConfig = async (data) => {
     return response.data;
   } catch (error) {
     return error.response.data;
+  }
+};
+
+export const uploadBrandLogo = async (data) => {
+  const companyId = localStorage.getItem("compId");
+  try {
+    const response = await axiosSecureInstance.post(API_SETTINGS_BRAND_LOGO(companyId), data);
+    return response;
+  } catch (error) {
+    return error?.response?.data;
+  }
+};
+
+export const fetchCompanyInfo = async () => {
+  const companyId = localStorage.getItem("compId");
+  try {
+    const response = await axiosSecureInstance.get(FETCH_COMPANY_INFO(companyId));
+    return response;
+  } catch (error) {
+    return error?.response?.data; 
+  }
+};
+
+export const deleteBrandLogo = async () => {
+  const companyId = localStorage.getItem("compId");
+  try {
+    const response = await axiosSecureInstance.post(DELETE_BRAND_LOGO(companyId));
+    return response;
+  } catch (error) {
+    return error?.response?.data;
   }
 };

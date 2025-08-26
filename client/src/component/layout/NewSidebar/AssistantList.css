@@ -7,3 +7,41 @@
     width: 24px;
     height: 24px;
 }
+
+.rc-scrollbars-thumb.rc-scrollbars-thumb-v {
+    background-color: transparent !important;
+}
+
+.frequentlyUsedAgents .rc-scrollbars-view{
+    margin-bottom: 0 !important;
+}
+
+.frequentlyUsedAgents .anticon-pushpin {
+  display: block;
+  transition: none !important;
+}
+
+.frequentlyUsedAgents .anticon-pushpin svg {
+  transition: none !important;
+}
+
+.frequentlyUsedAgents-loading-text {
+  color: #ffffff;
+}
+
+.assistant-list-loading-text {
+  color: #ffffff;
+}
+
+.ant-spin .ant-spin-dot-holder {
+color: #177ddc !important;
+}
+
+.navPrompt.assistant-list.sidebar-item .pin-icon {
+  visibility: hidden;
+  transition: none !important;
+}
+
+.navPrompt.assistant-list.sidebar-item:hover .pin-icon {
+  visibility: visible;
+}

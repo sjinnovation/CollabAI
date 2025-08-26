@@ -29,8 +29,10 @@ import { updatePromptByID } from "../service/gptPromptService.js";
 import { updateMaxUserTokens ,checkMaxUserTokensExhausted } from "../service/userService.js";
 import { generateClaudeHttpResponse } from "../service/claudeAiPromptService.js";
 import mongoose from "mongoose";
-import { extractAllGoogleDriveLinks, extractFileOrFolderId, longFileContextToUsableFileContext, replaceGoogleDriveLinks } from '../utils/googleDriveHelperFunctions.js';
-import { downloadFilesFromGoogleDriveLink, getFileMetadata } from './googleAuth.js';
+import { generateDeepseekAIHttpResponse } from '../service/deepseekAIPromptService.js';
+import FolderChat from '../models/folderModel.js';
+import { getFileInfoWithThreadIdAndMsgId } from '../service/folderChatService.js';
+import { deleteThreadFromProject } from '../utils/projectHelper.js';
 
 export const getGptStreamResponse = async (req, res) => {
   try {
@@ -109,7 +111,7 @@ export const getGptPrompt = async (req, res, next) => {
 		botProvider='openai',
 		userPrompt,
 		threadId: threadid,
-		chatLog,
+		chatLog = [],
 		compId,
 		tags,
 	} = req.body;
@@ -122,28 +124,8 @@ export const getGptPrompt = async (req, res, next) => {
     if (!user) {
       return next(BadRequest(PromptMessages.USER_NOT_FOUND));
     }
-//
     await checkMaxUserTokensExhausted(userid);
-    const links = extractAllGoogleDriveLinks(userPrompt);
     let modifiedPrompt =  userPrompt;
-    if(links?.length > 0){
-      const fileIds = links.map(link => extractFileOrFolderId(link));
-      const { fileName, mimeType,fileSize } = await getFileMetadata(fileIds[0], userid);
-      let fileDataContext = [];
-      if(fileSize < 5000000){
-        fileDataContext = await downloadFilesFromGoogleDriveLink(links,userid);
-      }
-      const changedQuestionWithDataContext = replaceGoogleDriveLinks(userPrompt);
-      if(fileDataContext.length > 0){
-        const truncatedPrompt = await longFileContextToUsableFileContext(fileDataContext,botProvider);
-        modifiedPrompt =`Based on the following documents, answer the question: ${changedQuestionWithDataContext},ignore if there is any 'ENCODED_LINK' found in the question and do not try to access ENCODED_LINK.  \n\nDocuments:\n${truncatedPrompt}`;
-      }else{
-        modifiedPrompt = "show this message only 'File Size Exceeds 5MB,please download it and upload for great experience'  and do not write anything extra with it";
-
-      }
-
-    }
-
     switch (botProvider) {
       case "openai":
         botResponse = await generateOpenAIHttpResponse({
@@ -151,14 +133,14 @@ export const getGptPrompt = async (req, res, next) => {
           chatLog,
           userId: userid
         });
-        tokenUsed = botResponse.totalToken;
+        tokenUsed = botResponse?.totalToken;
         botPayload = {
           description: userPrompt,
-          promptresponse: botResponse.response,
+          promptresponse: botResponse?.response,
           tokenused: tokenUsed,
           botProvider: botProvider,
           promptdate: new Date(),
-          modelUsed: botResponse.modelUsed,
+          modelUsed: botResponse?.modelUsed,
         };
 
         break;
@@ -172,11 +154,11 @@ export const getGptPrompt = async (req, res, next) => {
 
         botPayload = {
           description: userPrompt,
-          promptresponse: botResponse.response,
+          promptresponse: botResponse?.response,
           botProvider: botProvider,
-          tokenused: tokenUsed,
+          tokenused: botResponse?.tokenUsed,
           promptdate: new Date(),
-          modelUsed: botResponse.modelUsed,
+          modelUsed: botResponse?.modelUsed,
         };
         break;
 
@@ -185,17 +167,34 @@ export const getGptPrompt = async (req, res, next) => {
           modifiedPrompt,
           userId: userid,
         });
-
+        
         botPayload = {
           description: userPrompt,
-          promptresponse: botResponse.response,
+          promptresponse: botResponse?.response,
           botProvider: botProvider,
-          tokenused: tokenUsed,
+          tokenused: botResponse?.tokenUsed,
           promptdate: new Date(),
-          modelUsed: botResponse.modelUsed,
+          modelUsed: botResponse?.modelUsed,
         };
+        break;
+        
+      case "deepseek":
+          botResponse = await generateDeepseekAIHttpResponse({
+            modifiedPrompt,
+            chatLog,
+            userId: userid
+          });
+          tokenUsed = botResponse?.totalToken;
+          botPayload = {
+            description: userPrompt,
+            promptresponse: botResponse?.response,
+            botProvider: botProvider,
+            tokenused: tokenUsed,
+            promptdate: new Date(),
+            modelUsed: botResponse?.modelUsed,
+          };
+          break;
     }
-
 
     const newPrompt = await promptModel.create({
       tokenused: botPayload?.tokenused,
@@ -236,7 +235,6 @@ export const getGptPrompt = async (req, res, next) => {
 
     await updateMaxUserTokens(newPrompt.userid, totalTokens);
 
-    await newPrompt.populate("tags");
     res.status(StatusCodes.OK).json({
       message: PromptMessages.RETRIEVED_SUCCESSFULLY,
       data: {
@@ -289,10 +287,47 @@ export const getUserPrompts = async (req, res, next) => {
  */
 export const fetchprompts = async (req, res, next) => {
   const { threadid } = req.params;
+  const { projectId } = req.query;
+
   try {
-    const prompts = await promptModel
+    let prompts = await promptModel
       .find({ threadid, isDeleted: false })
-      .populate("tags");
+    if (projectId && projectId !== "null") {
+      // Create an array to store processed prompts
+      const processedPrompts = [];
+      
+      // Process each prompt sequentially
+      for (const prompt of prompts) {
+        const { 
+          msgAndThreadBasedFiles: threadIdBasedProjectInfo, 
+          threadBasedFiles,
+          filesOfTheThread, 
+          filesOfThreadMsg,
+          allFileInfo = [], 
+          base64Images 
+        } = await getFileInfoWithThreadIdAndMsgId(
+          projectId, 
+          prompt.msgId, 
+          threadid
+        );
+        let finalPrompt = {...prompt,
+          fileInfo : allFileInfo,
+          hasFiles :  allFileInfo.length > 0,
+          base64Images: base64Images,
+        }
+
+        const combinedData = {
+          ...finalPrompt._doc,
+          fileInfo: finalPrompt.fileInfo,
+          hasFiles: finalPrompt.hasFiles,
+          base64Images: finalPrompt.base64Images,
+        };
+        processedPrompts.push(combinedData);
+      }
+
+      // Replace prompts with processed ones
+      prompts = processedPrompts;
+    }
 
     return res.status(StatusCodes.OK).json({
       message: PromptMessages.RETRIEVED_SUCCESSFULLY,
@@ -358,14 +393,16 @@ export const clearSavedPrompts = async (req, res, next) => {
  * @returns {JSON} Returns a success message if prompts are cleared successfully, otherwise an error message.
  */
 export const clearSavedPrompt = async (req, res, next) => {
-  const { threadid } = req.body;
+  const { threadid,projectId } = req.body;
   try {
+    const deleteProjectThread = await deleteThreadFromProject(threadid,projectId);
     const result = await promptModel.updateMany(
       { threadid, isDeleted: false },
       { $set: { isDeleted: true } }
     );
     res.status(StatusCodes.OK).json({
       message: PromptMessages.DELETED_SUCCESSFULLY,
+      deleteProjectThread
     });
   } catch (error) {
     next(InternalServer(PromptMessages.INTERNAL_SERVER_ERROR));
@@ -383,24 +420,46 @@ export const fetchChatThreads = async (req, res, next) => {
   const {
     params: { userid },
   } = req;
+  const {assistantId,folderId = null}= req.query;
   try {
-    const threadIds = await promptModel
-      .find({ userid, isDeleted: false })
+    let docs = [];
+
+    if(folderId !== null && folderId !== 'null'){
+      const threadIds = await promptModel
+      .find({ userid, isDeleted: false, folderId : folderId })
       .distinct("threadid")
       .exec();
     const queries = threadIds.map((threadId) => {
       return promptModel.findOne({ threadid: threadId }).exec();
     });
-    let docs = await Promise.all(queries);
-    let assistantThreads = await getAssistantThreadsByQuery({
-      user: new mongoose.Types.ObjectId(userid),
-      is_deleted: false,
-    });
-    docs = [...docs, ...assistantThreads];
+    docs = await Promise.all(queries);
+    }else{
+      const threadIds = await promptModel
+        .find({ userid, isDeleted: false })
+        .distinct("threadid")
+        .exec();
+      const queries = threadIds.map((threadId) => {
+        return promptModel.findOne({ threadid: threadId }).exec();
+      });
+      docs = await Promise.all(queries);
+      let assistantThreads = assistantId !== null && assistantId !== '' ? await getAssistantThreadsByQuery({
+        user: new mongoose.Types.ObjectId(userid),
+        is_deleted: false,
+        assistant_id: assistantId,
+      }) : await getAssistantThreadsByQuery({
+        user: new mongoose.Types.ObjectId(userid),
+        is_deleted: false,
+      });
+
+
+      docs = [...docs, ...assistantThreads];
+    }
+
     docs.sort((a, b) => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
-    res.status(StatusCodes.OK).json({
+
+    return res.status(StatusCodes.OK).json({
       message: PromptMessages.RETRIEVED_SUCCESSFULLY,
       data: { prompts: docs },
     });
@@ -465,7 +524,11 @@ export const regenerateLastPrompt = async (req, res, next) => {
 				break;
 
 			case 'claude':
-				botResponse = await generateClaudeHttpResponse({userPrompt, userId : user_id})
+				botResponse = await generateClaudeHttpResponse({userPrompt, userId : user_id});
+        break;
+
+        case 'deepseek':
+          botResponse = await generateDeepseekAIHttpResponse({userPrompt, userId : user_id});
 				
 		}
 
@@ -473,11 +536,11 @@ export const regenerateLastPrompt = async (req, res, next) => {
         tokenUsed = botResponse?.totalToken;
 		botPayload = {
 			description: userPrompt,
-			promptresponse: botResponse.response,
+			promptresponse: botResponse?.response,
 			botProvider : botProvider,
 			tokenused: tokenUsed,
 			promptdate: promptDate,
-			modelused: botResponse.modelUsed
+			modelused: botResponse?.modelUsed
 		};
 		await updatePromptByID(id, botPayload);
 		const {

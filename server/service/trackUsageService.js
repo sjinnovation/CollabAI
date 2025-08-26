@@ -2,6 +2,8 @@ import { getGeminiAIInstance } from "../config/geminiAi.js";
 import { tokenPrices } from "../constants/tokenPrices.js";
 import { encoding_for_model } from 'tiktoken';
 import TrackUsage from "../models/trackUsageModel.js";
+import Teams from "../models/teamModel.js";
+import AssistantUsage from "../models/assistantUsageModel.js";
 
 /**
  * Creates a track usage document and saves it to the database.
@@ -73,7 +75,6 @@ export const calculateTokenAndCost = async (input_token, output_token, model_use
     }
 
     const totalTokens = Number(totalInputToken) + Number(totalOutputToken);
-
     return {
         inputTokenPrice,
         outputTokenPrice,
@@ -113,6 +114,300 @@ const flattenOutputTokenStructure = (output_token) => {
     } else if (typeof output_token === 'object' && output_token !== null) {
         return Object.values(output_token).map(flattenOutputTokenStructure).join('');
     } else {
-        return output_token.toString();
+        return output_token?.toString();
     }
+};
+
+export const getTrackUsages = async ({ page, limit }) => {
+  // Ensure page and limit are positive integers
+  page = Math.max(1, parseInt(page));
+  limit = Math.max(1, parseInt(limit));
+
+  // Calculate skip value for pagination
+  const skip = (page - 1) * limit;
+
+  // Define date ranges for today, this month, and last month (in IST)
+  const now = new Date();
+  now.setUTCHours(now.getUTCHours() + 5, now.getUTCMinutes() + 30); // Adjust to IST
+
+  const dateRanges = [
+    // Today: June 18, 2025
+    {
+      createdAt: {
+        $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        $lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+      },
+    },
+    // This Month: June 1, 2025 - June 30, 2025
+    {
+      createdAt: {
+        $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+        $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+      },
+    },
+    // Last Month: May 1, 2025 - May 31, 2025
+    {
+      createdAt: {
+        $gte: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        $lt: new Date(now.getFullYear(), now.getMonth(), 1),
+      },
+    },
+  ];
+
+  // Aggregation pipeline
+  const pipeline = [
+    // Match non-deleted TrackUsage records within today, this month, or last month
+    {
+      $match: {
+        isDeleted: false,
+        $or: dateRanges,
+      },
+    },
+    // Sort by createdAt descending
+    { $sort: { createdAt: -1 } },
+    // Skip and limit for pagination
+    { $skip: skip },
+    { $limit: limit },
+    // Lookup User data
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user_id',
+        foreignField: '_id',
+        as: 'user_id',
+      },
+    },
+    // Unwind user_id array
+    { $unwind: { path: '$user_id', preserveNullAndEmptyArrays: true } },
+    // Lookup Teams data for user_id.teams
+    {
+      $lookup: {
+        from: 'teams',
+        localField: 'user_id.teams',
+        foreignField: '_id',
+        as: 'teams',
+      },
+    },
+    // Project the desired fields
+    {
+      $project: {
+        id: { $toString: '$_id' },
+        user: {
+          $cond: {
+            if: { $eq: ['$user_id', null] },
+            then: null,
+            else: {
+              id: { $toString: '$user_id._id' },
+              firstName: '$user_id.fname',
+              lastName: '$user_id.lname',
+              username: '$user_id.username',
+              email: '$user_id.email',
+              status: '$user_id.status',
+            },
+          },
+        },
+        team: {
+          $map: {
+            input: '$teams',
+            as: 'team',
+            in: {
+              id: { $toString: '$$team._id' },
+              name: { $ifNull: ['$$team.teamTitle', 'Unknown Team'] },
+            },
+          },
+        },
+        inputToken: '$input_token',
+        outputToken: '$output_token',
+        modelUsed: '$model_used',
+        inputTokenPrice: '$input_token_price',
+        outputTokenPrice: '$output_token_price',
+        totalTokenCost: '$total_token_cost',
+        totalTokens: '$total_tokens',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ];
+
+  // Execute aggregation
+  const docs = await TrackUsage.aggregate(pipeline).exec();
+
+  // Count total documents for pagination metadata
+  const totalDocs = await TrackUsage.countDocuments({
+    isDeleted: false,
+    $or: dateRanges,
+  });
+
+  // Debug: Check Teams collection directly
+  const teamIds = docs
+    .filter(doc => Array.isArray(doc.team))
+    .flatMap(doc => doc.team.map(team => team.id));
+  const teamsCheck = await Teams.find({ _id: { $in: teamIds } })
+    .select('teamTitle isDeleted')
+    .lean()
+    .exec();
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalDocs / limit);
+
+  return {
+    docs,
+    totalDocs,
+    page,
+    totalPages,
+  };
+};
+
+
+
+
+
+export const getAssistantUsages = async ({ page, limit }) => {
+  // Ensure page and limit are positive integers
+  const pageNum = Math.max(1, parseInt(page));
+  const limitNum = Math.max(1, parseInt(limit));
+
+  // Calculate skip value for pagination
+  const skip = (pageNum - 1) * limitNum;
+
+  // Aggregation pipeline
+  const pipeline = [
+    // Match non-deleted AssistantUsage records
+    { $match: { isDeleted: { $ne: true } } },
+    // Lookup Assistant data
+    {
+      $lookup: {
+        from: 'assistants',
+        let: { assistantId: '$assistantId' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$assistant_id', '$$assistantId'] }, is_deleted: false } },
+        ],
+        as: 'assistant',
+      },
+    },
+    // Unwind assistant array
+    { $unwind: { path: '$assistant', preserveNullAndEmptyArrays: true } },
+    // Lookup User data for userId (also used as owner)
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    // Unwind user array
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    // Lookup Teams data for user.teams
+    {
+      $lookup: {
+        from: 'teams',
+        localField: 'user.teams',
+        foreignField: '_id',
+        as: 'userTeams',
+      },
+    },
+    // Lookup Teams data for assistant.teamId
+    {
+      $lookup: {
+        from: 'teams',
+        localField: 'assistant.teamId',
+        foreignField: '_id',
+        as: 'assistantTeams',
+      },
+    },
+    // Sort by createdAt descending
+    { $sort: { createdAt: -1 } },
+    // Skip and limit for pagination
+    { $skip: skip },
+    { $limit: limitNum },
+    // Project the desired fields
+    {
+      $project: {
+        id: { $toString: '$_id' },
+        assistant: {
+          id: '$assistant.assistant_id',
+          name: '$assistant.name',
+          model: '$assistant.model',
+          description: '$assistant.description',
+          assistantTypes: '$assistant.assistantTypes',
+        },
+        user: {
+          id: { $toString: '$user._id' },
+          firstName: '$user.fname',
+          lastName: '$user.lname',
+          username: '$user.username',
+          email: '$user.email',
+          status: '$user.status',
+        },
+        owner: {
+          id: { $toString: '$user._id' },
+          name: { $concat: ['$user.fname', ' ', '$user.lname'] },
+        },
+        userTeams: {
+          $map: {
+            input: '$userTeams',
+            as: 'team',
+            in: {
+              id: { $toString: '$$team._id' },
+              name: { $ifNull: ['$$team.teamTitle', 'Unknown Team'] },
+            },
+          },
+        },
+        assistantTeams: {
+          $map: {
+            input: '$assistantTeams',
+            as: 'team',
+            in: {
+              id: { $toString: '$$team._id' },
+              name: { $ifNull: ['$$team.teamTitle', 'Unknown Team'] },
+            },
+          },
+        },
+        usageCount: 1,
+        usageDate: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ];
+
+  // Execute aggregation
+  const docs = await AssistantUsage.aggregate(pipeline).exec();
+
+  // Count total documents
+  const totalItems = await AssistantUsage.countDocuments({ isDeleted: { $ne: true } });
+
+  // Debug: Check Teams collection
+  const teamIds = docs
+    .flatMap(doc => [
+      ...(doc.userTeams || []).map(team => team.id),
+      ...(doc.assistantTeams || []).map(team => team.id),
+    ])
+    .filter(id => id);
+  const teamsCheck = await Teams.find({ _id: { $in: teamIds } })
+    .select('teamTitle isDeleted')
+    .lean()
+    .exec();
+
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(totalItems / limitNum);
+  const hasNextPage = pageNum < totalPages;
+  const hasPrevPage = pageNum > 1;
+  const nextPage = hasNextPage ? pageNum + 1 : null;
+  const prevPage = hasPrevPage ? pageNum - 1 : null;
+
+  return {
+    docs,
+    pagination: {
+      totalItems,
+      totalPages,
+      currentPage: pageNum,
+      limit: limitNum,
+      hasNextPage,
+      hasPrevPage,
+      nextPage,
+      prevPage,
+    },
+  };
 };

@@ -1,0 +1,44 @@
+.checkbox-table {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: no-wrap;
+}
+
+/* Shrink the checkbox column and center the checkbox */
+.ant-table-selection-column {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  text-align: center;
+}
+
+@media screen and (max-width: 1024px) {
+  .container-width {
+    gap: 8px;
+  }
+  .user-prompt-btn {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .user-prompt-btn-users {
+    min-width: unset !important;
+  }
+
+  .table-container .ant-table-wrapper .ant-table-selection-column {
+    padding-inline-end: 8px !important;
+  }
+}
+@media screen and (max-width: 768px) {
+  .container-width {
+    width: 90%;
+    gap: 8px;
+  }
+
+  .custom-flex-wrap {
+    flex-wrap: wrap;
+    justify-content: start !important;
+  }
+}

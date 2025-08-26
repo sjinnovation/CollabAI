@@ -32,6 +32,18 @@ export const uploadS3 = multer({
   limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
 });
 
+
+/**
+ * @function uploadImage
+ * @description Handles image upload, generates a signed URL for the uploaded image from S3, and returns the URL.
+ * @param {Object} req - Request object; expects file in `req.file`.
+ * @param {Object} res - Responds with signed image URL or error message.
+ * @returns {Response}
+ *  - 200: Success with signed image URL.
+ *  - 400: No file provided.
+ *  - 500: Error generating signed URL or unexpected error.
+ */
+
 // Function to handle image upload
 export const uploadImage = (req, res) => {   
   try {

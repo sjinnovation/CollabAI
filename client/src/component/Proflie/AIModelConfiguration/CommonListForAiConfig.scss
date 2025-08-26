@@ -1,0 +1,18 @@
+.ant-slider-mark-text  {
+    font-family: "DM Sans";
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-align: center;
+}
+
+.ant-slider-mark-text .ant-slider-mark-text-active{
+    margin-left: 10px !important;
+}
+
+
+
+@media screen and (max-width: 1024px) {
+    .ant-slider-mark-text:first-child {
+        left: 20px !important;
+    }
+}

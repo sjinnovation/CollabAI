@@ -46,3 +46,54 @@
     padding: 0 !important;
   }
 }
+
+.main-sidebar-toggle {
+  display: none;
+}
+
+.setting-sidebar-display {
+  display: none;
+}
+
+.public-agent-explore-sidebar-display {
+  display: none;
+}
+.organization-setting-display {
+  display: none;
+}
+.agent-list-sidebar-display {
+  display: none;
+}
+.knowledgeBaseMenu-setting-display {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .main-sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .main-sidebar-close-icon,
+  .main-sidebar-open-icon
+  {
+    color: var(--light-dark);
+    padding: 0 !important;
+  }
+  .setting-sidebar-display {
+    display: inline-flex;
+  }
+  .public-agent-explore-sidebar-display {
+    display: inline-flex;
+  }
+  .organization-setting-display {
+    display: inline-flex;
+  }
+  .agent-list-sidebar-display {
+    display: inline-flex;
+  }
+  .knowledgeBaseMenu-setting-display {
+    display: inline-flex;
+  }
+}

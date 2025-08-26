@@ -1,0 +1,15 @@
+.breadcrumb-link {
+    text-decoration: none;
+}
+
+.breadcrumb-link.light {
+    color: #000;
+}
+
+.breadcrumb-link.dark {
+    color: #fff;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}

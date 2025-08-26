@@ -24,28 +24,15 @@ export const getGptResponse = async (body) => {
 };
 
 
-export const getChatsPerThread = async (thread_id) => {
+export const getChatsPerThread = async (thread_id,projectId = null) => {
   try {
     const response = await axiosSecureInstance.get(
-      `api/prompt/fetchprompts/${thread_id}`
+      `api/prompt/fetchprompts/${thread_id}?projectId=${projectId}`
     );
 
     return { success: true, chats: response.data?.data || [] };
   } catch (error) {
     console.log("🚀 ~ getChatsPerThread ~ error:", error);
-    return { success: false,  message: error?.response?.data?.message };
-  }
-}
-
-export const getTags = async () => {
-  try {
-    const response = await axiosSecureInstance.get(
-      `/api/meetingTypes/get-all`
-    );
-
-    return { success: true, tags: response.data?.meetingTypes || [] } || [];
-  } catch (error) {
-    console.log("🚀 ~ getTags ~ error:", error);
     return { success: false,  message: error?.response?.data?.message };
   }
 }

@@ -1,43 +1,17 @@
-import React from 'react'
-import { Tabs, Row, Col } from 'antd';
-import TrackUsage from './TrackUsage';
-import DailyUsage from './DailyUsage';
-import AssistantUsage from './AssistantUsage';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { getUserRole } from '../../../Utility/service';
 
 const TrackUsageComponent = () => {
+  const role = getUserRole();
+  
+  // Redirect to monthly usage by default for superadmin
+  if (role === 'superadmin') {
+    return <Navigate to="/reports/monthly" replace />;
+  }
+  
+  // Redirect to home for non-superadmin users
+  return <Navigate to="/" replace />;
+};
 
-    const items = [
-        {
-          key: '1',
-          label: 'Monthly Usage',
-          children: <TrackUsage/>,
-        },
-        {
-          key: '2',
-          label: 'Daily Usage',
-          children: <DailyUsage/>,
-        },
-        {
-          key: '3',
-          label: 'Assistant Usage',
-          children: <AssistantUsage/>,
-        },
-       
-      ]; 
-  return (
-    <div>
-      <Row className='p-5'>
-        <Col span={24}>
-          <Tabs 
-            defaultActiveKey="1" 
-            items={items}
-            className=" custom-tab"
-            tabBarStyle={{ justifyContent: 'space-around' }}
-          />
-        </Col>
-      </Row>
-    </div>
-  )
-}
-
-export default TrackUsageComponent
+export default TrackUsageComponent;

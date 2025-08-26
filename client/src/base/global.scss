@@ -47,24 +47,51 @@ h1 {
 /* adding custom scrollbar */
 
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-  background: transparent;
+  width: 14px !important;
+  cursor: pointer !important;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 10px;
+  // background-color: #F1F1F1 !important;
+  background-color: var(--scrollbar-track);
+  border-radius: 10px !important; 
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
+  // background-color: #b6b6b6 !important;
+  background-color: var(--scrollbar-thumb);
+  border-radius: 10px !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background-color: #A8A8A8 !important;
+  cursor: pointer !important;
 }
+
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23676767' d='M12 8l-6 6h12z'/%3E%3C/svg%3E") no-repeat center !important;
+  background-size: 14px !important;
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+  cursor: pointer !important;
+}
+
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23676767' d='M12 16l6-6H6z'/%3E%3C/svg%3E") no-repeat center !important;
+  background-size: 14px !important;
+  border-bottom-left-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+  cursor: pointer !important;
+}
+
+::-webkit-scrollbar-button:single-button:vertical:decrement.dark-mode {
+  background: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 8l-6 6h12z' fill='%23FFFFFF'/%3E%3C/svg%3E") no-repeat center;
+  background-size: 14px !important;
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+  cursor: pointer !important;
+}
+
 
 /* ----------------------------- */
 
@@ -215,4 +242,9 @@ a.btn.btn-outline-dark {
   border-color: var(--border-color);
   margin: 20px 20px 19px 0;
   color: var(--chat-box-text-color) !important;
+}
+
+.custom-table.assistant-usage-table .ant-table.ant-table-bordered {
+  overflow-y: auto;
+  max-height: 52vh;
 }

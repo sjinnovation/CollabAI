@@ -4,6 +4,8 @@ import User from '../models/user.js';
 import { InternalServer } from '../middlewares/customError.js';
 import { ConfigMessages } from '../constants/enums.js';
 import { deleteKeyFromOpenAiConfigCache } from '../utils/openAiConfigHelper.js';
+import { decrypt, encrypt, isEncrypted } from '../utils/configEncription.js';
+ import EncryptionMetadata from '../models/encryptionMetadataModel.js';
 
 /**
  * @function getThresholdValue
@@ -35,7 +37,6 @@ export const setThresholdValue = async (req, res, next) => {
 				newvalues,
 				function (err, res) {
 					if (err) throw err;
-					console.log('1 document updated');
 				}
 			);
 
@@ -416,8 +417,34 @@ export const getConfigurations = async (req, res, next) => {
             'openaiPresence',
             'geminiTopP',
             'geminiTopK',
-			'personalizeAssistant'
-            
+			'personalizeAssistant',
+            'deepseekModel',
+            'deepseekTemperature',
+            'deepseekMaxTokens',
+            'deepseekTopP',
+            'deepseekTopK',
+            'deepseekRepetitionPenalty',
+			'togetheraiKey',
+			'fluxModel',
+			'fluxImageWidth',
+			'fluxImageHeight',
+			'fluxImageSeed',
+			'fluxSteps',
+			'fluxPreviews',
+			'fluxStatus',
+			'linkedinClientId',
+            'linkedinClientSecret',
+			"openaiSystemInstruction",
+			"geminiSystemInstruction",
+			"claudeSystemInstruction",
+			"deepseekSystemInstruction",
+			"huggingfacetokenKey",
+			"vsCodeOpenaikey",
+			"vsCodeOpenaiTemperature",
+			"vsCodeOpenaiMaxToken",
+			"vsCodeClaudeTemperature",
+			"vsCodeClaudeMaxToken",
+			"vsCodeClaudeApiKey",
 		];
 		const configValues = await config.find({ key: { $in: keysToFetch } });
 		if (!configValues || configValues.length === 0) {
@@ -426,19 +453,67 @@ export const getConfigurations = async (req, res, next) => {
 			});
 		}
 
-		const formattedValues = configValues.reduce((acc, configValue) => {
-			acc[configValue.key] = configValue.value;
-			return acc;
-		}, {});
+		const formattedValues = await Promise.all(configValues.map(async (configValue) => {
+			const sensitiveKeys = [
+				'openaikey',
+				'geminiApiKey',
+				'claudeApiKey',
+				'togetheraiKey',
+				'linkedinClientId',
+				'linkedinClientSecret',
+				'vsCodeOpenaikey',
+				'vsCodeClaudeApiKey',
+			];
+
+			if (sensitiveKeys.includes(configValue.key)) {
+				try {
+					const isEncryptedValue = await isEncrypted(configValue._id);
+					if (isEncryptedValue) {
+						const decryptedValue = await decrypt(configValue.value, configValue._id)
+						return {
+							
+							[configValue.key]: maskKey(decryptedValue)
+						};
+					} else {
+						return {
+							[configValue.key]: maskKey(configValue.value)
+						};
+					}
+					
+				} catch (e) {
+					console.error(`Error processing ${configValue.key}:`, e);
+					return {
+						[configValue.key]: maskKey(configValue.value)
+					};
+				}
+			} else {
+				return {
+					[configValue.key]: configValue.value
+				};
+			}
+		}));
+
+		const finalValues = formattedValues.reduce((acc, curr) => ({ ...acc, ...curr }), {});
 
 		return res.status(StatusCodes.OK).json({
-			configValues: formattedValues,
+			configValues: finalValues,
 			message: ConfigMessages.CONFIGURATIONS_FETCHED,
 		});
 	} catch (error) {
 		return next(InternalServer(error.message));
 	}
 };
+
+function maskKey(key) {
+	if (key.length > 6) {
+		const firstThree = key.slice(0, 3);
+		const lastThree = key.slice(-3);
+		const middlePart = key.slice(3, -3).replace(/./g, "*");
+		return firstThree + middlePart + lastThree;
+	} else {
+		return key;
+	}
+}
 
 export const getPersonalizeAssistantSetting = async (req, res, next) => {
 	try {
@@ -457,6 +532,47 @@ export const getPersonalizeAssistantSetting = async (req, res, next) => {
 		return next(InternalServer(error.message));
 	}
 };
+
+export const encryptConfigs = async (req, res, next) => {
+	const {text} = req.body;
+	try {
+		const configValues = encrypt(text);
+		if (!configValues || configValues.length === 0) {
+			return res.status(StatusCodes.NOT_FOUND).json({
+				data : configValues || null,
+				message: "could not encrypted text",
+
+
+			});
+		}
+		return res.status(StatusCodes.OK).json({
+			data : configValues,
+			message: "encrypted text",
+		});
+	} catch (error) {
+		return next(InternalServer(error.message));
+	}
+};
+
+export const decryptConfigs = async (req, res, next) => {
+	const {text} = req.body;
+	try {
+		const configValues = decrypt(text);
+		if (!configValues || configValues.length === 0) {
+			return res.status(StatusCodes.NOT_FOUND).json({
+				data : configValues || null,
+				message: "could not encrypted text",
+			});
+		}
+		return res.status(StatusCodes.OK).json({
+			data : configValues,
+			message: "encrypted text",
+		});
+	} catch (error) {
+		return next(InternalServer(error.message));
+	}
+};
+
 export const updateConfigurations = async (req, res, next) => {
 	const { _id: userId } = req.user;
 	const {
@@ -483,10 +599,48 @@ export const updateConfigurations = async (req, res, next) => {
             geminiTopK,
             geminiMaxToken,
 			personalizeAssistant,
+			togetheraiKey,
+			fluxModel,
+			fluxImageWidth,
+			fluxImageHeight,
+			fluxImageSeed,
+			fluxSteps,
+			fluxPreviews,
+			fluxStatus,
+			deepseekModel,
+			deepseekTemperature,
+			deepseekMaxTokens,
+			deepseekTopP,
+			deepseekTopK,
+			deepseekRepetitionPenalty,
+			linkedinClientId,
+			linkedinClientSecret,
+			openaiSystemInstruction,
+			geminiSystemInstruction,
+			claudeSystemInstruction,
+			deepseekSystemInstruction,
+			huggingfacetokenKey,
+			vsCodeOpenaikey,
+			vsCodeOpenaiTemperature,
+			vsCodeOpenaiMaxToken,
+			vsCodeClaudeApiKey,
+			vsCodeClaudeTemperature,
+			vsCodeClaudeMaxToken,
 		},
 	} = req;
 
 	try {
+
+		// Update HuggingFace Token Key
+		if (huggingfacetokenKey !== undefined) {
+			await updateConfiguration(
+				'huggingfacetokenKey',
+				huggingfacetokenKey,
+				ConfigMessages.HUGGINGFACE_TOKEN_KEY_UPDATED,
+				ConfigMessages.HUGGINGFACE_TOKEN_KEY_SAVED
+			);
+		}
+		
 		// Update AI model
 		if (model !== undefined) {
 			await updateConfiguration(
@@ -498,7 +652,7 @@ export const updateConfigurations = async (req, res, next) => {
 		}
 
 		// Update Secret Key
-		if (openaikey !== undefined) {
+		if (openaikey !== undefined && !isMasked(openaikey)) {
 			await updateConfiguration(
 				'openaikey',
 				openaikey,
@@ -549,7 +703,7 @@ export const updateConfigurations = async (req, res, next) => {
 		}
 
 		// Update Gemini API Key
-		if (geminiApiKey !== undefined) {
+		if (geminiApiKey !== undefined && !isMasked(geminiApiKey)) {
 			await updateConfiguration(
 				'geminiApiKey',
 				geminiApiKey,
@@ -570,7 +724,7 @@ export const updateConfigurations = async (req, res, next) => {
 		}
 
 		// Update Claude API Key
-		if (claudeApiKey !== undefined) {
+		if (claudeApiKey !== undefined && !isMasked(claudeApiKey)) {
 			await updateConfiguration(
 				'claudeApiKey',
 				claudeApiKey,
@@ -697,6 +851,74 @@ export const updateConfigurations = async (req, res, next) => {
 				ConfigMessages.MAX_TOKEN_SAVED
 			);
 		} 
+
+		// Update togetherai key
+		if (togetheraiKey !== undefined && !isMasked(togetheraiKey)) {
+			await updateConfiguration(
+				'togetheraiKey',
+				togetheraiKey,
+				ConfigMessages.TOGETHERAI_KEY_UPDATED,
+				ConfigMessages.TOGETHERAI_KEY_SAVED
+			);
+		} 
+		if (fluxModel !== undefined) {
+			await updateConfiguration(
+				'fluxModel',
+				fluxModel,
+				ConfigMessages.FLUX_IMAGE_MODEL_UPDATED,
+				ConfigMessages.FLUX_IMAGE_MODEL_SAVED
+			);
+		} 
+		if (fluxImageWidth !== undefined) {
+			await updateConfiguration(
+				'fluxImageWidth',
+				fluxImageWidth,
+				ConfigMessages.FLUX_IMAGE_WIDTH_UPDATED,
+				ConfigMessages.FLUX_IMAGE_WIDTH_SAVED
+			);
+		} 
+		if (fluxImageHeight !== undefined) {
+			await updateConfiguration(
+				'fluxImageHeight',
+				fluxImageHeight,
+				ConfigMessages.FLUX_IMAGE_HEIGHT_UPDATED,
+				ConfigMessages.FLUX_IMAGE_HEIGHT_SAVED
+			);
+		} 
+		if (fluxImageSeed !== undefined) {
+			await updateConfiguration(
+				'fluxImageSeed',
+				fluxImageSeed,
+				ConfigMessages.FLUX_IMAGE_SEED_UPDATED,
+				ConfigMessages.FLUX_IMAGE_SEED_SAVED
+			);
+		} 
+		if (fluxSteps !== undefined) {
+			await updateConfiguration(
+				'fluxSteps',
+				fluxSteps,
+				ConfigMessages.FLUX_IMAGE_STEPS_UPDATED,
+				ConfigMessages.FLUX_IMAGE_STEPS_SAVED
+			);
+		} 
+		if (fluxPreviews !== undefined) {
+			await updateConfiguration(
+				'fluxPreviews',
+				fluxPreviews,
+				ConfigMessages.FLUX_IMAGE_PREVIEWS_UPDATED,
+				ConfigMessages.FLUX_IMAGE_PREVIEWS_SAVED
+			);
+		} 
+		if (fluxStatus !== undefined) {
+			await updateConfiguration(
+				'fluxStatus',
+				fluxStatus,
+				ConfigMessages.FLUX_IMAGE_STATUS_UPDATED,
+				ConfigMessages.FLUX_IMAGE_STATUS_SAVED
+			);
+		} 
+		
+
 		// Update gemini max token 
 		if (personalizeAssistant !== undefined) {
 			await updateConfiguration(
@@ -719,6 +941,174 @@ export const updateConfigurations = async (req, res, next) => {
 
 		}
 
+		// Update Deepseek Model
+		if (deepseekModel !== undefined) {
+			await updateConfiguration(
+				'deepseekModel',
+				deepseekModel,
+				ConfigMessages.DEEPSEEK_MODEL_UPDATED,
+				ConfigMessages.DEEPSEEK_MODEL_SAVED
+			);
+		}
+
+		// Update Deepseek Temperature
+		if (deepseekTemperature !== undefined) {
+			await updateConfiguration(
+				'deepseekTemperature',
+				deepseekTemperature,
+				ConfigMessages.DEEPSEEK_TEMPERATURE_UPDATED,
+				ConfigMessages.DEEPSEEK_TEMPERATURE_SAVED
+			);
+		}
+
+		// Update Deepseek Max Tokens
+		if (deepseekMaxTokens !== undefined) {
+			await updateConfiguration(
+				'deepseekMaxTokens',
+				deepseekMaxTokens,
+				ConfigMessages.DEEPSEEK_MAX_TOKENS_UPDATED,
+				ConfigMessages.DEEPSEEK_MAX_TOKENS_SAVED
+			);
+		}
+
+		// Update Deepseek Top P
+		if (deepseekTopP !== undefined) {
+			await updateConfiguration(
+				'deepseekTopP',
+				deepseekTopP,
+				ConfigMessages.DEEPSEEK_TOP_P_UPDATED,
+				ConfigMessages.DEEPSEEK_TOP_P_SAVED
+			);
+		}
+
+		// Update Deepseek Top K
+		if (deepseekTopK !== undefined) {
+			await updateConfiguration(
+				'deepseekTopK',
+				deepseekTopK,
+				ConfigMessages.DEEPSEEK_TOP_K_UPDATED,
+				ConfigMessages.DEEPSEEK_TOP_K_SAVED
+			);
+		}
+
+		// Update Deepseek Repetition Penalty
+		if (deepseekRepetitionPenalty !== undefined) {
+			await updateConfiguration(
+				'deepseekRepetitionPenalty',
+				deepseekRepetitionPenalty,
+				ConfigMessages.DEEPSEEK_REPETITION_PENALTY_UPDATED,
+				ConfigMessages.DEEPSEEK_REPETITION_PENALTY_SAVED
+			);
+		}
+		
+		// Update LinkedIn Client Id
+		if (linkedinClientId !== undefined && !isMasked(linkedinClientId)) {
+			await updateConfiguration(
+				'linkedinClientId',
+				linkedinClientId,
+				ConfigMessages.LINKEDIN_CLIENT_ID_UPDATED,
+				ConfigMessages.LINKEDIN_CLIENT_ID_SAVED
+			);
+		}
+
+		// Update LinkedIn Client Secret
+		if (linkedinClientSecret !== undefined && !isMasked(linkedinClientSecret)) {
+			await updateConfiguration(
+				'linkedinClientSecret',
+				linkedinClientSecret,
+				ConfigMessages.LINKEDIN_CLIENT_SECRET_UPDATED,
+				ConfigMessages.LINKEDIN_CLIENT_SECRET_SAVED
+			);
+		}
+
+		// Update openai system instruction
+		if (openaiSystemInstruction !== undefined) {
+			await updateConfiguration(
+				"openaiSystemInstruction",
+				openaiSystemInstruction,
+				ConfigMessages.OPENAI_SYSTEM_INSTRUCTION_UPDATED,
+				ConfigMessages.OPENAI_SYSTEM_INSTRUCTION_SAVED
+			);
+		}
+
+		// Update gemini system instruction
+		if (geminiSystemInstruction !== undefined) {
+			await updateConfiguration(
+				"geminiSystemInstruction",
+				geminiSystemInstruction,
+				ConfigMessages.GEMINI_SYSTEM_INSTRUCTION_UPDATED,
+				ConfigMessages.GEMINI_SYSTEM_INSTRUCTION_SAVED
+			);
+		}
+
+		// Update claude system instruction
+		if (claudeSystemInstruction !== undefined) {
+			await updateConfiguration(
+				"claudeSystemInstruction",
+				claudeSystemInstruction,
+				ConfigMessages.CLAUDE_SYSTEM_INSTRUCTION_UPDATED,
+				ConfigMessages.CLAUDE_SYSTEM_INSTRUCTION_SAVED
+			);
+		}
+
+		// Update deepseek system instruction
+		if (deepseekSystemInstruction !== undefined) {
+			await updateConfiguration(
+				"deepseekSystemInstruction",
+				deepseekSystemInstruction,
+				ConfigMessages.DEEPSEEK_SYSTEM_INSTRUCTION_UPDATED,
+				ConfigMessages.DEEPSEEK_SYSTEM_INSTRUCTION_SAVED
+			);
+		}
+		if (vsCodeOpenaikey !== undefined && !isMasked(vsCodeOpenaikey)) {
+			await updateConfiguration(
+				"vsCodeOpenaikey",
+				vsCodeOpenaikey,
+				ConfigMessages.OPENAI_KEY_UPDATED,
+				ConfigMessages.OPENAI_KEY_SAVED
+			);
+		}
+		if (vsCodeOpenaiTemperature !== undefined) {
+			await updateConfiguration(
+				"vsCodeOpenaiTemperature",
+				vsCodeOpenaiTemperature,
+				ConfigMessages.OPENAI_TEMPERATURE_UPDATED,
+				ConfigMessages.OPENAI_TEMPERATURE_SAVED
+			);
+		}
+		if (vsCodeOpenaiMaxToken !== undefined) {
+			await updateConfiguration(
+				"vsCodeOpenaiMaxToken",
+				vsCodeOpenaiMaxToken,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
+			);
+		}
+		if (vsCodeClaudeApiKey !== undefined && !isMasked(vsCodeClaudeApiKey)) {
+			await updateConfiguration(
+				"vsCodeClaudeApiKey",
+				vsCodeClaudeApiKey,
+				ConfigMessages.CLAUDE_API_KEY_UPDATED,
+				ConfigMessages.CLAUDE_API_KEY_SAVED
+			);
+		}
+		if (vsCodeClaudeTemperature !== undefined) {
+			await updateConfiguration(
+				"vsCodeClaudeTemperature",
+				vsCodeClaudeTemperature,
+				ConfigMessages.CLAUDE_TEMPERATURE_UPDATED,
+				ConfigMessages.CLAUDE_TEMPERATURE_SAVED
+			);
+		}
+		if (vsCodeClaudeMaxToken !== undefined) {
+			await updateConfiguration(
+				"vsCodeClaudeMaxToken",
+				vsCodeClaudeMaxToken,
+				ConfigMessages.MAX_TOKEN_UPDATED,
+				ConfigMessages.MAX_TOKEN_SAVED
+			);
+		}
+
 		res.status(StatusCodes.OK).json({
 			message: ConfigMessages.CONFIGURATIONS_UPDATED,
 		});
@@ -730,20 +1120,192 @@ export const updateConfigurations = async (req, res, next) => {
 
 async function updateConfiguration(key, value, updateMessage, saveMessage) {
 	const keyRec = await config.findOne({ key });
-console.log(key,value,updateMessage,saveMessage)
+	// List of keys that should be encrypted
+	const sensitiveKeys = [
+		'openaikey',
+		'geminiApiKey',
+		'claudeApiKey',
+		'togetheraiKey',
+		'linkedinClientId',
+		'linkedinClientSecret',
+		'vsCodeOpenaikey',
+		'vsCodeClaudeApiKey',
+	];
+
+	let valueToStore = value;
+
+
+
+	if (sensitiveKeys.includes(key) && !isMasked(value)) {
+		if (keyRec) {
+			await EncryptionMetadata.findOneAndDelete({ configId: keyRec._id });
+			// If record exists, encrypt with existing configId
+			valueToStore = await encrypt(value, keyRec._id);
+			
+			await config.updateOne(
+				{ _id: keyRec._id },
+				{ $set: { value: valueToStore } }
+			);
+
+		} else {
+			// If record doesn't exist, create it first with unencrypted value
+			const newConfig = await config.create({ key, value: valueToStore });
+			// Then encrypt with the new configId
+			valueToStore = await encrypt(value, newConfig._id);
+			// Update the config with encrypted value
+			await config.updateOne(
+				{ _id: newConfig._id },
+				{ $set: { value: valueToStore } }
+			);
+			deleteKeyFromOpenAiConfigCache(key);
+			return {
+				message: ConfigMessages[saveMessage],
+			};
+		}
+	}
 	if (keyRec) {
 		// const valueToUpdate = typeof value === 'number' ? value.toString() : value;
-		const newvalues = { $set: { value } };
+		const newvalues = { $set: { value: valueToStore } };
 		await config.updateOne({ key }, newvalues);
 
-		console.log(`${key} updated`);
 		deleteKeyFromOpenAiConfigCache(key);
 	} else {
 		// const valueToUpdate = typeof value === 'number' ? value.toString() : value;
-		await config.create({ key, value });
-		console.log(`${key} saved`);
+		await config.create({ key, value: valueToStore });
 	}
 	return {
 		message: ConfigMessages[updateMessage] || ConfigMessages[saveMessage],
 	};
 }
+
+function isMasked(key) {
+	return key.includes('***');
+}
+
+// Helper function to get decrypted config value
+export const getDecryptedConfigValue = async (key) => {
+	try {
+		const configValue = await config.findOne({ key });
+		if (!configValue) return null;
+
+		const sensitiveKeys = [
+			'openaikey',
+			'geminiApiKey',
+			'claudeApiKey',
+			'togetheraiKey',
+			'linkedinClientId',
+			'linkedinClientSecret',
+			'vsCodeOpenaikey',
+			'vsCodeClaudeApiKey'
+		];
+
+		if (sensitiveKeys.includes(key)) {
+			const isEncryptedValue = await isEncrypted(configValue._id);
+			if (isEncryptedValue) {
+				return await decrypt(configValue.value, configValue._id);
+			}
+		}
+		return configValue.value;
+	} catch (error) {
+		console.error(`Error getting decrypted value for ${key}:`, error);
+		return null;
+	}
+};
+
+const sensitiveKeys = [
+	'openaikey',
+	'geminiApiKey',
+	'claudeApiKey',
+	'togetheraiKey',
+	'linkedinClientId',
+	'linkedinClientSecret',
+	'huggingfacetokenKey',
+	'vsCodeOpenaikey',
+	'vsCodeClaudeApiKey',
+];
+
+// const isMasked = (value) => {
+//     return value.includes('***');
+// };
+
+export const migrateConfigs = async (req, res, next) => {
+	try {
+		console.log('Starting config encryption migration...');
+
+		for (const key of sensitiveKeys) {
+			const configDoc = await config.findOne({ key });
+			if (configDoc && !isMasked(configDoc.value)) {
+				try {
+					// Encrypt the value
+					const encryptedValue = await encrypt(configDoc.value, configDoc._id);
+
+					// Update the config with encrypted value
+					await config.updateOne(
+						{ _id: configDoc._id },
+						{ $set: { value: encryptedValue } }
+					);
+
+					console.log(`Successfully migrated ${key}`);
+				} catch (error) {
+					console.error(`Error migrating ${key}:`, error);
+				}
+			}
+		}
+
+		console.log('Migration completed successfully');
+		res.status(StatusCodes.OK).json({
+			message: 'Migration completed successfully',
+		});
+	} catch (error) {
+		console.error('Migration failed:', error);
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			message: error,
+		});
+	}
+};
+
+export const reverseMigration = async (req, res, next) => {
+	try {
+		console.log('Starting config encryption reversal...');
+
+		for (const key of sensitiveKeys) {
+			const configDoc = await config.findOne({ key });
+			if (configDoc) {
+				try {
+					// Check if the value is encrypted
+					const isEncryptedValue = await isEncrypted(configDoc._id);
+
+					if (isEncryptedValue) {
+						// Decrypt the value
+						const decryptedValue = await decrypt(configDoc.value, configDoc._id);
+
+						// Update the config with decrypted value
+						await config.updateOne(
+							{ _id: configDoc._id },
+							{ $set: { value: decryptedValue } }
+						);
+
+						// Remove encryption metadata
+						await EncryptionMetadata.deleteOne({ configId: configDoc._id });
+
+						console.log(`Successfully reversed encryption for ${key}`);
+					} else {
+						console.log(`Skipping ${key} as it's not encrypted`);
+					}
+				} catch (error) {
+					console.error(`Error reversing encryption for ${key}:`, error);
+				}
+			}
+		}
+
+		console.log('Reversal completed successfully');
+		res.status(StatusCodes.OK).json({
+			message: 'Encryption reversal completed successfully',
+		});
+	} catch (error) {
+		console.error('Reversal failed:', error);
+		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+			message: error.message || 'Failed to reverse encryption',
+		});
+	}
+}; 

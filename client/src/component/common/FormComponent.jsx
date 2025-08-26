@@ -10,6 +10,7 @@ import FormTextArea from "./FormTextArea";
 import FormFileInput from "./FormFileInput";
 import MultiSelect from "./MultiSelect";
 
+
 const FormComponent = ({
   title,
   formItems,
@@ -17,6 +18,7 @@ const FormComponent = ({
   className,
   handleSubmit,
   defaultValues,
+  loginError = null
 }) => {
   const [form] = Form.useForm();
   const [resetTrigger, setResetTrigger] = useState(false);
@@ -94,11 +96,13 @@ const FormComponent = ({
               );
             case "submit":
               return (
-                <div className="d-flex justify-content-end">
+                <div className="">
+                  {loginError ? <p className="text-danger mb-0">{`Email or password is incorrect.`}</p> : <></>}
                   <FormButton
                     key={index}
                     {...item}
                     onClick={handleOk}
+                    style={{ marginTop: "0px" }}
                   />
                 </div>
               );

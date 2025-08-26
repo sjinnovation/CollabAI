@@ -13,7 +13,7 @@ export const handleLogin = async (email, password) => {
         const userRole = response?.data?.role === 'superadmin' ? '2010' : '2015';
         const compData = await axiosOpen.get(USER_COMPANY_DATA_API_SLUG(response?.data?.userid));
 
-        saveUserToLocalStorage(response?.data);
+        saveUserToLocalStorage(response?.data); 
 
         return {
             success: true,

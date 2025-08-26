@@ -1,8 +1,9 @@
-import { DELETE_ASSISTANT_THREADS, FETCH_ALL_ASSISTANTS, FETCH_ASSISTANT_THREADS, UPDATE_ASSISTANT_THREADS } from "./assistant_api_constant";
+import { DELETE_ASSISTANT_THREADS, FETCH_ALL_ASSISTANTS, FETCH_ASSISTANT_THREADS, UPDATE_ASSISTANT_THREADS, FETCH_N8N_WORKFLOWS, SAVE_SELECTED_WORKFLOWS } from "./assistant_api_constant";
 import { GET_SINGLE_ASSISTANT_INFO_SLUG } from "../constants/Api_constants";
 import { axiosSecureInstance } from "./axios";
 import { message } from "antd";
 import { getUserID } from "../Utility/service";
+import { getN8nWorkflows } from "./user";
 
 
 export const getAssistants = async (page, setAssistants, setTotalPage, setLoading, searchQuery) => {
@@ -97,30 +98,93 @@ export const getAssistants = async (page, setAssistants, setTotalPage, setLoadin
   };
 
   export const getAssistantInfo = async (userId, assistantId, setCheckUser, setIsPublic, setLoading,setIsOrganizational) => {
-  
-    if (userId === null) {
-      return <p>Loading...</p>;
-  
-    } else {
-      try {
-        const response = await axiosSecureInstance.get(GET_SINGLE_ASSISTANT_INFO_SLUG(assistantId));
-        const checkPublic = await response.data?.assistant?.is_public
-        const userIdFromResponse = await response.data?.assistant?.userId?._id
-        const findOrganizational = await response.data?.assistant?.category ;
 
-        if(findOrganizational ==="ORGANIZATIONAL" ){
+    try {
+      const response = await axiosSecureInstance.get(GET_SINGLE_ASSISTANT_INFO_SLUG(assistantId));
+      const assistant = response.data?.assistant;
+  
+      if (assistant) {
+  
+        if (assistant.category === "ORGANIZATIONAL") {
           setIsOrganizational(true);
-
+        } else {
+          setIsOrganizational(false);
         }
-
-        if (userId == userIdFromResponse) {
-          setCheckUser(true);
+        if (userId) {
+          setCheckUser(userId === assistant.userId?._id);
         }
-        setIsPublic(checkPublic);
-        setLoading(false);
-      } catch (error) {
-        throw new Error(error);
+  
+        if (assistant.is_public) {
+          setIsPublic(true);
+  
+          localStorage.setItem("isPublic", "true");
+        } else {
+          setIsPublic(false);
+
+          localStorage.removeItem("isPublic");
+        }
+      } else {
+        console.warn("No assistant data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching assistant info:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+// n8n workflow related functions
+export const fetchN8nWorkflows = async (secretKey, assistant_id, isExistingKey = false) => {
+  try {
+    // For existing key, use the user-based API
+    if (isExistingKey) {
+      const userId = getUserID();
+      const response = await getN8nWorkflows(userId);
+      
+      if (response.data.success && Array.isArray(response.data.workflows)) {
+        return { success: true, workflows: response.data.workflows };
+      } else {
+        return { success: false, workflows: [], message: response.data.message || 'No workflows found' };
+      }
+    } else {
+      // For new key validation, use the assistant-based API
+      const response = await axiosSecureInstance.post(FETCH_N8N_WORKFLOWS(), {
+        secretKey: secretKey,
+        assistant_id: assistant_id,
+        isExistingKey: isExistingKey
+      });
+      
+      if (response.data.success && Array.isArray(response.data.workflows)) {
+        return { success: true, workflows: response.data.workflows };
+      } else {
+        return { success: false, workflows: [], message: response.data.message || 'No workflows found' };
       }
     }
-  
-  };
+  } catch (error) {
+    console.error('Error fetching workflows:', error);
+    if (error.response?.status === 401) {
+      return { success: false, error: 'Invalid secret key. Please check your n8n API key.' };
+    } else {
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch workflows. Please check your secret key.' };
+    }
+  }
+};
+
+export const saveSelectedWorkflows = async (assistant_id, workflowIds) => {
+  try {
+    const response = await axiosSecureInstance.post(SAVE_SELECTED_WORKFLOWS(assistant_id), {
+      workflowIds: workflowIds
+    });
+    
+    if (response.data.success) {
+      message.success('Selected workflows saved successfully!');
+      return { success: true };
+    } else {
+      return { success: false, error: 'Failed to save selected workflows' };
+    }
+  } catch (error) {
+    console.error('Error saving selected workflows:', error);
+    message.error('Failed to save selected workflows');
+    return { success: false, error: 'Failed to save selected workflows' };
+  }
+};

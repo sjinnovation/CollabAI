@@ -26,10 +26,10 @@ export const fetchAllAssistants = async (page, limit, orgAssistantSearchQuery) =
 };
 
 // fetchSingleUserAssistants
-export const fetchAssistantsCreatedByUser = async (page, userId, personalAssistantSearchQuery) => {
+export const fetchAssistantsCreatedByUser = async (page, userId, pageSize, personalAssistantSearchQuery) => {
   const LIMIT = 10;
   const response = await axiosSecureInstance.get(
-    USER_GET_ALL_USER_CREATED_ASSISTANTS_SLUG(userId || getUserID(), page, LIMIT, personalAssistantSearchQuery)
+    USER_GET_ALL_USER_CREATED_ASSISTANTS_SLUG(userId || getUserID(), page, pageSize, personalAssistantSearchQuery)
   );
 
 

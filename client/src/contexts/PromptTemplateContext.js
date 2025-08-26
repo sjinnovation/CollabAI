@@ -1,6 +1,11 @@
 import { useState, createContext, useEffect } from "react";
 
-export const PromptTemplateContext = createContext();
+export const PromptTemplateContext = createContext({
+  currentPromptTemplate: "", 
+  PromptTemplateTrigger: 0,
+  triggerUpdate: () => {},
+  updateCurrentPromptTemplate: () => {},
+});
 
 function PromptTemplateContextProvider(props) {
     const [PromptTemplateTrigger, setUpdatePromptTemplateTrigger] = useState(0);

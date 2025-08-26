@@ -28,7 +28,31 @@ const KnowledgeBaseSchema = new mongoose.Schema({
         type: Array,
         default: [],
     },
-
+    url :{
+        type: String,
+        default: null,
+        required: false
+    },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'KnowledgeBase',
+        default: null,
+    },
+    isFileShared: {
+        type: Boolean,
+        default: false,
+        required: false,
+    },
+    isKnowledgeBaseShareable: { 
+        type: Boolean,
+        default: false,
+        required: false,
+    },
+    sharedKnowledgeBaseOwner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
+    }
 }, 
 { timestamps: true }
 

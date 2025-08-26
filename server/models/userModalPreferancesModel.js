@@ -61,6 +61,38 @@ const userPreferences = new Schema(
         message: "{VALUE} is not an integer value",
       },
     },
+    deepseekModel: {
+      type: String,
+      required: false,
+    },
+    deepseekTemperature: {
+      type: Number,
+      required: false,
+    },
+    deepseekMaxTokens: {
+      type: Number,
+      required: false,
+      validate: {
+        validator: Number.isInteger,
+        message: "{VALUE} is not an integer value",
+      },
+    },
+    deepseekTopP: {
+      type: Number,
+      required: false,
+    },
+    deepseekTopK: {
+      type: Number,
+      required: false,
+      validate: {
+        validator: Number.isInteger,
+        message: "{VALUE} is not an integer value",
+      },
+    },
+    deepseekRepetitionPenalty: {
+      type: Number,
+      required: false,
+    },
   },
   { timestamp: true }
 );

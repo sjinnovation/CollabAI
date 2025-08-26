@@ -12,40 +12,40 @@ import { GET_FILE_FROM_GOOGLE_DRIVE, GOOGLE_DRIVE_FILES_TO_KNOWLEDGE_BASE } from
 import { message } from 'antd';
 import { LoginWithGoogle } from '../IntegrateApplications/LoginWithGoogle';
 import useGoogleDrivePicker from '../IntegrateApplications/useGoogleDrivePicker';
-import googleDriveIcon from '../../assests/images/google-drive-icon.png';
+import googleDriveIcon from "../../assests/images/knowledge-base-menu/google_drive_icon.svg"
+import { MdAddToDrive } from 'react-icons/md';
 
 
 const userId = getUserID();
 
-const GoogleFilePicker = ({ folderStructure, selectedFolder, setIsLoading,isLoading,token, autoTriggerPicker, setAutoTriggerPicker }) => {
+const GoogleFilePicker = ({ folderStructure, selectedFolder,selectedFile, setIsLoading,isLoading,token, autoTriggerPicker, setAutoTriggerPicker,setSelectedApp,setIsShowFolderListModal, setOpenCustomDropdown,setGoogleFileInfo}) => {
     const [openPicker, data, authResponse] = useDrivePicker();
-    const [filesInfo, setFilesInfo] = useState([]);
-
 
     const accessToken = process.env.REACT_APP_GOOGLE_DRIVE_ACCESS_KEY;
     const apiKey = process.env.REACT_APP_GOOGLE_API_KEY;
     const handlePicked = async (data) => {
-        setIsLoading(true);
-
         if (data.docs && data.docs.length > 0) {
             const files = data.docs.map(async (file) => {
                 const url = GET_FILE_FROM_GOOGLE_DRIVE(file.id, apiKey)
-                // const base64 = await fetchFile(url);
                 let name = file.name;
                 name =  name.replace(/[\/\\*|"?]/g, ' ');
                 return {
                     name: name,
-                    size: file.sizeBytes,
+                    size: file?.sizeBytes,
                     type: 'file',
-                    category: file.mimeType,
-                    fileId: file.id
+                    category: file?.mimeType,
+                    fileId: file?.id,
+                    url: file?.url
                 };
             });
             const filesInfo = await Promise.all(files);
-            await sendFileToServer(filesInfo, folderStructure, selectedFolder);
-            setFilesInfo(filesInfo);
+            if(filesInfo){
+                setGoogleFileInfo(filesInfo);
+                setIsShowFolderListModal(true);
+                setOpenCustomDropdown(false);
+                setSelectedApp("googleDrive");
+            }
         }
-        setIsLoading(false);
 
     };
     const handleOpenPicker = useGoogleDrivePicker(handlePicked);
@@ -96,8 +96,8 @@ const GoogleFilePicker = ({ folderStructure, selectedFolder, setIsLoading,isLoad
     const sendFileToServer = async (filesInfo,folderStructure, selectedFolder) => {
         const previousParentFolderNames = getParentFolderNames(folderStructure, selectedFolder);
         const uploadedFileDetails = filesInfo.map(file => {
-            const updatedFileName = previousParentFolderNames ? `${previousParentFolderNames}/${file.name}` : file.name;
-            return { name: updatedFileName, size: file.size, type : file.category, fileId : file.fileId };
+            const updatedFileName = selectedFile ? `${selectedFile}/${file.name}` : file.name;
+            return { name: updatedFileName, size: file.size, type : file.category, fileId : file.fileId,url : file?.url };
         });
         const KnowledgeBase = {
             userId: userId,
@@ -121,9 +121,16 @@ const GoogleFilePicker = ({ folderStructure, selectedFolder, setIsLoading,isLoad
     };
 
     return (
-        <div>
-            <li onClick={()=>handleOpenPicker(apiKey)} > <FaGoogleDrive /> Import From Google Drive (Max : 1.5MB)</li>
-        </div>
+        <li className="tool-item" onClick={()=>{
+            handleOpenPicker(apiKey)}} >
+           <div className="tool-item-icon">
+                <img src={googleDriveIcon} alt="Google Drive Icon" style={{ width: 25, height: 25 }} />
+            </div>
+            <div className="tool-item-info">
+                <div className="tool-name"> Import From Google Drive</div>
+                <p className="tool-details">Add Google doc, sheet, ppt (max file size 1.5 MB)</p>
+            </div>                
+        </li>
     );
 };
 

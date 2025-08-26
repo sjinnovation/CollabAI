@@ -14,6 +14,7 @@ export const ThemeProvider = ({ children }) => {
     if (theme === "light") {
       root.style.setProperty("--chat-box-bg-color", "#ffffff");
       root.style.setProperty("--chat-box-bg-color-2", "#F0F4F9");
+      root.style.setProperty("--sidemenu-selected-item", "#f1f1f1");
       root.style.setProperty("--thread-active", "#ffffff");
       root.style.setProperty("--theme-toggler-light", "#ffffff");
       root.style.setProperty("--theme-toggler-dark", "#000000");
@@ -32,13 +33,28 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty("--border-color", "rgba(0,0,0,.15)");
       root.style.setProperty("--light-dark", "#000000");
       root.style.setProperty("--sidebar-border-color", "rgba(255,255,255,.15)");
+      root.style.setProperty("--threadbar-border-color", "#d8d8d8");
       root.style.setProperty("--chat-text-hover", "rgb(249, 250, 251)");
       root.style.setProperty("--hover-bg", "#f1f1f1");
       root.style.setProperty("--chat-box-shadow-color", "rgba(250, 250, 250, 0.2");
+      root.style.setProperty("--thead-box-shadow", "rgba(0, 0, 0, 0.05)");
+      root.style.setProperty("--scrollbar-track", "#F1F1F1");
+      root.style.setProperty("--scrollbar-thumb", "#b6b6b6");
+      root.style.setProperty("--scrollbar-thumb-sidebar", "#b6b6b6");
+      root.style.setProperty("--disabled-button", "#999999");
+      root.style.setProperty("--disabled-button-text", "#fff");
+      root.style.setProperty("--dropdown-selector", "#f0f0f0");
+      root.style.setProperty("--carousel-arrow-color", "rgba(10, 9, 9, 0.7)");
+      root.style.setProperty("--carousel-arrow-icon-color", "rgba(236, 235, 235, 0.85)");
+      root.style.setProperty("--create-project-modal", "#f9f9f9")
+      root.style.setProperty("--create-project-subtext", "rgb(93,93,93)")
+      root.style.setProperty("--sidebar-project-item-hover", "rgb(245, 245, 245)")
+      root.style.setProperty("--sidebar-project-item-active", "rgb(245, 245, 245)")
     } else {
       root.style.setProperty("--chat-box-bg-color", "#212121");
       root.style.setProperty("--thread-active", "#393939");
       root.style.setProperty("--chat-box-bg-color-2", "#1E1F20");
+      root.style.setProperty("--sidemenu-selected-item", "#1E1F20");
       root.style.setProperty("--theme-toggler-light", "#000000");
       root.style.setProperty("--theme-toggler-dark", "#ffffff");
       root.style.setProperty("--light-dark", "#ffffff");
@@ -55,10 +71,23 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty("--secondary-color", "#171717");
       root.style.setProperty("--border-color", "rgba(255,255,255,.15)");
       root.style.setProperty("--sidebar-border-color", "rgba(255,255,255,.15)");
-      root.style.setProperty("--chat-text-hover", "#030712");
+      root.style.setProperty("--threadbar-border-color", "rgba(255,255,255,.15)");
+      root.style.setProperty("--chat-text-hover", "#151515de");
       root.style.setProperty("--hover-bg", "rgba(255,255,255,.15)");
-      root.style.setProperty("--chat-box-shadow-color", "rgba(0, 0, 0, 0.2");
-
+      root.style.setProperty("--chat-box-shadow-color", "rgba(0, 0, 0, 0.2)");
+      root.style.setProperty("--thead-box-shadow", "rgba(255, 255, 255, 0.05)");
+      root.style.setProperty("--scrollbar-track", "#2E2E30");
+      root.style.setProperty("--scrollbar-thumb", "rgb(136,136,136)");
+      root.style.setProperty("--scrollbar-thumb-sidebar", "#b6b6b6");
+      root.style.setProperty("--disabled-button", "#a1a1a1");
+      root.style.setProperty("--disabled-button-text", "#333");
+      root.style.setProperty("--dropdown-selector", "#333");
+      root.style.setProperty("--carousel-arrow-color", "#ffffff");
+      root.style.setProperty("--carousel-arrow-icon-color", "rgba(0, 0, 0, 0.85)");
+      root.style.setProperty("--create-project-modal", "#0D0D0D")
+      root.style.setProperty("--create-project-subtext", "rgb(255,255,255)")
+      root.style.setProperty("--sidebar-project-item-hover", "#2a2a2a")
+      root.style.setProperty("--sidebar-project-item-active", "#3a3a3a")
     }
 
     localStorage.setItem("theme", theme);

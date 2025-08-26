@@ -13,6 +13,7 @@ import { FileContextProvider } from "../../contexts/FileContext";
 import "./main-layout.scss";
 import { useContext } from "react";
 import TitleContextProvider from "../../contexts/TitleContext";
+import ProfileProvider from "../../contexts/ProfileContext.js";
 
 const Layout = () => {
   const location = useLocation();
@@ -24,14 +25,16 @@ const Layout = () => {
         <FileContextProvider>
           <AssistantContextProvider>
             <PromptTemplateContextProvider>
-            <TitleContextProvider>
-                <main className="d-flex flex-nowrap w-100">
-                  <WelcomeCard />
-                    {/* <Sidebar /> */}
-                    <NewSidebar />
-                    <MainContent />
-                  </main>
-              </TitleContextProvider>
+              <ProfileProvider>
+                <TitleContextProvider>
+                    <main className="d-flex flex-nowrap w-100 main-responsive">
+                      <WelcomeCard />
+                        {/* <Sidebar /> */}
+                        <NewSidebar />
+                        <MainContent />
+                      </main>
+                </TitleContextProvider>
+              </ProfileProvider>
             </PromptTemplateContextProvider>
           </AssistantContextProvider>
         </FileContextProvider>

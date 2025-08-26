@@ -3,6 +3,10 @@ import PublicAssistant from '../models/public_assistant.js';
 import mongoose from 'mongoose';
 import Assistant from '../models/assistantModel.js';
 import { ObjectId } from 'mongodb';
+import { getSingleAssistantByIdWithUserDetailsService } from '../service/assistantService.js';
+import { countFavouriteAssistantService } from '../service/favoriteAssistantService.js';
+import { doesAssistantExist, isOpenAIFileObjectExist, retrieveOpenAIFileObject } from '../lib/openai.js';
+
 export const createPublicAssistantService = async (assistant_id, creators_id) => {
     return await PublicAssistant.create({ assistant_id, creators_id });
 };
@@ -144,7 +148,8 @@ export const getPublicAssistantWithQueryConditionService = async (typeId, queryC
                     assistantTypeId: 1,
                     functionCalling: 1,
                     functionDefinitionIds: 1,
-    
+                    createdAt: 1,
+                    updatedAt: 1,
                 },
             },
             { $skip: skip },
@@ -153,4 +158,110 @@ export const getPublicAssistantWithQueryConditionService = async (typeId, queryC
         Assistant.countDocuments({ ...queryConditions, assistantTypeId: typeId, is_featured: false }),
     ]);
     return { assistants, totalCount }
+};
+
+export const getPublicAssistantsWithDetailsService = async ({
+  page = 1,
+  pageSize = 10,
+  searchQuery = "",
+  openaiInstance,
+}) => {
+  const skip = (Number(page) - 1) * Number(pageSize);
+  const limit = parseInt(pageSize);
+
+  let query = { is_public: true };
+  if (typeof searchQuery === "string" && searchQuery.length) {
+    query.name = { $regex: new RegExp(searchQuery, "i") };
+  }
+
+  const [assistants, totalCount] = await Promise.all([
+  Assistant.find(query)
+  .populate({
+    path: "assistantApiId",
+    model: "FunctionDefinition",
+    select: "name"
+  })
+  .sort({ createdAt: -1 })
+  .skip(skip)
+  .limit(limit)
+  .lean(),
+    Assistant.countDocuments(query),
+  ]);
+
+  if (!assistants || assistants.length === 0) {
+    return { assistants: [], totalCount: 0 };
+  }
+
+  const assistantIds = assistants.map((assistant) => assistant.assistant_id);
+
+  const [publicAssistants, assistantDetails, favoriteCounts] =
+    await Promise.all([
+      PublicAssistant.find({ assistant_id: { $in: assistantIds } }).lean(),
+      Promise.all(
+        assistantIds.map((id) =>
+          getSingleAssistantByIdWithUserDetailsService(id)
+        )
+      ),
+      Promise.all(assistantIds.map((id) => countFavouriteAssistantService(id))),
+    ]);
+
+  const existingAssistantIds = await Promise.all(
+    assistantIds.map((id) => doesAssistantExist(openaiInstance, id))
+  );
+
+  // Process file names for each assistant
+  await Promise.all(
+    assistants.map(async (assistant) => {
+      const fileIds = assistant?.file_ids || [];
+  
+      const validFileChecks = await Promise.all(
+        fileIds.map(async (fileId) => {
+          const isValid = await isOpenAIFileObjectExist(openaiInstance, fileId);
+          return isValid ? fileId : null;
+        })
+      );
+  
+      const existingFileIds = validFileChecks.filter(Boolean);
+      assistant.file_ids = existingFileIds;
+  
+      const fileNames = await Promise.all(
+        existingFileIds.map((fileId) =>
+          retrieveOpenAIFileObject(fileId)
+            .then((fileInfo) => fileInfo?.filename)
+            .catch(() => null)
+        )
+      );
+  
+      assistant.fileNames = fileNames.filter(Boolean);
+    })
+  );
+  
+
+  const result = assistants
+    .filter((_, index) => existingAssistantIds[index])
+    .map((assistant, index) => {
+      const assistantDetail = assistantDetails[index];
+      const publicAssistant = publicAssistants.find(
+        (pa) => pa.assistant_id === assistant.assistant_id
+      );
+      const count = favoriteCounts[index];
+
+      if (!assistantDetail || !publicAssistant) return null;
+
+      const enrichedAssistant = {
+        ...assistantDetail,
+        count,
+        assistantApiId: assistant.assistantApiId,
+        fileNames: assistant.fileNames, // Add fileNames to the enriched assistant
+      };
+      enrichedAssistant.userInfo = `${assistantDetail?.userId?.fname || ""} ${
+        assistantDetail?.userId?.lname || ""
+      }`.trim();
+      enrichedAssistant.userId = assistantDetail?.userId?._id;
+
+      return enrichedAssistant;
+    })
+    .filter(Boolean);
+
+  return { assistants: result, totalCount };
 };

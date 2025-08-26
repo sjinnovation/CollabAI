@@ -60,8 +60,8 @@ const TemplateListTable = ({ propsData }) => {
 
     // filtered templates based on search query
     const filteredTemplates = data?.filter((template) => {
-        return template.title.toLowerCase().includes(searchQuery.toLowerCase()) 
-        || 
+        return template.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ||
         template.description.toLowerCase().includes(searchQuery.toLowerCase())
       }
       );
@@ -88,7 +88,7 @@ const TemplateListTable = ({ propsData }) => {
                         // fetchUserDetails(page)
                     },
                 }}
-                scroll={{ x: true, y: '50vh' }}
+                scroll={{ x: 1000, y: '50vh' }}
                 bordered
                 responsive
             />

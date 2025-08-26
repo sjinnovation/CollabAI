@@ -1,0 +1,5 @@
+@media screen and (max-width: 768px) {
+  .custom-flex-gap {
+    gap: 10px !important;
+  }
+}

@@ -1,0 +1,113 @@
+/* container popover */
+.rep-popover-wrapper .ant-popover-inner {
+    border-radius: 16px;
+    padding: 10px;
+    width: 350px;
+  }
+  
+  /* header */
+  .rep-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 2px;
+  }
+  .rep-info-icon { color: #888; }
+  
+  /* each option */
+  .rep-option {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 16px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .rep-option:hover { background: #ebebeb; }
+  .rep-option-selected { background: #f5f5f5; }
+  
+  /* labels */
+  .rep-option-label { font-weight: 500; }
+  .rep-option-desc { font-size: 12px; color: #666; }
+
+  .rep-option-desc.dark-mode {
+    color: #dddddd;
+  }
+  
+  /* checkmark */
+  .rep-check { 
+    color: #333;
+    font-size: 18px;
+    margin-top: 14px;
+    margin-left: 10px;
+    border-radius: 50%; 
+}
+  
+  /* trigger button */
+  .rep-button {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+  }
+  .rep-down {
+    margin-left: 6px;
+    font-size: 12px;
+    color: #57606a;
+  }
+
+  
+  /* dark mode (if you toggle via [data-theme="dark"]) */
+/* === Dark-mode overrides === */
+[data-theme="dark"] .rep-popover-wrapper .ant-popover-inner {
+    background-color: #22272e !important;
+  }
+  
+  [data-theme="dark"] .rep-header {
+    border-bottom-color: #444c56;
+    color: #c9d1d9;
+  }
+  
+  [data-theme="dark"] .rep-info-icon {
+    color: #8b949e;
+  }
+  
+  [data-theme="dark"] .rep-option {
+    color: #c9d1d9;
+  }
+  
+ .rep-option:hover.dark-mode {
+    background-color: #969696;
+  }
+  
+.rep-option-selected.dark-mode {
+    background-color: #AFAFAF;
+  }
+  
+  [data-theme="dark"] .rep-option-label {
+    color: #f0f6fc;
+  }
+  
+  [data-theme="dark"] .rep-option-desc {
+    color: #8b949e;
+  }
+  
+  [data-theme="dark"] .rep-check {
+    color: #58a6ff;
+  }
+  
+  [data-theme="dark"] .rep-button {
+    background-color: #22272e;
+    border-color: #444c56;
+    color: #c9d1d9;
+  }
+  
+  [data-theme="dark"] .rep-button:hover {
+    background-color: #2d333b;
+  }
+  
+  

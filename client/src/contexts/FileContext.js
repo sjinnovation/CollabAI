@@ -1,13 +1,78 @@
-// SelectedFileContext.js
 import React, { createContext, useEffect, useState } from 'react';
-import { getConfig, getPersonalizeAssistantSetting } from '../api/settings';
+import { getPersonalizeAssistantSetting } from '../api/settings';
 import { getUserID } from '../Utility/service';
 import { getGoogleAuthCredentials } from '../api/googleAuthApi';
+import { getWorkBoardAuthCredentials } from '../api/workBoard';
+import { getWebCrawlerCredentials } from '../api/webCrawl';
+import { getFluxCredentials } from '../api/fluxImageGenerator';
 
 const userId = getUserID();
-export const FileContext = createContext();
+export const FileContext = createContext({
+  selectedFile: [], 
+  setSelectedFile: () => {},
+
+  folderStructure: [], 
+  setFolderStructure: () => {},
+
+  publicFilesStructure: [], 
+  setPublicFilesStructure: () => {},
+
+  selectedFolders: [],
+  setSelectedFolders: () => {},
+
+  fileList: [], 
+  setFileList: () => {},
+
+  selectedRowKeys: [],
+  setSelectedRowKeys: () => {},
+
+  isModalVisible: false,
+  setIsModalVisible: () => {},
+
+  isLoading: false,
+  setIsLoading: () => {},
+
+  deletedFileList: [],
+  setDeletedFileList: () => {},
+
+  enablePersonalize: false,
+  setEnablePersonalize: () => {},
+
+  isEditPageLoading: false,
+  setIsEditPageLoading: () => {},
+
+  isConnected: false,
+  setIsConnected: () => {},
+
+  token: '', 
+  setToken: () => {},
+
+  isWorkBoardConnected: false, 
+  setIsWorkBoardConnected: () => {},
+
+  workBoardToken: '', 
+  setWorkBoardToken: () => {},
+
+  selectedFileAppWithFileId: {
+    appName: '',
+    fileIdOrUrl: '',
+    fileName: ''
+  }, // Default value
+  setSelectedFileAppWithFileId: () => {},
+
+  isWebCrawlConnected: false, 
+  setIsWebCrawlConnected: () => {},
+
+  webCrawledFilesStructure: [],
+  setWebCrawledFilesStructure: () => {}
+});
 
 export const FileContextProvider = ({ children }) => {
+  const initialAppValues ={
+    "appName":'',
+    "fileIdOrUrl":'',
+    "fileName" :'',
+  }
   const [selectedFile, setSelectedFile] = useState([]);
   const [folderStructure, setFolderStructure] = useState([]);
   const [publicFilesStructure ,setPublicFilesStructure] = useState([]);
@@ -22,8 +87,16 @@ export const FileContextProvider = ({ children }) => {
 
   const [isConnected, setIsConnected] = useState(false);
   const [token, setToken] = useState('');
-
-
+  const [isWorkBoardConnected, setIsWorkBoardConnected] = useState(false);
+  const [workBoardToken, setWorkBoardToken] = useState('');
+  const [selectedFileAppWithFileId,setSelectedFileAppWithFileId]= useState(initialAppValues);
+  const [isWebCrawlConnected,setIsWebCrawlConnected] = useState(false);
+  const [webCrawledFilesStructure ,setWebCrawledFilesStructure] = useState([]);
+  const [isFluxConnected,setIsFluxConnected] = useState(false);
+  const [fluxFilesStructure ,setFluxFilesStructure] = useState([]);
+  const [fluxImageGenerator,setFluxImageGenerator] = useState([]);
+  const [isIntegrateAppsConnected,setIsIntegrateAppsConnected] = useState(false);
+  const [deleteFileIds, setDeleteFileIds] = useState([]);
 
   useEffect(() => {
     getPersonalizeAssistantSetting().then(response =>{
@@ -35,8 +108,9 @@ export const FileContextProvider = ({ children }) => {
       setEnablePersonalize(isPersonalizeAssistantEnabled);
     });
     getGoogleAuthCredentials(userId, setIsConnected,setToken);
-
-
+    getWorkBoardAuthCredentials(userId,setIsWorkBoardConnected,setWorkBoardToken);
+    getWebCrawlerCredentials(setIsWebCrawlConnected);
+    getFluxCredentials(setIsFluxConnected);
   }, []);
 
 
@@ -54,9 +128,19 @@ export const FileContextProvider = ({ children }) => {
         enablePersonalize,setEnablePersonalize,
         isConnected, setIsConnected,
         token, setToken,
-        isEditPageLoading,setIsEditPageLoading
-        
-
+        isWorkBoardConnected, setIsWorkBoardConnected,
+        workBoardToken, setWorkBoardToken,
+        isEditPageLoading,setIsEditPageLoading,
+        selectedFileAppWithFileId,setSelectedFileAppWithFileId,
+        isWebCrawlConnected,setIsWebCrawlConnected,
+        webCrawledFilesStructure ,setWebCrawledFilesStructure,
+        isFluxConnected,setIsFluxConnected,
+        fluxFilesStructure ,setFluxFilesStructure,
+        fluxImageGenerator,setFluxImageGenerator,
+        isIntegrateAppsConnected,
+        setIsIntegrateAppsConnected,
+        deleteFileIds, 
+        setDeleteFileIds
         }}>
       {children}
     </FileContext.Provider>

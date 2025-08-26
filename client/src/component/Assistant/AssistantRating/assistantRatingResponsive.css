@@ -1,0 +1,6 @@
+@media (max-width: 1024px) {
+  .responsive-rating {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}

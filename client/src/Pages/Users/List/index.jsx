@@ -15,6 +15,7 @@ import DebouncedSearchInput from "../../SuperAdmin/Organizations/DebouncedSearch
 import { getUserRole } from "../../../Utility/service";
 import AddUser from "../Add/AddUser";
 import EditUser from "../EditUser/EditUser";
+import './listStyle.css'
 const { Title } = Typography;
 
 const ListUser = () => {
@@ -161,7 +162,7 @@ const ListUser = () => {
       console.log(error);
     }
   };
- 
+
 
   const columns = [
     {
@@ -219,9 +220,8 @@ const ListUser = () => {
       title: "Actions",
       key: "actions",
       render: (text, record) => (
-        <div>
+        <div className='checkbox-table'>
           <Button
-            style={{ marginRight: 10 }}
             onClick={() => {
               setEditActive(record._id);
               setEditModal(true);
@@ -263,20 +263,20 @@ const ListUser = () => {
   });
 
   const showTotal = (total) => `Total ${total} items`;
-  
-  
+
+
   return (
     <>
       <div className="container mt-5">
       <div className="flex-grow-1 ">
-        <div className="d-flex align-items-center justify-content-between">
+        <div className="d-flex align-items-center justify-content-between container-width custom-flex-wrap">
           <div className="col-4">
             <Title level={2}>User Lists</Title>
           </div>
           <div className="col-md-5"></div>
           {role === "admin" || role === "superadmin" ? (
             <>
-              <div className=" d-flex align-items-center user-prompt-btn">
+              <div className=" d-flex align-items-center user-prompt-btn user-prompt-btn-users">
                 <Button onClick={() => navigate("/promptuserview")}>
                   Chat Prompts
                 </Button>
@@ -288,7 +288,7 @@ const ListUser = () => {
           ) : null}
         </div>
         {role === "admin" || role === "superadmin" ? (
-          <div>
+          <div className="table-container">
             <div className="search-container">
               <DebouncedSearchInput
                 data={{
@@ -302,13 +302,14 @@ const ListUser = () => {
             </Button>
             </div>
             <div>
-            
+
             </div>
             <Table
               loading={dataLoader}
               rowSelection={{
                 type: "checkbox",
                 ...rowSelection,
+                columnWidth: 50,
               }}
               columns={columns}
               dataSource={dataWithKeys}
@@ -321,7 +322,7 @@ const ListUser = () => {
                 },
                 showSizeChanger: false,
               }}
-              scroll={{ x: true, y: "50vh" }} // Enable horizontal scrolling
+              scroll={{ x: true, y: "40vh" }} // Enable horizontal scrolling
               bordered
               responsive
             />

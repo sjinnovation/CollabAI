@@ -7,16 +7,24 @@ import KnowledgeBaseAssistants from "../models/knowledgeBaseAssistants.js";
 import { deleteAllEmbeddingFromNameSpace } from "./rag.js";
 import Assistant from "../models/assistantModel.js";
 import User from "../models/user.js";
+import WebCrawlKnowledgeBase from "../models/webCrawlKnowledgeBase.js";
+import { extractWorkBoardIdFromQuestion } from "../utils/googleDriveHelperFunctions.js";
+import { insertWorkBoardSyncData, isExistingKnowledgeBaseSync } from "./workBoardService.js";
+import ShareKnowledgeBase from "../models/shareKnowledgeBase.js";
+import WorkBoardSync from "../models/workBoardSyncModel.js";
 
 const bucket = process.env.AWS_BUCKET_NAME;
 
-export const createSingleKnowledgeBaseService = async (name, size, s3_link, owner,spaceIndexes) => {
+export const createSingleKnowledgeBaseService = async (name, size, s3_link, owner,spaceIndexes,url = null, parentId = null, isKnowledgeBaseShareable = false, isFileShared = false, sharedFolderOwner = null ) => {
     const isExisting = await KnowledgeBase.findOne({ name: name, owner: owner }).lean();
     if (!isExisting) {
         const sizeInMB = (Math.ceil(size * 1e-6 * 100) / 100).toFixed(2)
-        const data = await KnowledgeBase.create({ name: name, size: sizeInMB, s3_link: s3_link, owner: owner,spaceIndex : spaceIndexes });
+        const data = await KnowledgeBase.create({ name: name, size: sizeInMB, s3_link: s3_link, owner: owner, spaceIndex: spaceIndexes, url: url, parentId: parentId || null, isKnowledgeBaseShareable, isFileShared, sharedKnowledgeBaseOwner: sharedFolderOwner });
         if (data) {
             await updateParentFolderSize(name, sizeInMB, owner, 'create');
+        }
+        if(url){
+            const responseOfWorkBoardSync = await insertWorkBoardSyncData(data?._id, []);
         }
         return data;
 
@@ -25,13 +33,151 @@ export const createSingleKnowledgeBaseService = async (name, size, s3_link, owne
     }
 
 };
+export const updateKnowledgeBaseFile = async (knowledgeBaseId,info)=>{
+    return await KnowledgeBase.findByIdAndUpdate({ _id: knowledgeBaseId }, info, { new: true,upsert:true });
+};
+export const getAllKnowledgeBaseService = async (role, userId,page, pageSize ,searchQuery,selectedTree) => {
+    let data = null;
+    let allUserData = null;
+    let allPublicKnowledgeBase = null;
+    let treeData = null;
+    
+    if(selectedTree === 0){
+    let findUserData = await KnowledgeBase.find({ 
+         owner: userId,
+         $or: [
+            { isFileShared: false } 
+        ]
+     }).populate({ path: 'owner', model: User, select: '_id fname lname' });
 
-export const getAllKnowledgeBaseService = async (role, userId) => {
-    const findUserData = await KnowledgeBase.find({ owner: userId }).populate({ path: 'owner', model: User, select: '_id fname lname' });
+    const sharedKnowledgeBaseResponse = await ShareKnowledgeBase.find({
+        $or: [
+            { collaborator: userId },
+            { owner: userId }
+        ]
+    }).populate([
+        {
+            path: 'collaborator',
+            model: User,
+            select: '_id fname lname',
+        },
+        {
+            path: 'owner',
+            model: User,
+            select: '_id fname lname'
+        },
+        {
+            path: 'knowledgeBaseId',
+            model: KnowledgeBase,
+            populate: {
+                path: 'owner',
+                model: User,
+                select: '_id fname lname'
+            }
+        }
+    ]);
+  
+    const sharedKnowledgeBase = sharedKnowledgeBaseResponse.map((shared) => {
+        return {
+            ...shared.knowledgeBaseId?.toObject(),
+            collaborator: shared.collaborator,
+            sharedAccessDocumentId: shared?._id,
+            shared: true
+        };
+    });
+
+    const fetchingSharedFiles = await Promise.all(sharedKnowledgeBase.map(async (shared) => {
+        const data = await KnowledgeBase.find({
+            parentId: shared._id,
+            isFileShared: true
+        }).populate({
+            path: 'owner',
+            model: User,
+            select: '_id fname lname'
+        });
+        return data.length > 0 ? data : [{}]; 
+    }));
+
+
+    
+    const flattenedFiles = fetchingSharedFiles.flat();
+
+    let finalData = [];
+
+    if(flattenedFiles.length > 0) {
+        finalData = [...flattenedFiles, ...findUserData, ...sharedKnowledgeBase]
+    }
+    else {
+        finalData = [...findUserData, ...sharedKnowledgeBase]
+    }
+
+    finalData = await Promise.all(
+        finalData.map(async(folder) => {
+            const sharedUsers =  await ShareKnowledgeBase.find({
+                knowledgeBaseId: folder._id
+            }).select('collaborator').populate({
+                path: 'collaborator',
+                model: User,
+                select: '_id fname lname'
+            });
+
+            if(sharedUsers.length > 0) { 
+                folder.accessedUser = sharedUsers;
+                folder.shared = true;
+            }
+            
+            return folder
+        })
+    );
+
+    finalData = finalData.filter((data) => Object.keys(data).length > 0)
+
+    const convertedData = await convertDate(finalData);
+
+    const allKnowledgeBaseIdsWithNames = await KnowledgeBaseAssistants.find({}).populate({ path: 'assistantObjectId', model: Assistant, select: 'name' });
+    data = convertedData?.map(userDataItem => {
+        const assistant = allKnowledgeBaseIdsWithNames?.find(assistant => assistant?.assistantObjectId?.equals(userDataItem?.assistantId));
+        return {
+            ...userDataItem,
+            assistantName: assistant ? assistant?.assistantObjectId?.name : null
+        };
+    });
+
+        for (let file of data) {
+            if (file.spaceIndex) {
+                file.name = restoreOriginalName(file.name, file.spaceIndex);
+            }
+        }
+        treeData = data?formatToTreeData(data):[];
+    }else if(selectedTree === 1){
+        const findAllUsersData = await KnowledgeBase.find({ owner: { $ne: userId } }).populate({ path: 'owner', model: User, select: '_id fname lname' });
+        allUserData = await convertDate(findAllUsersData);
+        for (let file of allUserData) {
+            if (file.spaceIndex) {
+                file.name = restoreOriginalName(file.name, file.spaceIndex);
+            }
+        }
+        treeData = allUserData?formatToTreeData(allUserData):[];
+    }
+    const allPublicFiles = await KnowledgeBase.find({ isPublic: true }).populate({ path: 'owner', model: User, select: '_id fname lname' });
+    allPublicKnowledgeBase = await convertDate(allPublicFiles);
+    for (let file of allPublicKnowledgeBase) {
+        if (file?.spaceIndex) {
+            file.name = restoreOriginalName(file?.name, file?.spaceIndex);
+        }
+    }
+   const publicTreeData =allPublicKnowledgeBase? formatToTreeData(allPublicKnowledgeBase):[];
+
+    const files = (role === "superadmin") ? { data, allUserData, allPublicKnowledgeBase,treeData,publicTreeData } : { data, allUserData: [], allPublicKnowledgeBase,treeData,publicTreeData };
+    return files
+};
+
+export const getAllImportedWebCrawledKnowledgeBaseService = async (role, userId) => {
+    const findUserData = await WebCrawlKnowledgeBase.find({ owner: userId }).populate({ path: 'owner', model: User, select: '_id fname lname' });
     const convertedData = await convertDate(findUserData);
 
-    const findAllUsersData = await KnowledgeBase.find({ owner: { $ne: userId } }).populate({ path: 'owner', model: User, select: '_id fname lname' });
-    const allPublicFiles = await KnowledgeBase.find({ isPublic: true }).populate({ path: 'owner', model: User, select: '_id fname lname' });
+    const findAllUsersData = await WebCrawlKnowledgeBase.find({ owner: { $ne: userId } }).populate({ path: 'owner', model: User, select: '_id fname lname' });
+    const allPublicFiles = await WebCrawlKnowledgeBase.find({ isPublic: true }).populate({ path: 'owner', model: User, select: '_id fname lname' });
     const allKnowledgeBaseIdsWithNames = await KnowledgeBaseAssistants.find({}).populate({ path: 'assistantObjectId', model: Assistant, select: 'name' });
 
     const allUserData = await convertDate(findAllUsersData);
@@ -44,7 +190,6 @@ export const getAllKnowledgeBaseService = async (role, userId) => {
             assistantName: assistant ? assistant?.assistantObjectId?.name : null
         };
     });
-
     for(let file of data){
         if(file.spaceIndex){
             file.name = restoreOriginalName(file.name, file.spaceIndex);
@@ -61,16 +206,16 @@ export const getAllKnowledgeBaseService = async (role, userId) => {
         }
     }
 
-    const files = (role === "superadmin") ? { data, allUserData, allPublicKnowledgeBase } : { data, allUserData: [], allPublicKnowledgeBase };
+    const files = (role === "superadmin") ? { importedWebCrawledData : data, allUsersImportedWebCrawledData : allUserData, publicWebCrawledData : allPublicKnowledgeBase } : { importedWebCrawledData : data, allUsersImportedWebCrawledData : [], publicWebCrawledData : allPublicKnowledgeBase };
     return files
 };
-
 export const getSingleKnowledgeBaseService = async (id) => {
     return await KnowledgeBase.findOne({ _id: id });
 };
 
 const convertDate = async (data) => {
-    const now = moment();
+    try {
+        const now = moment();
 
     const result = await Promise.all(data?.map(async document => {
         const createdAt = moment(document?.createdAt);
@@ -88,7 +233,7 @@ const convertDate = async (data) => {
         const regex = new RegExp(`\\b${document?.name}\\b`);
         const assistantNameList=[];
         if(!isPrefix){
-            const allCollectionOfFolder= await KnowledgeBase.find({ name: { $regex: regex } ,owner : document?.owner?._id});
+            const allCollectionOfFolder= await KnowledgeBase.find({ parentId: document._id ,owner : document?.owner?._id});
             const allKnowledgeBaseIds=allCollectionOfFolder?.map(collection=>collection?._id);
             for(let id of allKnowledgeBaseIds){
                 const findAssistants = await KnowledgeBaseAssistants.find({ knowledgeBaseId: id })
@@ -121,17 +266,29 @@ const convertDate = async (data) => {
         }
     }
 
-
+    if (document?.toObject) {
         return {
-            ...document?.toObject(),
+            ...document.toObject(),
             owner: `${document?.owner?.fname} ${document?.owner?.lname}`,
             userId: document?.owner?._id,
             assistantNameList,
             timeDifference
         };
+    } else {
+        return {
+            ...document, 
+            owner: `${document?.owner?.fname} ${document?.owner?.lname}`,
+            userId: document?.owner?._id,
+            assistantNameList,
+            timeDifference
+        };
+    }
     }));
 
     return result;
+    } catch (error) {
+        console.log(error)
+    }
 };
 
 
@@ -158,25 +315,122 @@ export const updateSingleKnowledgeBaseService = async (id, name, updatedName, ow
 export const updateKnowledgeBasePublicStateService = async (id, isPublic, owner) => {
     const getFile = await KnowledgeBase.findOne({ _id: id });
     let isUpdated = false;
+    let type = '';
     if (getFile.name.includes(".")) {
         const response = await KnowledgeBase.findByIdAndUpdate(id, { isPublic: isPublic }, { new: true });
         const updateParentStatus = await updateParentFolderPublicState(getFile.name, owner, isPublic);
         if (updateParentStatus) {
             isUpdated = true;
-
+            type = 'file';
         } else {
             isUpdated = false;
-
+            type = 'file';
         }
     } else {
         const regex = new RegExp(`\\b${getFile.name}\\b`);
-        const resp = await KnowledgeBase.updateMany({ name: { $regex: regex }, owner: owner }, { isPublic: isPublic }, { new: true });
+        const resp = await KnowledgeBase.updateMany({
+            $or: [
+                { parentId: getFile._id },
+                { _id: getFile._id }
+            ]
+        }, { isPublic: isPublic }, { new: true });
         isUpdated = true;
-
+        type = 'folder';
     }
-    return isUpdated
+    return {isUpdated, type};
 
 };
+
+export const updateFolderName = async (oldFolderPath, nameFolderName, ownerId, fileId) => {
+    let oldParentPathRegex = oldFolderPath.endsWith('/') ? oldFolderPath : `${oldFolderPath}/`;
+    let oldParentPath =  oldFolderPath;
+    let convertedTitleForOldParentPath = "";
+    let convertedSpaceIndexForOldParentPath = "";
+    let convertedTitleForNewParentPath = "";
+    let convertedSpaceIndexForNewParentPath = "";
+
+    if(oldParentPath) {
+        const { resultFileName, replacedIndices } = replaceCharacters(oldParentPath); 
+        convertedTitleForOldParentPath = resultFileName;
+    }
+
+    if(nameFolderName) {
+        const { resultFileName, replacedIndices } = replaceCharacters(nameFolderName);
+        convertedTitleForNewParentPath = resultFileName;
+        convertedSpaceIndexForNewParentPath = replacedIndices;
+    }
+
+    if (oldParentPath?.length > 0) {
+        const regex = new RegExp(`^${oldParentPathRegex}`, "i");
+     
+        const owner = ownerId;
+
+        const parentFolder = await KnowledgeBase.findOneAndUpdate(
+            { name: convertedTitleForOldParentPath, owner},
+            { $set: { name: convertedTitleForNewParentPath, spaceIndex: convertedSpaceIndexForNewParentPath } },
+            { new: true }
+        );
+
+        return parentFolder;
+        // if (parentFolder) {
+        //     const updatedChildren = await KnowledgeBase.updateMany(
+        //         { name: { $regex: regex }, owner },
+        //         [
+        //             {
+        //                 $set: {
+        //                     name: {
+        //                         $replaceOne: {
+        //                             input: "$name",
+        //                             find: oldParentPath,
+        //                             replacement: resultFileName,
+        //                         },
+        //                     },
+        //                 },
+        //             },
+        //         ]
+        //     );
+        //     console.log(`${updatedChildren.modifiedCount} children updated successfully.`);
+        // } else {
+        //         console.error("Parent folder not found!");
+        // }
+    } else {
+        console.error("Invalid parent folder path.");
+}}
+
+export const moveFile = async (folderId, owner, fileId) => {
+    if(folderId) {
+        const sharedFolderChecking = await ShareKnowledgeBase.findOne({ knowledgeBaseId: folderId });
+        const isKnowledgeBaseExist = await KnowledgeBase.findById(folderId);
+        if(isKnowledgeBaseExist.isKnowledgeBaseShareable) {
+            const movedFolder = await KnowledgeBase.findOneAndUpdate(
+                { _id: fileId},
+                { $set: { parentId: folderId, isFileShared: true, sharedKnowledgeBaseOwner: isKnowledgeBaseExist?.owner} },
+                { new: true }
+            );
+
+            if (movedFolder) {
+                return movedFolder;
+            } else {
+                console.error("File does not exist.");
+            }
+        }
+       else {
+        const movedFolder = await KnowledgeBase.findOneAndUpdate(
+            { _id: fileId},
+            { $set: { parentId: folderId, isFileShared: false, sharedKnowledgeBaseOwner: null} },
+            { new: true }
+        );
+        if (movedFolder) {
+            return movedFolder;
+        } else {
+            console.error("File does not exist.");
+        }
+       }
+    } else {
+        console.error("Invalid folder id.");
+    }
+}
+
 async function updateFilePaths() {
     const client = new MongoClient(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -210,7 +464,10 @@ export const deleteSingleKnowledgeBaseService = async (id, userId, isAdmin) => {
             const fileName = fileNameWithEscape(checkFileOrFolderExistOrNot[0].name);
             const regex = new RegExp(`\\b${fileName}\\b`);
             if (!isPrefix) {
-                const allCollectionOfFolder = await KnowledgeBase.find({ name: { $regex: regex }, owner: checkFileOrFolderExistOrNot[0].owner });
+                const allCollectionOfFolder = await KnowledgeBase.find({ 
+                    parentId: checkFileOrFolderExistOrNot[0]._id, 
+                    owner: checkFileOrFolderExistOrNot[0].owner 
+                });
                 for (let ids of allCollectionOfFolder) {
                     const hasPrefix = ids.name.includes('.');
                     const makeNameSpace = checkFileOrFolderExistOrNot[0].owner + "/" + ids.name
@@ -218,6 +475,20 @@ export const deleteSingleKnowledgeBaseService = async (id, userId, isAdmin) => {
 
                 }
                 const responseOfDelete = await KnowledgeBase.deleteMany({ name: { $regex: regex }, owner: checkFileOrFolderExistOrNot[0].owner });
+
+                if(responseOfDelete) {
+                    await KnowledgeBase.deleteMany({
+                        parentId: id
+                    });
+                    
+                    await ShareKnowledgeBase.deleteMany({
+                        knowledgeBaseId: id
+                    });
+
+                    await WorkBoardSync.deleteOne({
+                        knowledgeBaseId: id
+                    })
+                }
 
             } else {
                 const namespace = checkFileOrFolderExistOrNot[0].owner + "/" + checkFileOrFolderExistOrNot[0].name
@@ -251,7 +522,22 @@ export const deleteSingleUsersAllKnowledgeBaseService = async (userId) => {
 
     if (checkFileOrFolderExistOrNot) {
         const regex = new RegExp(`\\b${checkFileOrFolderExistOrNot[0].name}\\b`);
-        return await KnowledgeBase.deleteMany({ owner: userId });
+        const response = await KnowledgeBase.deleteMany({ owner: userId });
+        if(response) {
+            await KnowledgeBase.deleteMany({
+                parentId: id
+            });
+            
+            await ShareKnowledgeBase.deleteMany({
+                knowledgeBaseId: id
+            });
+            
+            await WorkBoardSync.findByIdAndDelete({
+                knowledgeBaseId: id
+            })
+
+            return response;
+        }
     } else {
         return false
     }
@@ -260,7 +546,7 @@ export const deleteSingleUsersAllKnowledgeBaseService = async (userId) => {
 };
 
 
-export const storeKnowledgeBaseAssistantsReference = async (assistantObjectId, assistantId, knowledgeBaseInfo, assistantInformation, knowledgeSource,editMode = false,clone = false) => {
+export const storeKnowledgeBaseAssistantsReference = async (assistantObjectId, assistantId, knowledgeBaseInfo, assistantInformation, knowledgeSource,editMode = false,clone = false,userId) => {
     let knowledgeBaseIds =[];
     if(!clone){
         for (const knowledgeBase of knowledgeBaseInfo) {
@@ -296,6 +582,16 @@ export const storeKnowledgeBaseAssistantsReference = async (assistantObjectId, a
     }else{
         const responseOfInfoStore = await KnowledgeBaseAssistants.create({ assistantId: assistantId, assistantObjectId: assistantObjectId, knowledgeBaseId: knowledgeBaseIds,file_ids : assistantInformation, knowledgeSource: knowledgeSource });
     }
+    assistantInformation.map(async (info) => {
+        const isExistingInSyncTable = await isExistingKnowledgeBaseSync(info?.key);
+            const knowledgeBaseId = info?.key;
+            const useCaseData = {
+                opeanaiFileId: info?.file_id,
+                assistantId: assistantObjectId,
+                userId: userId,
+            }
+            const responseOfWorkBoardSync = await insertWorkBoardSyncData(knowledgeBaseId, useCaseData);
+    });
 
     return true
 };
@@ -344,7 +640,7 @@ export const checkKnowledgeBasedAssistants = async (assistantId, restoreFileName
 
         if (shouldSave) {
             checkInformationAboutTheAssistant.markModified('knowledgeBaseId');
-            checkInformationAboutTheAssistant.markModified('file_ids');0
+            checkInformationAboutTheAssistant.markModified('file_ids');
             try {
                 await checkInformationAboutTheAssistant.save();
             } catch (error) {
@@ -443,15 +739,11 @@ const fileNameWithEscape = (fileName) => {
 
 export const replaceCharacters = (path) => {
     const replacedIndices = [];
-    
-    // Split the path by '/' to handle each segment separately
-    const pathSegments = path?.split('/');
+        const pathSegments = path?.split('/');
   
-    const processedSegments = pathSegments.map((segment, segmentIndex) => {
+    const processedSegments = pathSegments?.map((segment, segmentIndex) => {
         segment = segment.trim();
-        // Remove leading special characters and spaces
         segment = segment.replace(/^[^a-zA-Z0-9]+/, '');
-      // Check if the segment has a file extension
       const lastDotIndex = segment.lastIndexOf('.');
       let namePart = segment;
       let extensionPart = '';
@@ -461,7 +753,7 @@ export const replaceCharacters = (path) => {
         extensionPart = segment.substring(lastDotIndex); 
       }
   
-      const purifiedNamePart = namePart.split('').map((char, index) => {
+      const purifiedNamePart = namePart?.split('')?.map((char, index) => {
         if (char === ' ') {
           replacedIndices.push(index + (segmentIndex > 0 ? pathSegments.slice(0, segmentIndex).join('/').length + 1 : 0)); 
           return '_';
@@ -476,7 +768,6 @@ export const replaceCharacters = (path) => {
     });
   
     const purifiedPath = processedSegments.join('/');
-  
     return { resultFileName: purifiedPath, replacedIndices };
   };
   
@@ -490,7 +781,7 @@ export const findAndDeleteKnowledgeBase = async (fileName, userId,isAdmin) => {
 
 };
 export const findFileDetails = async (key) => {
-    return await KnowledgeBase.find({ _id: key });
+    return await KnowledgeBase.findOne({ _id: key });
 
 };
 export const restoreOriginalName = (fileName, replacedIndices) => {
@@ -532,3 +823,113 @@ export const removeKnowledgeBaseIdAndFile = async (id) => {
       return { message: "Internal Server Error" };
     }
   };
+
+export const formatToTreeData = (data) => {
+
+  
+    const folders = data.filter(item => !item?.name?.includes('.'))?.map(item => ({
+      ...item,
+      type: 'folder', 
+    }));
+    const files = data.filter(item => item?.name?.includes('.'))?.map(item => ({
+      ...item,
+      type: 'file', 
+    }));
+
+    const folderMap = new Map();
+    folders.forEach(folder => {
+      folder.children = [];
+      folderMap.set(folder._id?.toString(), folder);
+    });
+  
+    const standaloneFiles = [];
+  
+    files.forEach(file => {
+      const folderParentId = file?.parentId?.toString() || null;
+
+      if (folderMap.has(folderParentId)) {
+        folderMap.get(folderParentId).children.push(file);
+      } else {
+        standaloneFiles.push(file);
+      }
+    });
+    return [...Array.from(folderMap.values()), ...standaloneFiles];
+  }
+export const isWorkBoardKnowledgeBase = async (KnowledgeBaseId)=>{
+    const knowledgeBaseCollection = await KnowledgeBase.findOne({_id : KnowledgeBaseId});
+    const fileName = knowledgeBaseCollection?.name;
+    if(fileName.includes('/')){
+        const segments = fileName.split('/');
+        if(segments.length > 0){
+            const parentInfo = await KnowledgeBase.findOne({name : segments[0]});
+            if(parentInfo?.url){
+                const data=extractWorkBoardIdFromQuestion(parentInfo?.url);
+                if(data){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }
+    }else{
+        if(knowledgeBaseCollection?.url){
+            const data=extractWorkBoardIdFromQuestion(knowledgeBaseCollection?.url);
+            if(data){
+                return true;
+            }else{
+                return false;
+            }
+            
+        }else{
+            return false;
+        }
+    }
+
+  };
+  export const deleteFileIdsFromKnowledgeBaseAssistant = async (assistantId,fileInfo)=>{
+    try {
+        const deleteResponse = await KnowledgeBaseAssistants.updateOne(
+          { assistantId }, 
+          {
+            $pull: {
+              knowledgeBaseId: fileInfo.key, 
+              file_ids: fileInfo,
+            },
+          }
+        );
+        return deleteResponse;
+      } catch (error) {
+        console.error("Error removing data:", error);
+        return null;
+      }
+  };
+
+ export const updateFileIdsInKnowledgeBaseAssistant = async (assistantId,info)=>{
+    try {
+      const updateResponse = await KnowledgeBaseAssistants.updateOne(
+        { assistantId },
+        {
+          $addToSet: { 
+            knowledgeBaseId: info.key, 
+          },
+          $push: {
+            file_ids: info,
+          },
+        }
+      );
+      return updateResponse;
+    } catch (error) {
+      console.error("Error adding data:", error);
+      return null;
+    }
+  }
+
+  export const getFileIdsFromFileKey = async (fileKeyList = [], assistantId) => {
+    const assistantInfo = await KnowledgeBaseAssistants.findOne({ assistantId });
+    if (!assistantInfo || !assistantInfo?.file_ids) return [];
+  
+    return assistantInfo?.file_ids
+      ?.filter(file => fileKeyList?.includes(file?.key))
+      ?.map(file => file?.file_id);
+  };
+  

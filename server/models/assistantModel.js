@@ -43,7 +43,20 @@ const AssistantSchema = mongoose.Schema(
 
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Teams",
-
+            },
+        ],
+        assistantApiId: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "service_api",
+                required: false,
+            },
+        ],
+        assistantApiServiceids: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "ServiceList",
+                required: false,
             },
         ],
         static_questions: [
@@ -83,6 +96,15 @@ const AssistantSchema = mongoose.Schema(
             type: String,
             required: false,
         },
+        imageType: {
+            type: String,
+            enum: ['DEFAULT', 'UPLOAD', 'DALLE'],
+            required: false,
+        },
+        dalleImageDescription: {
+            type: String,
+            required: false,
+        },
         is_public: {
             type: Boolean,
             default: false
@@ -118,8 +140,43 @@ const AssistantSchema = mongoose.Schema(
                 required: false
             }
         ],
-        
+        connectApps: [
+            {
+                workBoard: {
+                    type: Boolean,
+                    required: false,
+                },
+                googleDrive: {
+                    type: Boolean,
+                    required: false,
+                },
+                importWebPages: {
+                    type: Boolean,
+                    required: false,
+                },
+                _id: false
+            }
+        ],
+        plugins: [
+            {
+                type: {
+                    type: String,
+                    required: true,
+                },
 
+            },
+        ],
+        selectedassistantIds:{
+            type: [String],
+            default: [],
+            required: false
+        },
+        // n8n integration fields - only keep selectedWorkflowIds since n8n credentials are now stored in user model
+        selectedWorkflowIds: {
+            type: [String],
+            default: [],
+            required: false,
+        },
     },
     {
         timestamps: true,

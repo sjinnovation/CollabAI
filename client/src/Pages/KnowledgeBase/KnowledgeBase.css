@@ -1,13 +1,15 @@
+
 .parentLayout {
     height: 100vh;
     justify-content: space-between;
-
+    background-color: var(--main-bg-color) !important;
 }
 .plusNewButton {
-    height: 3rem; 
-    width: 85%; 
+    width: 100% !important;
     margin-bottom: 1.5rem;
-     margin-top: 2.2rem;
+    padding: 15px;
+    font-weight: 600;
+    z-index: 101;
 }
 
 .treeParent {
@@ -16,20 +18,47 @@
 
 }
 .allFilesShowButton {
-    width: 91%; 
+    width: 91%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.5rem 
+    margin-bottom: 1.5rem
 }
 .createFolder {
-    margin-top: 1.5rem; 
-    width: 300px;
+    margin-bottom: 1.5rem;
+    width: 100%;
 }
 
 .tableContent {
-    margin: 37px 16px 0px;
+    padding: 24px 24px 0 24px;
     overflow: initial;
+
+    .ant-input-search-button  {
+        height: 36px !important;
+    }
+    .ant-input-affix-wrapper-lg {
+        padding: 5px 9px;
+    }
+    .ant-table-body {
+        max-height: none !important;
+        overflow-y: auto !important;
+        margin-bottom: 70px;
+    }
+
+    .ant-table-selection-column {
+        width: 5% !important;
+    }
+
+    .custom-row-selected.ant-table-row-selected > .ant-table-cell {
+        background-color: var(--chat-box-bg-color-2) !important;
+    }
+
+    .ant-table-row-level-1 {
+        background-color: var(--chat-box-bg-color-2);
+        .ant-table-cell-with-append {
+            margin-left: 20px;
+        }
+    }
 }
 .large-icon-container {
     font-size: 1.5rem;
@@ -38,8 +67,7 @@
 }
 .description-container {
     font-size: 1rem;
-    margin-top: 24px;
-    margin-bottom: 24px;
+    margin-top: 8px;
     color: gray
 
 }
@@ -48,4 +76,181 @@
 }
 * h2 {
     color: black;
+}
+
+.knowledge-base-sidemenu {
+    .ant-menu-item {
+        margin: 0 !important;
+        width: 100%;
+        padding: 0 16px !important;
+        .ant-menu-title-content {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--theme-toggler-dark);
+        }
+        .ant-menu-item-icon {
+            color: var(--theme-toggler-dark);
+        }
+        &.ant-menu-item-selected,
+        &:active,
+        &:hover {
+            background-color: var(--sidemenu-selected-item);
+            border-radius: 4px !important;
+        }
+    }
+}
+.multi-delete-wrapper {
+    position: absolute;
+    z-index: 99999 !important;
+}
+.knowledge-base-modal {
+    .custom-row-selected.ant-table-row-selected > .ant-table-cell {
+        background-color: var(--chat-box-bg-color-2) !important;
+    }
+
+    .ant-table-row-level-1 {
+        background-color: var(--chat-box-bg-color-2);
+        .ant-table-cell-with-append {
+            margin-left: 20px;
+        }
+    }
+    .ant-dropdown-menu-item {
+        .ant-dropdown-menu-title-content {
+            width: 100%;
+            & > div {
+                width: 100% !important;
+                .ant-space-item {
+                    width: 100%;
+                }
+            }
+        }
+    }
+
+    .success-menu-item {
+        color: #52c41a;
+    }
+
+    .success-menu-item:hover {
+        background-color: #f6ffed;
+    }
+
+    .ant-modal-body {
+        max-height: 400px;
+        overflow-y: auto;
+        width: 100%;
+        overflow-x: hidden;
+        .folder-list-modal {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding-top: 20px;
+            width: 98%;
+            place-content: center;
+            place-items: center;
+
+            .single-folder {
+                border: 1px solid var(--border-color);
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 10px 15px;
+                border-radius: 4px;
+                user-select: none;
+                cursor: pointer;
+                position: relative;
+                width: 100%;
+                height: 75px;
+                &:hover {
+                    border-color: #1890ff;
+                }
+
+                &.selected {
+                    border-color: #1890ff;
+                }
+
+                .select-icon {
+                    color: #1890ff;
+                    position: absolute;
+                    right: -6px;
+                    top: -4px;
+                    z-index: 999999999999999999999 !important;
+                    background-color: var(--chat-box-bg-color);
+                }
+
+                .icon {
+                    width: 35px;
+                    height: 35px;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+
+                .info {
+                    display: flex;
+                    align-items: start;
+                    flex-direction: column;
+
+                    .name {
+                        font-size: 14px;
+                        font-weight: 600;
+                        text-transform: capitalize;
+                        margin: 0;
+                        word-wrap: break-word;
+                    }
+
+                    .created-by {
+                        font-size: 12px;
+                        color: gray;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.menu-item-style {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.add-api-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 10px;
+  }
+
+  .connect-apps-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+  }
+
+  .connect-app-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .menu-item-style {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media screen and (max-width: 1024px) {
+
+    .ant-layout-sider-collapsed.knowledge-base-sidemenu-main {
+  display: none !important;
+}
+
+.ant-layout-sider-collapsed.knowledge-base-sidemenu-main .ant-menu-item-icon {
+  display: none !important;
+}
 }

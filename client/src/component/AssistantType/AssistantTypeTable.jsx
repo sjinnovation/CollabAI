@@ -76,7 +76,7 @@ const AssistantTypeTable = ({ dataProps }) => {
           pageSize: 10,
           total: filteredAssistantTypes?.length,
         }}
-        scroll={{ x: true, y: '50vh' }}
+        scroll={{ x: "max-content", y: '50vh' }}
         bordered
         responsive
       />

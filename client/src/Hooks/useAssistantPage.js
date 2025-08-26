@@ -88,7 +88,7 @@ const useAssistantPage = () => {
     }
   };
 
-  const handleUpdateAssistant = async (record, data) => {
+  const handleUpdateAssistant = async (record, data, currentPage, personalAssistantSearchQuery, pageSize) => {
     try {
       updateLoader({ ASSISTANT_UPDATING: record?.assistant_id });
       if(data.is_active === false){
@@ -97,7 +97,7 @@ const useAssistantPage = () => {
       }
       const response = await updateAssistant(record?._id, data);
       if(response) {
-        handleFetchUserCreatedAssistants();
+        handleFetchUserCreatedAssistants(currentPage, personalAssistantSearchQuery, pageSize);
         handleFetchAllAssistants(1);
         handleFetchFunctionCallingAssistants();
         handleShowMessage(response.message);
@@ -114,10 +114,10 @@ const useAssistantPage = () => {
     }
   };
 
-  const handleFetchUserCreatedAssistants = async (page, personalAssistantSearchQuery = null) => {    
+  const handleFetchUserCreatedAssistants = async (page, personalAssistantSearchQuery = null, pageSize = 10) => {    
     try {
       updateLoader({ ASSISTANT_LOADING: true });
-      const response = await fetchAssistantsCreatedByUser(page, userId , personalAssistantSearchQuery);
+      const response = await fetchAssistantsCreatedByUser(page, getUserID() , pageSize, personalAssistantSearchQuery);
       if(response) {
         setAdminUserAssistants(response.data);
         setTotalCount(response.meta.total);
@@ -168,13 +168,13 @@ const useAssistantPage = () => {
     }
   };
 
-  const handleDeleteAssistant = async (assistantId) => {
+  const handleDeleteAssistant = async (assistantId, page, personalAssistantSearchQuery, pageSize) => {
     updateLoader({ ASSISTANT_DELETING: assistantId });
     try {
       const response = await deleteAssistant(assistantId);
 
       if(response) {
-        handleFetchUserCreatedAssistants();
+        handleFetchUserCreatedAssistants(page, personalAssistantSearchQuery, pageSize);
         handleFetchUserAssistantStats();
         handleFetchFunctionCallingAssistants();
         handleFetchAllAssistants(1);
@@ -188,22 +188,29 @@ const useAssistantPage = () => {
       updateLoader({ ASSISTANT_DELETING: false });
     }
   };
-
-  const handleFetchAllAssistants = async (page, orgAssistantSearchQuery) => {
-    
-    try {
-      updateLoader({ ALL_ASSISTANT_LOADING: true });
-      const response = await fetchAllAssistants(page, 10, orgAssistantSearchQuery);
-
-      if(response) {
-        setAssistants(response);
+    // Throttle: Only allow one call per second, ignore others
+    let lastCallTime = 0;
+    const handleFetchAllAssistants = async (page, orgAssistantSearchQuery, pageSize) => {
+      const now = Date.now();
+      if (now - lastCallTime < 1000) {
+        // Ignore this call, already called within 1 second
+        console.log("handleFetchAllAssistants throttled, ignoring call.");
+        return;
       }
-    } catch (error) {
-      handleShowMessage(error);
-    } finally {
-      updateLoader({ ALL_ASSISTANT_LOADING: false });
-    }
-  };
+      lastCallTime = now;
+      console.log(
+        `Fetching all assistants - Page: ${page}, Query: ${orgAssistantSearchQuery}, Size: ${pageSize}`
+      );
+      try {
+        updateLoader({ ALL_ASSISTANT_LOADING: true });
+        const response = await fetchAllAssistants(page, pageSize, orgAssistantSearchQuery);
+        setAssistants(response);
+      } catch (error) {
+        handleShowMessage(error);
+      } finally {
+        updateLoader({ ALL_ASSISTANT_LOADING: false });
+      }
+    };
 
   const handleFetchTeams = async () => {
     try {

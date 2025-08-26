@@ -1,0 +1,14 @@
+.config-header-section {
+  width: 100%;
+  margin-bottom: 10px;
+  .config-component-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--theme-toggler-dark);
+  }
+  .config-component-subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: gray;
+  }
+}

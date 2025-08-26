@@ -4,7 +4,8 @@ export const getMaxTokenOfModels = async () => {
     const keysToFetch = [
         'openaiMaxToken',
         'geminiMaxToken',
-        'claudeMaxToken'
+        'claudeMaxToken',
+        'huggingfacetokenMaxToken',
     ];
     const configValues = await config.find({ key: { $in: keysToFetch } });
     const formattedValues = configValues.reduce((acc, configValue) => {
@@ -13,3 +14,8 @@ export const getMaxTokenOfModels = async () => {
     }, {});
     return formattedValues;
 }
+
+export const getConfigKeyValue = async (key)=>{
+    const configValues = await config.findOne({ key: key });
+    return configValues?.value;
+};

@@ -34,6 +34,9 @@ export const tokenPrices = {
     // "claude-3-sonnet-20240229": { input: 0.000000003, output: 0.000000015 },
     // "claude-3-opus-20240229": { input: 0.000000015, output: 0.000000075 },
 
+    //o1
+    'o1-preview': { input: 0.000015, output: 0.00006 },
+    'o1-mini': { input: 0.000003, output: 0.000012 },
 
     // GPT-4o
     'gpt-4o': { input: 0.005, output: 0.015 },
@@ -102,4 +105,8 @@ export const tokenPrices = {
     "claude-3-haiku-20240307": { input: 0.00025, output: 0.00125 },
     "claude-3-sonnet-20240229": { input: 0.003, output: 0.015 },
     "claude-3-opus-20240229": { input: 0.015, output: 0.075 },
+    "claude-3-5-sonnet-20240620":{ input: 0.003, output: 0.015 },
+    "claude-3-7-sonnet-20250219": { input: 0.003, output: 0.015 },
+    "claude-sonnet-4-20250514": { input: 0.003, output: 0.015 },
+    "claude-opus-4-20250514": { input: 0.015, output: 0.075 },
 };

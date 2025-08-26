@@ -3,6 +3,7 @@ import configureSocketIO from '../config/socket.js';
 import { authenticateSocket } from '../middlewares/login.js';
 import { setupChatNamespace } from './chat/chatNamespace.js';
 import { setupAssistantNamespace } from './assistants/assistantNamespace.js';
+import { setupProjectNamespace } from './projects/chatNamespace.js';
 
 const setupSocketServer = (server) => {
 	const io = configureSocketIO(server);
@@ -17,10 +18,13 @@ const setupSocketServer = (server) => {
 	//initialize namespace for assistant
 	const assistantNamespace = io.of('/assistants');
 	assistantNamespace.use(authenticateSocket);
-
+//initialize namespace for assistant
+const projectsNamespace = io.of('/projects');
+projectsNamespace.use(authenticateSocket);
 	// Setup namespaces
 	setupChatNamespace(chatNamespace);
 	setupAssistantNamespace(assistantNamespace);
+	setupProjectNamespace(projectsNamespace);
 };
 
 export default setupSocketServer;

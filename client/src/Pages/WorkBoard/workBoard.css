@@ -1,0 +1,13 @@
+.custom-table .ant-table-thead > tr > th {
+    text-align: center !important; /* Center the column titles */
+}
+
+
+html, body, #root {
+    height: 100%;
+}
+
+.container {
+  min-height: 100vh;
+  overflow: auto;
+}

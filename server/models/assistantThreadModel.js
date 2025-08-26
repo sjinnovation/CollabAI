@@ -22,6 +22,16 @@ const AssistantThreadSchema = mongoose.Schema(
         title: {
             type: String,
         },
+        messages: [{
+            msg_id: {
+                type: String,
+                required: true,
+            },
+            codeInterpreterOutput: {
+                type: String,
+                default: null,
+            },
+        }],
     },
     {
         timestamps: true,

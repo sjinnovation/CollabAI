@@ -1,6 +1,10 @@
+import { getFileIdsFromFileKey } from "../service/knowledgeBase.js";
+import { fileSearchFileTypes } from "../utils/fileSearchFileExtensions.js";
+import { getFileExtension, retrieveOpenAIFileObject } from "./openai.js";
+
 export const createOpenAiVectorStore = async (openai,storeName)=>{
   try {
-    const store = await openai.beta.vectorStores.create({
+    const store = await openai.vectorStores.create({
         name: storeName
     });
     return {success: true, store}
@@ -11,7 +15,7 @@ export const createOpenAiVectorStore = async (openai,storeName)=>{
 }
 
 export const createOpenAiVectorStoreWithFileIds = async (openai, storeName, file_ids)=>{
-  const vectorStore = await openai.beta.vectorStores?.create({
+  const vectorStore = await openai.vectorStores?.create({
         name: storeName,
         file_ids: file_ids,
         // expires_after: {
@@ -23,7 +27,7 @@ export const createOpenAiVectorStoreWithFileIds = async (openai, storeName, file
 }
 export const updateOpenAiVectorStoreName = async (openai, vectorStoreId, storeName)=>{
   try {
-    const vectorStore = await openai.beta.vectorStores.update(
+    const vectorStore = await openai.vectorStores.update(
       vectorStoreId,
       {
         name: storeName,
@@ -37,49 +41,88 @@ export const updateOpenAiVectorStoreName = async (openai, vectorStoreId, storeNa
 
 
 export const getFileIdsFromVectorStore = async (openai, vectorStoreId)=>{
-  const vectorStoreFiles = await openai.beta.vectorStores.files.list(
+  const vectorStoreFiles = await openai.vectorStores.files.list(
     vectorStoreId
   );
-  // console.log(vectorStoreFiles);
   const fileIds = vectorStoreFiles?.body?.data?.map(obj => obj.id);
   return fileIds;
 }
 
 
 export const uploadFilesToVectorStore = async (openai, vectorStoreId, newFileIds)=>{
- 
-  console.log("newFileIds", newFileIds)
-
-  for (const newFileId of newFileIds) {
+  let fileSearchIds = await Promise.all(newFileIds.map(async fileId => {
+    const fileInfo = await retrieveOpenAIFileObject(fileId);
+    const extension = getFileExtension(fileInfo?.filename);
+    return fileSearchFileTypes?.includes(extension) ? fileInfo?.id : null;
+}));
+if(vectorStoreId){
+  for (const newFileId of fileSearchIds) {
     try {
-      
-      // Attempt to upload to the the vector store
-      const uploadedVectorStoreFile = await openai.beta.vectorStores.files.create(
-        vectorStoreId,
-        {
-          file_id: newFileId
-        }
-      );
+      if (newFileId) {
+        // Attempt to upload to the the vector store
+        const uploadedVectorStoreFile = await openai.vectorStores.files.create(
+          vectorStoreId,
+          {
+            file_id: newFileId
+          }
+        );
+
+      } else {
+        continue;
+      }
+
     } catch (error) {
       // Log the error but continue with the next iteration
       console.error(`Error uploading file with ID ${newFileId}:`, error);
     }
   }
+
+}
+
   
 }
 
-export const deleteFilesFromVectorStoreUtils = async (openai, vectorStoreId, deletedFileIds)=>{
+export const deleteFilesFromVectorStoreUtils = async (openai, vectorStoreId, deletedFileIds,assistant_id = null)=>{
+  let deletedVectorFileIds = []; 
   for (const deletedFileId of deletedFileIds) {
     try {
       // Attempt to delete the file from the vector store
-      const deletedVectorStoreFile = await openai.beta.vectorStores.files.del(
+      const deletedVectorStoreFile = await openai.vectorStores.files.del(
         vectorStoreId,
         deletedFileId
       );
+      deletedVectorFileIds.push(deletedVectorStoreFile);
     } catch (error) {
       // Log the error but continue with the next iteration
       console.error(`Error deleting file with ID ${deletedFileId}:`, error);
     }
+
   }
-  
+  return deletedVectorFileIds
+}
+export const createOpenAiVectorStoreWithFileIdsForProject = async (openai, storeName, file_ids,initialVectorStoreId =  null)=>{
+  let vectorStoreId = initialVectorStoreId;
+  if(vectorStoreId === null){
+    const vectorStore = await openai.vectorStores.create({
+      name: storeName
+    });
+    vectorStoreId = vectorStore?.id
+  }
+
+  const vectorStoreFile = file_ids.map(async (file)=>{
+    return await openai.vectorStores.files.create(
+      vectorStoreId,
+      {file_id : file}
+    );
+
+  })
+
+  return Promise.all(vectorStoreFile);
+}
+export const deleteAllTheVectorStoresOfProject = async (vectorStoresIds,openai)=>{
+  const deletedVectorStorePromises = vectorStoresIds.map(async (vectorStoreId) =>{
+    return await openai.vectorStores.del(
+      vectorStoreId
+  )});
+  return await Promise.all(deletedVectorStorePromises);
 }

@@ -1,0 +1,92 @@
+.custom-dropdown-wrapper {
+    position: fixed;
+    top: 100px;
+    width: 100%;
+    max-width: 500px;
+    z-index: 100;
+    visibility: hidden;
+    // transition: all .5s ease-in-out;
+    &.show-main-wrapper {
+        visibility: visible;
+    }
+
+    .dropdown-inner-wrapper {
+        width: 100%;
+        position: absolute;
+        color: #000;
+        width: 100%;
+        background-color: var(--main-bg-color);
+        border: 1px solid var(--border-color);
+        top: -10px;
+        left: 0;
+        transition: all 200ms ease-out;
+        visibility: hidden;
+        padding: 15px;
+        border-radius: 5px;
+        text-align: start;
+        overflow-y: auto;
+        // max-height: 350px;
+        &.show-dropdown {
+            top: -5px;
+            visibility: visible;
+        }
+        .sub-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: gray;
+            margin-bottom: 10px !important;
+        }
+        .section-divider {
+            border-top: .5px solid var(--border-color);
+            margin: 10px 0;
+        }
+
+        .knowledge-base-tools-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+            user-select: none;
+            list-style-type: none;
+            margin-top: 10px;
+            .tool-item {
+                display: flex;
+                align-items: start;
+                gap: 10px;
+                padding: 8px 12px;
+                cursor: pointer;
+                list-style-type: none;
+                width: 100%;
+                border-radius: 4px;
+                height: 75px;
+                &:hover {
+                    background-color: var(--hover-bg);
+                }
+                .tool-item-icon {
+                    color: var(--chat-box-text-color) !important;
+                    .icon {
+                        font-size: 20px;
+                        color: var(--chat-box-text-color) !important;
+
+                    }
+                    
+                }
+                .tool-item-info {
+                    list-style-type: none;
+                    .tool-name {
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: var(--chat-box-text-color);
+                    }
+                    .tool-details {
+                        font-size: 12px;
+                        color: gray;
+
+                    }
+                }
+            }
+        }
+    }
+
+}

@@ -5,14 +5,21 @@ import fs from 'fs';
 import path, { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import GoogleAuth from '../models/googleAuth.js';
-import { createOrUpdateGoogleAuthService, deleteGoogleAuthCredentialService, getGoogleAuthCredentialService, setAccessToken, setClientCredentials } from '../service/googleAuthService.js';
-import { CommonMessages,GoogleDriveMessages, KnowledgeBaseMessages } from '../constants/enums.js';
+import { createOrUpdateAppAuthService, deleteAppAuthCredentialService, getGoogleAuthCredentialService, isTokenValid, setAccessToken, setClientCredentials } from '../service/googleAuthService.js';
+import { CommonMessages,GoogleDriveMessages, KnowledgeBaseMessages, WorkBoardMessages } from '../constants/enums.js';
 import { extractAllGoogleDriveLinks, extractFileOrFolderId } from '../utils/googleDriveHelperFunctions.js';
 import { extractText } from './preprocessOfRAG.js';
-import mime from 'mime-types';
-import { createSingleKnowledgeBaseService, replaceCharacters } from '../service/knowledgeBase.js';
-import { uploadToS3Bucket } from '../lib/s3.js';
+import mime from 'mime';
+import mimeTypes from 'mime-types';
+import { createSingleKnowledgeBaseService, deleteFileIdsFromKnowledgeBaseAssistant, replaceCharacters, updateFileIdsInKnowledgeBaseAssistant, updateKnowledgeBaseFile } from '../service/knowledgeBase.js';
+import { ensureDirectoryExistence, uploadToS3Bucket } from '../lib/s3.js';
+import { request } from 'express';
+import { getOpenAIInstance } from '../config/openAI.js';
+import { deleteUseCaseData, getSignleWorkboardSyncInfo, getUserBasedWorkBoardActivityService, upsertWorkBoardSyncData } from '../service/workBoardService.js';
+import { deleteFilesVectorStore, getAssistantByIdOrAssistantIdService, updateAssistantFileIds } from '../service/assistantService.js';
+import { deleteAssistantFileByID, doesAssistantExist, retrieveAssistantFromOpenAI } from '../lib/openai.js';
+import { deleteLocalFile, uploadFiles } from '../utils/assistant.js';
+import { uploadFilesToVectorStore } from '../lib/vectorStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,9 +35,9 @@ drive = google.drive({
   version: 'v3',
   auth: client,
 });
-const getAccessToken = async (code) => {
+export const getAccessToken = async (code) => {
   try {
-    const { tokens } = await client.getToken(code); 
+    const { tokens } = await client.getToken(code);
     return { accessToken: tokens.access_token, refreshToken: tokens.refresh_token };
   } catch (error) {
     console.error("Error getting access token:", error);
@@ -38,9 +45,23 @@ const getAccessToken = async (code) => {
   }
 };
 
+/**
+ * @async
+ * @function googleAuth
+ * @description Authenticates user with Google using OAuth code, obtains access and refresh tokens,
+ *              saves or updates the authentication info for the user.
+ * @param {Object} req - Request object with body containing:
+ *   - userId {string} - MongoDB ObjectId of the user.
+ *   - code {string} - OAuth authorization code from Google.
+ * @param {Object} res - Response object, returns status and JSON message.
+ * @returns {Response}
+ *  - 200: Returns access token on successful authentication.
+ *  - 400: Missing userId or code in the request body.
+ *  - 500: Internal server error during authentication process.
+ */
+
 export const googleAuth = async (req, res) => {
   const { userId, code } = req.body;
-
   if (!code || !userId) {
     return res.status(StatusCodes.BAD_REQUEST).json({ message: GoogleDriveMessages.AUTH_CODE_IS_REQUIRED });
   }
@@ -48,7 +69,8 @@ export const googleAuth = async (req, res) => {
   try {
     const { accessToken, refreshToken } = await getAccessToken(code);
     setClientCredentials(client, "access_token", accessToken);
-    const createGoogleAuth = await createOrUpdateGoogleAuthService(userId, code, accessToken, refreshToken);
+    const appName="google-drive";
+    const createGoogleAuth = await createOrUpdateAppAuthService(userId, code, accessToken, refreshToken,appName);
     drive = google.drive({
       version: 'v3',
       auth: client,
@@ -95,92 +117,136 @@ export const allMimeTypeToExtension = {
 };
 let fileNameList = [];
 
-export const downloadFile = async (fileId, fileName, mimeType, directory = null) => {
-  // Sanitize and ensure the directory structure exists
-  const sanitizedFileName = fileName.replace(/[/\\?%*:|"<>]/g, '_'); 
-  const fileExtension = allMimeTypeToExtension[mimeType] || ''; 
-  const fileBaseName = sanitizedFileName + fileExtension;
-  const dirName = fileBaseName.substring(0, fileBaseName.lastIndexOf('/'));
-  const fileBasePath = fileBaseName.substring(fileBaseName.lastIndexOf('/') + 1);
-
-  // Create directories recursively
-  const dirPath = join(directory, dirName);
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-
-  // Define the full path for the file to be saved
-  const filePath = join(dirPath, fileBasePath);
-  const downloadedDirectory = filePath;
-
-  try {
-    if (mimeType === 'application/vnd.google-apps.folder') {
-      // Handle folder: create the folder locally and recursively download its contents
-      const folderPath = join(directory, fileName);
-      if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
-      }
-      await listFilesInFolder(fileId, folderPath);
-    } else if (mimeType.startsWith('application/vnd.google-apps')) {
-      // For Google Docs files, use export
-      let exportMimeType = '';
-      if (mimeType === 'application/vnd.google-apps.document') {
-        exportMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; 
-      } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
-        exportMimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      } else if (mimeType === 'application/vnd.google-apps.presentation') {
-        exportMimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-      } else {
-        return;
-      }
-      const res = await drive.files.export(
-        { fileId: fileId, mimeType: exportMimeType },
-        { responseType: 'stream' }
-      );
-
-      await new Promise((resolve, reject) => {
-        const dest = fs.createWriteStream(filePath);
-        res.data
-          .on('end', () => {
-            resolve();
-          })
-          .on('error', (err) => {
-            console.error('Error exporting file:', err);
-            reject(err);
-          })
-          .pipe(dest);
-      });
-
-    } else {
-      // For other files, download directly
-      const res = await drive.files.get(
-        { fileId: fileId, alt: 'media' },
-        { responseType: 'stream' }
-      );
-
-      await new Promise((resolve, reject) => {
-        const dest = fs.createWriteStream(filePath);
-        res.data
-          .on('end', () => {
-            resolve();
-          })
-          .on('error', (err) => {
-            console.error('Error downloading file:', err);
-            reject(err);
-          })
-          .pipe(dest);
-      });
-    }
-
-    return downloadedDirectory;
-
-  } catch (error) {
-    console.error('Error in file download:', error);
-    throw error; 
+const GOOGLE_MIME_TO_EXTENSION = {
+  'application/vnd.google-apps.document': {
+    primary: { mime: 'application/pdf', ext: '.pdf' },
+    fallback: { mime: 'text/plain', ext: '.txt' }
+  },
+  'application/vnd.google-apps.spreadsheet': {
+    primary: { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ext: '.xlsx' },
+    fallback: { mime: 'text/csv', ext: '.csv' }
+  },
+  'application/vnd.google-apps.presentation': {
+    primary: { mime: 'application/pdf', ext: '.pdf' }
   }
 };
 
+export const downloadFile = async (fileId, fileName, mimeType, directory = null) => {
+  try {
+    const downloadedDirectory = directory || baseDir;
 
+    // Handle file extension for the output file
+    let outputFileName = fileName;
+    let exportMimeType;
+    let fallbackMimeType;
+
+    if (mimeType.startsWith('application/vnd.google-apps')) {
+      // For Google Workspace files, use the appropriate extension based on export format
+      const formats = GOOGLE_MIME_TO_EXTENSION[mimeType];
+      if (formats) {
+        const baseName = fileName.replace(/\.[^/.]+$/, ''); // Remove any existing extension
+        exportMimeType = formats.primary.mime;
+        outputFileName = `${baseName}${formats.primary.ext}`;
+        
+        if (formats.fallback) {
+          fallbackMimeType = formats.fallback.mime;
+        }
+      }
+    } else {
+      // For regular files, keep original extension or determine from mime type
+      const ext = mime.getExtension(mimeType);
+      if (ext && !fileName.endsWith(`.${ext}`)) {
+        outputFileName = `${fileName}.${ext}`;
+      }
+    }
+
+    const filePath = join(downloadedDirectory, outputFileName);
+
+    // Ensure directory exists
+    if (!fs.existsSync(downloadedDirectory)) {
+      fs.mkdirSync(downloadedDirectory, { recursive: true });
+    }
+
+    // Handle Google Workspace files
+    if (mimeType.startsWith('application/vnd.google-apps')) {
+      try {
+        // Try primary export format
+        const res = await drive.files.export(
+          { fileId, mimeType: exportMimeType },
+          { responseType: 'stream' }
+        );
+
+        await new Promise((resolve, reject) => {
+          const dest = fs.createWriteStream(filePath);
+          res.data
+            .on('end', resolve)
+            .on('error', reject)
+            .pipe(dest);
+        });
+      } catch (exportError) {
+        // If primary export fails and we have a fallback format, try that
+        if (fallbackMimeType && exportError.response?.status === 403) {
+          console.log(`Falling back to ${fallbackMimeType} for file: ${fileName}`);
+          const baseName = outputFileName.replace(/\.[^/.]+$/, '');
+          const fallbackExt = GOOGLE_MIME_TO_EXTENSION[mimeType].fallback.ext;
+          outputFileName = `${baseName}${fallbackExt}`;
+          const fallbackPath = join(downloadedDirectory, outputFileName);
+
+          const fallbackRes = await drive.files.export(
+            { fileId, mimeType: fallbackMimeType },
+            { responseType: 'stream' }
+          );
+
+          await new Promise((resolve, reject) => {
+            const dest = fs.createWriteStream(fallbackPath);
+            fallbackRes.data
+              .on('end', resolve)
+              .on('error', reject)
+              .pipe(dest);
+          });
+          return fallbackPath;
+        } else {
+          throw exportError;
+        }
+      }
+    } else {
+      // For regular files, use chunked download
+      const fileMetadata = await drive.files.get({
+        fileId,
+        fields: 'size'
+      });
+      const fileSize = parseInt(fileMetadata.data.size, 10);
+      const chunkSize = 5 * 1024 * 1024; // 5MB chunks
+      const dest = fs.createWriteStream(filePath);
+
+      for (let start = 0; start < fileSize; start += chunkSize) {
+        const end = Math.min(start + chunkSize - 1, fileSize - 1);
+        const range = `bytes=${start}-${end}`;
+
+        const res = await drive.files.get(
+          { fileId, alt: 'media' },
+          { 
+            headers: { Range: range },
+            responseType: 'stream'
+          }
+        );
+
+        await new Promise((resolve, reject) => {
+          res.data
+            .on('end', resolve)
+            .on('error', reject)
+            .pipe(dest, { end: false });
+        });
+      }
+      dest.end();
+    }
+
+    return filePath;
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    throw error;
+  }
+};
 export const listFilesInFolder = async (folderId, directory) => {
 
   try {
@@ -319,8 +385,8 @@ export const downloadAllGoogleDriveFiles = async (req, res) => {
   const { userId } = req.params;
   try {
     const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId);
-    if (credentialsOfGoogleAuth.length > 0) {
-      await setAccessToken(client, credentialsOfGoogleAuth[0]?.refreshToken);
+    if (credentialsOfGoogleAuth) {
+      await setAccessToken(client, credentialsOfGoogleAuth?.refreshToken);
       await downloadDriveFiles();
     }
     const allDownloadedFileList = fileNameList;
@@ -333,15 +399,27 @@ export const downloadAllGoogleDriveFiles = async (req, res) => {
 
   }
 }
+
+/**
+ * @async
+ * @function getGoogleAuthCredentials
+ * @description Retrieves Google OAuth credentials for a user and refreshes the access token.
+ * @param {Object} req - Request object with params containing:
+ *   - userId {string} - User's MongoDB ObjectId.
+ * @param {Object} res - Response object returning credentials and new access token.
+ * @returns {Response} 200 with credentials and token on success, 500 on error.
+ */
+
 export const getGoogleAuthCredentials = async (req, res) => {
   const { userId } = req.params;
   try {
     const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId);
-    if (credentialsOfGoogleAuth?.length > 0) {
-      await setAccessToken(client, credentialsOfGoogleAuth[0]?.refreshToken);
+    let newAccessToken = credentialsOfGoogleAuth?.accessToken;
+    if (credentialsOfGoogleAuth) {
+      newAccessToken = await setAccessToken(client, credentialsOfGoogleAuth?.refreshToken);
     }
     fileNameList = [];
-    return res.status(StatusCodes.OK).json({ success: true, message: GoogleDriveMessages.GOOGLE_DRIVE_CREDENTIALS_FETCHED_SUCCESSFULLY, data: credentialsOfGoogleAuth });
+    return res.status(StatusCodes.OK).json({ success: true, message: GoogleDriveMessages.GOOGLE_DRIVE_CREDENTIALS_FETCHED_SUCCESSFULLY, data: credentialsOfGoogleAuth ,newAccessToken:newAccessToken?.access_token});
   } catch (err) {
     console.error('Error listing other files:', err.message);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ Error: err, message: CommonMessages.INTERNAL_SERVER_ERROR, success: false, });
@@ -349,10 +427,20 @@ export const getGoogleAuthCredentials = async (req, res) => {
   }
 }
 
+/**
+ * @async
+ * @function deleteGoogleAuthCredentials
+ * @description Deletes Google OAuth credentials for a given user.
+ * @param {Object} req - Request object with params containing:
+ *   - userId {string} - User's MongoDB ObjectId.
+ * @param {Object} res - Response object returning deletion status.
+ * @returns {Response} 200 on successful deletion, 500 on error.
+ */
+
 export const deleteGoogleAuthCredentials = async (req, res) => {
   const { userId } = req.params;
   try {
-    const credentialsOfGoogleAuth = await deleteGoogleAuthCredentialService(userId);
+    const credentialsOfGoogleAuth = await deleteAppAuthCredentialService(userId);
     fileNameList = [];
     return res.status(StatusCodes.OK).json({ success: true, message: GoogleDriveMessages.GOOGLE_DRIVE_CREDENTIALS_DELETED_SUCCESSFULLY, data: credentialsOfGoogleAuth });
   } catch (err) {
@@ -367,9 +455,10 @@ export const getFileMetadata = async (fileId, userId) => {
     let fileName = '';
     let mimeType = '';
     let fileSize = 0;
-    const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId);
-    if (credentialsOfGoogleAuth?.length > 0) {
-      await setAccessToken(client, credentialsOfGoogleAuth[0]?.refreshToken);
+    const appName="google-drive";
+    const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId,appName);
+    if (credentialsOfGoogleAuth) {
+      await setAccessToken(client, credentialsOfGoogleAuth?.refreshToken);
       const res = await drive.files.get({
         fileId: fileId,
         fields: 'id, name, mimeType, size, permissions, owners',
@@ -482,7 +571,7 @@ export const downloadGoogleFile = async (fileId, userId) => {
       method: 'GET',
       responseType: 'arraybuffer', // This works for binary data
       headers: {
-        Authorization: `Bearer ${credentialsOfGoogleAuth[0].accessToken}`,
+        Authorization: `Bearer ${credentialsOfGoogleAuth.accessToken}`,
       },
     });
 
@@ -578,70 +667,60 @@ export const downloadLargeFile = async (fileId, fileName, mimeType, directory = 
   return filePath;
 };
 
+/**
+ * @async
+ * @function googleDriveInfoToKnowledgeBase
+ * @description Processes Google Drive files info, fetches metadata, replaces characters in filenames,
+ *              constructs S3 links, saves file info to knowledge base for a user.
+ * @param {Object} req - Request object with body containing:
+ *   - userId {string} - MongoDB ObjectId of the user.
+ *   - fileDetails {Array} - Array of file objects with fileId, name, url, parentId.
+ * @param {Object} res - Response object, returns status and JSON message.
+ * @returns {Response}
+ *  - 200: Successfully added files to knowledge base.
+ *  - 400: Missing or empty fileDetails array.
+ *  - 403: Missing Google Drive auth credentials for the user.
+ *  - 500: Internal error during file processing.
+ */
 export const googleDriveInfoToKnowledgeBase = async (req, res) => {
   const { userId, fileDetails } = req.body;
   if (!fileDetails || fileDetails.length === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({ message: GoogleDriveMessages.NO_FILE_IS_SENT });
   }
-  const baseDir = join(__dirname, './../docs/googleDrive');
-  if (!fs.existsSync(baseDir)) {
-    fs.mkdirSync(baseDir, { recursive: true });
-  }
+
   const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId);
-  if (credentialsOfGoogleAuth?.length > 0) {
-    await setAccessToken(client, credentialsOfGoogleAuth[0]?.refreshToken);
-  }else{
+  if (credentialsOfGoogleAuth) {
+    await setAccessToken(client, credentialsOfGoogleAuth?.refreshToken);
+  } else {
     return res.status(StatusCodes.FORBIDDEN).json({ message: GoogleDriveMessages.CONNECT_GOOGLE_DRIVE });
-
   }
 
-
-   try {
+  try {
     const createFileInfoToKnowledgeBase = await Promise.all(fileDetails.map(async (file) => {
       const { fileName, mimeType, fileSize } = await getFileMetadata(file.fileId, userId);
-      const fileDirectory = await downloadFile(file.fileId, fileName, mimeType, baseDir);
-      // Use fs.promises for async file reading
-      const fileData = await fs.promises.readFile(fileDirectory);
-
-      let { resultFileName, replacedIndices } = replaceCharacters(fileName);
-      resultFileName =  resultFileName.replace(/[\/\\*|"?]/g, ' ');
-      const fileExtension = allMimeTypeToExtension[mimeType] || ''; 
+      let { resultFileName, replacedIndices } = replaceCharacters(file.name);
+      const fileExtension = allMimeTypeToExtension[mimeType] || '';
       const lastDotIndex = resultFileName.lastIndexOf('.');
       let namePart = resultFileName;
       let extensionPart = '';
-  
+
       if (lastDotIndex > 0 && lastDotIndex !== resultFileName.length - 1) {
         namePart = resultFileName.substring(0, lastDotIndex);
-        extensionPart = resultFileName.substring(lastDotIndex); 
+        extensionPart = resultFileName.substring(lastDotIndex);
       }
       let fileBaseName = resultFileName;
 
-      if(extensionPart===''){
+      if (extensionPart === '') {
         fileBaseName = resultFileName + fileExtension;
 
       }
-      const fileType = mime.lookup(fileDirectory) || 'application/octet-stream';
 
-      // Convert file to Base64 format
-      const base64DataRawData = fileData.toString('base64');
-      const base64Data = base64DataRawData.replace(/^data:.*,/, '');
-      const contentType = fileType;
-
-      const fileBuffer = Buffer.from(base64Data, 'base64');
-      
-      // Upload the file to S3
-      let s3_link = await uploadToS3Bucket(fileBaseName, fileBuffer, contentType, userId);
-      s3_link = "knowledgeBase/" + userId + "/" + fileBaseName;
-      
-      // Create knowledge base entry
-      const data = await createSingleKnowledgeBaseService(fileBaseName, fileSize, s3_link, userId, replacedIndices);
-
+      const s3_link = "knowledgeBase/" + userId + "/" + fileBaseName;
+      const data = await createSingleKnowledgeBaseService(fileBaseName, fileSize, s3_link, userId, replacedIndices, file?.url,file?.parentId);
       return { fileId: file.fileId, data };
     }));
-    deleteFilesInDirectory(baseDir);
 
-    // After all files have been processed, send the response
-    return res.status(StatusCodes.OK).json({ data:createFileInfoToKnowledgeBase, message: KnowledgeBaseMessages.FILE_ADDED_SUCCESSFULLY });
+    return res.status(StatusCodes.OK).json({ data: createFileInfoToKnowledgeBase, message: KnowledgeBaseMessages.FILE_ADDED_SUCCESSFULLY });
 
   } catch (error) {
     console.error("Error in file processing:", error);
@@ -668,4 +747,142 @@ export const deleteFilesInDirectory = (directoryPath) => {
           });
       });
   });
+};
+
+/**
+ * @async
+ * @function syncGoogleDriveKnowledgeBase
+ * @description Syncs Google Drive files with assistant knowledge base by updating or replacing files
+ *              across OpenAI, vector stores, and knowledge base records.
+ * @param {Object} req - Request body with userId and fileId.
+ * @param {Object} res - Response with status and message.
+ * @returns {Response} 200 on success, 403 if Google Drive not connected, 500 on error.
+ */
+
+export const syncGoogleDriveKnowledgeBase = async (req, res) => {
+  const { userId,fileId } = req.body;
+  const openai = await getOpenAIInstance();
+
+  try {
+    const isGoogleDriveSyncInfoExist = await getSignleWorkboardSyncInfo(fileId);
+    if (isGoogleDriveSyncInfoExist) {
+      const useCaseArray = isGoogleDriveSyncInfoExist?.useCaseData;
+      for (const useCase of useCaseArray) {
+        const assistantSettings = await getAssistantByIdOrAssistantIdService(useCase?.assistantId);
+        const isExistingOpenAIAssistant = await doesAssistantExist(openai, assistantSettings?.assistant_id);
+
+        const assistantInfoFromOpenAI = isExistingOpenAIAssistant ? await retrieveAssistantFromOpenAI(openai, assistantSettings?.assistant_id) : null;
+        const fileIds = isExistingOpenAIAssistant ? assistantSettings?.file_ids : [];
+        if (fileIds.includes(useCase?.opeanaiFileId)) {
+          let newFileIds = fileIds.filter(id => id !== useCase?.opeanaiFileId);
+          const updateFileIds = await updateAssistantFileIds(assistantSettings?.assistant_id, newFileIds);
+          if (isExistingOpenAIAssistant) {
+            const responseOfFileIdsDelete = await deleteAssistantFileByID(openai, assistantSettings?.assistant_id, useCase?.opeanaiFileId);
+            const deletedVectorStoreFile = await deleteFilesVectorStore(
+              openai,
+              assistantSettings?.vectorStoreId,
+              useCase?.opeanaiFileId
+            );
+            const deleteFromSyncTable = await deleteUseCaseData(fileId, assistantSettings?._id);
+            const fileInfo = {
+              file_id: useCase?.opeanaiFileId,
+              key: fileId
+
+            };
+            const deleteFromKnowledgeBaseAssistant = await deleteFileIdsFromKnowledgeBaseAssistant(assistantSettings?.assistant_id, fileInfo);
+          }
+          const assistantInformation = [];
+          let ids = []
+          const links = extractAllGoogleDriveLinks(isGoogleDriveSyncInfoExist?.knowledgeBaseId?.url,ids);
+
+          if (ids?.length > 0) {
+            const baseDir = join(__dirname, './../docs/googleDrive');
+            if (!fs.existsSync(baseDir)) {
+              fs.mkdirSync(baseDir, { recursive: true });
+            }
+            const credentialsOfGoogleAuth = await getGoogleAuthCredentialService(userId);
+            if (credentialsOfGoogleAuth) {
+              const newTokens = await setAccessToken(client, credentialsOfGoogleAuth?.refreshToken);
+            }else{
+              return res.status(StatusCodes.FORBIDDEN).json({ message: GoogleDriveMessages.CONNECT_GOOGLE_DRIVE });
+            }
+          
+            const { fileName, mimeType, fileSize } = await getFileMetadata(ids[0], userId);
+            const fileDirectory = await downloadFile(ids[0], fileName, mimeType, baseDir);
+
+            let { resultFileName, replacedIndices } = replaceCharacters(fileName);
+            resultFileName =  resultFileName.replace(/[\/\\*|"?]/g, ' ');
+            const fileExtension = allMimeTypeToExtension[mimeType] || ''; 
+            const lastDotIndex = resultFileName.lastIndexOf('.');
+            let namePart = resultFileName;
+            let extensionPart = '';
+        
+            if (lastDotIndex > 0 && lastDotIndex !== resultFileName.length - 1) {
+              namePart = resultFileName.substring(0, lastDotIndex);
+              extensionPart = resultFileName.substring(lastDotIndex); 
+            }
+            let fileBaseName = resultFileName;
+      
+            fileBaseName = resultFileName + fileExtension;
+            // Create knowledge base entry
+            const updatedKnowledgeBaseBody = {
+              name : fileBaseName,
+              size : fileSize ,
+              spaceIndex : replacedIndices,
+            }
+            const updateKnowledgeBase = await updateKnowledgeBaseFile(fileId,updatedKnowledgeBaseBody);
+            let fileSizeInBytes = 0;
+            let encodingInfo = 'N/A';
+            let files =[];
+
+            const fileObject = {
+              fieldname: 'files',
+              originalname: isGoogleDriveSyncInfoExist?.knowledgeBaseId?.name,
+              encoding: encodingInfo,
+              mimetype: mime.getType(isGoogleDriveSyncInfoExist?.knowledgeBaseId?.name),
+              destination: '../docs/googleDrive/',
+              filename: isGoogleDriveSyncInfoExist?.knowledgeBaseId?.name,
+              path: fileDirectory,
+              size: fileSizeInBytes,
+              key: isGoogleDriveSyncInfoExist?.knowledgeBaseId?._id
+            };
+            files.push(fileObject);
+            if (files) {
+              const assistantInformation = [];
+              const newFileIdsFromOpenai = await uploadFiles(openai, files, assistantInformation);
+              const uploadedFilesToVectorStore = await uploadFilesToVectorStore(openai, assistantSettings?.vectorStoreId, newFileIdsFromOpenai);
+
+              const fileIds = [...newFileIds, ...newFileIdsFromOpenai];
+              Promise.all(files.map(deleteLocalFile)).then(() => console.log('All files deleted')).catch(err => console.error('Failed to delete some files:', err));
+              const updateFileIdsOfAssistant = await updateAssistantFileIds(assistantSettings?.assistant_id, fileIds);
+              const newUseCaseData = {
+                opeanaiFileId: newFileIdsFromOpenai[0],
+                assistantId: useCase?.assistantId,
+                userId: useCase?.userId
+              }
+              const updateWorkBoarSyncUseCase = await upsertWorkBoardSyncData(fileId, newUseCaseData);
+              const assistantNewFileInfo = {
+                file_id: newFileIdsFromOpenai[0],
+                key: fileId
+
+              };
+              const updateFileIdsInKBAssistant = await updateFileIdsInKnowledgeBaseAssistant(assistantSettings?.assistant_id, assistantNewFileInfo);
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+    return res.status(StatusCodes.OK).json({ message: GoogleDriveMessages.GOOGLE_DRIVE_SYNCED_SUCCESSFULLY, success: true });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: GoogleDriveMessages.GOOGLE_DRIVE_SYNC_FAILED,
+      success: false 
+    });
+  }
 };

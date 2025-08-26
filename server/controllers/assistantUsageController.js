@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import AssistantUsage from "../models/assistantUsageModel.js";
 import { AssistantTrackUsage, CommonMessages } from "../constants/enums.js";
+import { getAssistantUsageMonthly } from "../service/assistantControllerService.js";
+import {getPaginatedAssistantsWithUsageCount} from "../service/assistantUsageService.js";
 
 export const createAssistantUsage = async (req, res, next) => {
   const { assistantId } = req.params;
@@ -26,119 +28,80 @@ export const createAssistantUsage = async (req, res, next) => {
   }
 };
 
-
-
-
-
+/**
+ * API: Get All Assistant Usage Monthly
+ * Retrieves monthly usage data for assistants.
+ * Query Parameters: dateString, page, limit, search, ownerName, sortBy, sortOrder
+ * Returns:
+ * - Success (200): Assistant usage summary and total data count
+ * - Error (500): Internal server error message
+ */
 export const getAllAssistantUsageMonthly = async (req, res) => {
-  let { dateString, page = 1, limit = 10 } = req.query;
-  const filter = {};
-  let dateFilter = {};
+  const {
+    dateString,
+    page = 1,
+    limit = 10,
+    search = "",
+    ownerName = "",
+    sortBy = "updatedAt",
+    sortOrder = "desc",
+  } = req.query;
 
+  try {
+    const { assistantUsageSummary, totalDataCount } =
+      await getAssistantUsageMonthly({
+        dateString,
+        page,
+        limit,
+        search,
+        ownerName,
+        sortBy,
+        sortOrder,
+      });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: AssistantTrackUsage.ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY,
+      assistantUsageSummary,
+      totalDataCount,
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: CommonMessages.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+export const getAllUsersForAnAssistant = async (req, res) => {
+  const { assistantId } = req.params;
+  let { dateString } = req.query;
+
+  let dateFilter = {};
+  // Date filter setup for the given month
   if (dateString) {
-    const startOfMonth = new Date(dateString + '-01');
-    const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1);
+    const startOfMonth = new Date(dateString + '-01');  // Start of the month
+    const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0, 23, 59, 59, 999);  // End of the month
     dateFilter = {
       $gte: startOfMonth,
       $lt: endOfMonth
     };
   } else {
+    // If no date is provided, you could default to the current month
     const currentDate = new Date();
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1);
+    const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0, 23, 59, 59, 999);
     dateFilter = {
       $gte: startOfMonth,
       $lt: endOfMonth
     };
   }
 
-  filter.createdAt = dateFilter;
-  try {
-
-    const assistantUsageSummary = await AssistantUsage.aggregate([
-      {
-        $match: filter
-      },
-      {
-        $group: {
-          _id: "$assistantId",
-          totalUsageCount: { $sum: "$usageCount" },
-          uniqueUsers: { $addToSet: "$userId" },
-          createdAt: { $first: "$createdAt" }
-        }
-      },
-      {
-        $project: {
-          assistantId: "$_id",
-          _id: 0,
-          totalUsageCount: 1,
-          uniqueUserCount: { $size: "$uniqueUsers" },
-          createdAt: 1
-        }
-      },
-      {
-        $lookup: {
-          from: "assistants",
-          localField: "assistantId",
-          foreignField: "assistant_id",
-          as: "assistant"
-        }
-      },
-      {
-        $unwind: "$assistant"
-      },
-      {
-        $project: {
-          assistantId: 1,
-          totalUsageCount: 1,
-          uniqueUserCount: 1,
-          assistantName: "$assistant.name",
-          createdAt: 1
-          }
-      },
-      { $sort: { totalUsageCount: -1 } },
-      { $skip: (Number(page) - 1) * Number(limit) },
-      { $limit: Number(limit) }
-    ]);
-
-    const totalCountPipeline = [
-      {
-        $match: filter
-      },
-      {
-        $group: {
-          _id: "$assistantId"
-        }
-      },
-      {
-        $count: "totalCount"
-      }
-    ];
-
-    const totalDataCountResult = await AssistantUsage.aggregate(totalCountPipeline);
-    const totalDataCount = totalDataCountResult.length > 0 ? totalDataCountResult[0].totalCount : 0;
-
-
-    res.status(200).json({
-      message: AssistantTrackUsage.ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY,
-      assistantUsageSummary,
-      totalDataCount
-    });
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: CommonMessages.INTERNAL_SERVER_ERROR,
-    });
-  }
-};
-
-
-export const getAllUsersForAnAssistant = async (req, res) => {
-  const { assistantId } = req.params;
   try {
     const allUniqueUsers = await AssistantUsage.aggregate([
       {
         $match: {
-          assistantId
+          assistantId,
+          createdAt: dateFilter 
         }
       },
       {
@@ -177,3 +140,24 @@ export const getAllUsersForAnAssistant = async (req, res) => {
     });
   }
 }
+
+export const getAllAssistantsWithUsageCount = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const result = await getPaginatedAssistantsWithUsageCount(page, limit);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: AssistantTrackUsage.ASSISTANT_TRACK_USAGE_FETCHED_SUCCESSFULLY,
+      ...result
+    });
+  } catch (error) {
+    console.error("Error in getAllAssistantsWithUsageCount:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: CommonMessages.INTERNAL_SERVER_ERROR,
+    });
+  }
+};

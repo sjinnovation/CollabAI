@@ -1,0 +1,315 @@
+/* AiRecommendationsAndSuggestions Component Styles */
+
+.ai-recommendations-container {
+  max-width: 924px;
+  max-height: 200px;
+  margin: 10px auto;
+  padding: 0 10px 0 0;
+  transition: all 0.3s ease;
+}
+
+.ai-recommendations-container.dark-mode {
+  /* background-color: #1a1a1a; */
+  color: #ffffff;
+}
+
+/* Welcome Section */
+.welcome-greeting {
+  margin-bottom: 32px;
+}
+
+.welcome-title {
+  margin-bottom: 8px;
+  color: #000000;
+}
+
+.welcome-title.dark-mode {
+  color: #ffffff;
+}
+
+.welcome-subtitle {
+  color: #666666;
+}
+
+.welcome-subtitle.dark-mode {
+  color: #a0a0a0;
+}
+
+/* Main Content Grid */
+.main-content-grid {
+  max-height: 200px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Card Styles */
+.prompt-tips-card,
+.recommended-agents-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1a202c;
+  border: 1px solid #e2e8f0;
+}
+
+.prompt-tips-card.dark-mode,
+.recommended-agents-card.dark-mode {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  color: white;
+  border: 1px solid #374151;
+}
+
+/* Card Header */
+.card-header {
+  /* background-color: red; */
+  display: flex;
+  align-items: center;
+  padding-bottom: 15px;
+  /* height: 50px;
+  margin-bottom: 24px; */
+}
+
+.card-icon-container {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.card-icon-blue {
+  background: #1890ff;
+}
+
+.card-icon-purple {
+  background: #722ed1;
+}
+
+.card-icon {
+  color: white;
+  /* font-size: 12px; */
+}
+
+.card-title {
+  /* background-color: blue; */
+  /* margin-top: -10px; */
+  color: #1a202c;
+  margin: 0 !important;
+  padding: 0px !important;
+}
+
+.card-title.dark-mode {
+  color: white;
+}
+
+/* Tips Space */
+.tips-space {
+  width: 100%;
+}
+
+/* Tip Item */
+.tip-item {
+  border-left: 4px solid #1890ff;
+  padding-left: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tip-item:hover {
+  background: rgba(24, 144, 255, 0.05);
+}
+
+.tip-item.dark-mode:hover {
+  background: rgba(24, 144, 255, 0.1);
+}
+
+.tip-title {
+  color: #1890ff;
+  margin-bottom: 4px;
+}
+
+.tip-title.dark-mode {
+  color: #91d5ff;
+}
+
+.tip-description {
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tip-description.dark-mode {
+  color: #d1d5db;
+}
+
+/* Agents Grid */
+.agents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Agent Card */
+.agent-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+}
+
+.agent-card.dark-mode {
+  background: #374151;
+  border: 1px solid #4b5563;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.agent-card.dark-mode:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Agent Close Button */
+.agent-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #6b7280;
+  padding: 4px;
+  height: 24px;
+  width: 24px;
+}
+
+.agent-close-btn.dark-mode {
+  color: #9ca3af;
+}
+
+/* Agent Icon Container */
+.agent-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.agent-icon {
+  color: white;
+  font-size: 20px;
+}
+
+/* Agent Title */
+.agent-title {
+  color: #1a202c;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.agent-title.dark-mode {
+  color: white;
+}
+
+/* Agent Description */
+.agent-description {
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-height: 0;
+}
+
+.agent-description.dark-mode {
+  color: #9ca3af;
+}
+
+/* Agent Action Button */
+.agent-action-btn {
+  width: 100%;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ai-recommendations-container {
+    padding: 16px;
+  }
+  
+  .main-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .agents-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ai-recommendations-container {
+    padding: 18px;
+  }
+  
+  .agents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+/* Dark mode specific adjustments */
+.dark-mode .ant-card {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.dark-mode .ant-typography {
+  color: #ffffff;
+}
+
+.dark-mode .ant-typography.ant-typography-secondary {
+  color: #a0a0a0;
+}
+
+/* Hover effects for interactive elements */
+.prompt-tips-card .ant-space-item:hover,
+.recommended-agents-card .agent-card:hover {
+  cursor: pointer;
+}
+
+/* Button hover effects */
+.dark-mode .ant-btn-primary:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.dark-mode .ant-btn-text:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+} 

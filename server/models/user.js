@@ -3,7 +3,7 @@ import validator from 'validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import config from '../config.js';
-
+import paginate  from 'mongoose-paginate-v2';
 export const UserRole = {
 	SUPER_ADMIN: 'superadmin',
 	ADMIN: 'admin',
@@ -58,6 +58,13 @@ const userSchema = new mongoose.Schema(
 			enum: ['active', 'inactive'],
 			default: 'inactive',
 		},
+
+		isGoogleLogin: {
+			type: Boolean,
+			default: false,
+			required: false,
+		},
+
 		role: {
 			type: String,
 			enum: ['superadmin', 'admin', 'user'],
@@ -85,10 +92,62 @@ const userSchema = new mongoose.Schema(
 		},
 		desiredAiResponse: {
 			type: String,
-		}
+		},
+		designation: {
+			type: String,
+			required: false,
+		},
+		responsibility: {
+			type: String,
+			required: false,
+		},
+		companyInformation: {
+			type: String,
+			required: false,
+		},
+		userAvatar: {
+			type: String,
+			required: false,
+		},
+		userAcToken: {
+			type: String,
+			required: false,
+ 		},
+		 _badgeId: {
+			type:String,
+			default: 'globalBadge'
+		},
+		isPushVisible: {
+			type: Boolean,
+			default: false 
+		},
+		apiKey: {
+			type: String,
+			unique: true,
+			required: false,
+		},
+		apiKeyCreatedAt: {
+			type: Date,
+			required: false,
+		},
+		// n8n integration fields
+		isN8nConnected: {
+			type: Boolean,
+			default: false,
+		},
+		n8nSecretKey: {
+			type: String,
+			required: false,
+		},
+		aiSuggestionsEnabled: {
+			type: Boolean,
+			default: true,
+		},
 	},
 	{ timestamps: true }
 );
+
+userSchema.plugin(paginate);
 
 userSchema.pre('save', async function () {
 	if (!this.isModified('password')) return;

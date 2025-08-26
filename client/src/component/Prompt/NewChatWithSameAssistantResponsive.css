@@ -1,0 +1,11 @@
+@media (max-width: 768px) {
+  .responsive-assistant-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px;
+  }
+  .responsive-assistant-button {
+    margin-right: 35px;
+    width: 75%;
+  }
+}

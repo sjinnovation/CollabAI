@@ -1,0 +1,132 @@
+.upload-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 998;
+  }
+  
+  .upload-menu-container {
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    margin-left: 8px;
+    z-index: 999;
+    min-width: 200px;
+    background: var(--background-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .upload-menu.dark {
+    background: #1f1f1f;
+    color: #ffffff;
+    border: 1px solid #434343;
+  }
+  
+  .upload-menu.light {
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #d9d9d9;
+  }
+  
+  /* Ensure menu items have proper styling */
+  .ant-menu-item {
+    line-height: 32px !important;
+  }
+  
+  /* Override any potential container overflow */
+  .inputPromptTextarea-container {
+    overflow: visible !important;
+  }
+  
+  .actions-container {
+    overflow: visible !important;
+  }
+
+  .chatbox-leftside-elements{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .web-search-button {
+    border: 1px solid rgb(194, 194, 194);
+    border-radius: 24px;
+    padding: 0px 8px !important;
+    gap: 2px;
+  }
+  
+  .web-search-button.active {
+    color: #1890ff; 
+    font-weight: 400 !important;
+    background: rgba(24, 144, 255, 0.1);
+    border: 1px solid #5faef8;
+  }
+  .web-search-button.active:hover {
+    color: #1890ff !important;  
+    background: #BDDCF4 !important; 
+  }
+  
+  .web-search-button.dark.active:hover {
+    background: #414141 !important; 
+  }
+  
+  .reasoning-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #333;
+  }
+  
+  .reasoning-option:hover {
+    background: #f7f7f8; /* Hover background for light mode */
+  }
+  
+  .reasoning-option.selected {
+    background: #ececf1; /* Selected background for light mode */
+  }
+  
+  /* Dark mode styles */
+  [data-theme="dark"] .reasoning-option {
+    color: #ffffff !important; /* Force white text for dark mode */
+    opacity: 1; /* Ensure full opacity */
+  }
+  
+  [data-theme="dark"] .reasoning-option:hover {
+    background: #2a2b32; /* Darker background on hover */
+  }
+  
+  [data-theme="dark"] .reasoning-option.selected {
+    background: #4a4b5d; /* Deeper color for selected state in dark mode */
+  }
+  
+  [data-theme="dark"] .reasoning-option .description {
+    color: #cccccc; /* Lighter description color */
+    opacity: 0.8; /* Slightly reduced opacity for description */
+  }
+  
+  .uploaded-files-preview{
+    padding-top: 4px;
+    padding-left: 18px;
+  }
+  
+  .chatbox-alert {
+    margin: 12px 0;
+    padding: 10px 14px;
+    background-color: #fffbe6;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    font-size: 14px;
+    border-radius: 6px;
+  }

@@ -1,61 +1,68 @@
-import React, { useState } from 'react';
+import { useContext } from 'react';
 
 // libraries
-import { MdEditNote } from 'react-icons/md';
-import { Avatar, Form, Input, Button } from 'antd';
-import { AiOutlineEdit } from "react-icons/ai";
+import { Avatar } from 'antd';
 
 // components
 import Loading from '../common/Loading';
 import Error from '../common/Error';
 import BotResponse from './BotResponse';
-import { botIconsMap } from '../../constants/chatPageConstants';
+import { botIconsMap, editableBotValues } from '../../constants/chatPageConstants';
 import CodeInterPreterOutput from './CodeInterPreterOutput';
 import UserPrompt from './UserPrompt';
+import UserAvatar from '../UserAvatar/UserAvatar';
+import { ProfileContext } from '../../contexts/ProfileContext';
 
-const MessageContainer = ({ states }) => {
-  const { chat, idx, loading, error} = states;
+const MessageContainer = ({ states ,dynamicBotOptions}) => {
+  const { chat, idx, loading, error,folderId = null} = states;
+  
+  const { userAvatar } = useContext(ProfileContext);
 
-  const botProviderIcon = chat?.botProvider ? botIconsMap[chat.botProvider]?.icon : botIconsMap?.openai?.icon;
+  const matchedModel = dynamicBotOptions?.find(
+    (opt) => opt.value === chat?.botProvider
+  );
+
+  const botProviderIcon = chat?.botProvider?.includes("-hf") ? matchedModel?.image_url || botIconsMap.huggingface?.icon || botIconsMap.default?.icon : botIconsMap[chat?.botProvider]?.icon || botIconsMap.openai?.icon;
+
   const userIcon = botIconsMap.user.icon;
-
   const isBotMessageReceived = chat?.botMessage || false;
   const isCodeInterpreterOutputReceived = chat?.codeInterpreterOutput || false;
-
-
   const isPropsExistForEdit = states.hasOwnProperty('editProps') || false;
-  
-  
+
   return (
     <div className="chatLog" key={chat.msg_id || idx}>
       {/* ----- USER PROMPT ----- */}
       <div className="chatPromptMainContainer">
-        <div
-          className="chatPromptWrapper"
-          style={{
-            maxWidth: "48rem",
-          }}
-        >
-          <Avatar src={userIcon} className='userIcon' />
-         
+        <div className="chatPromptWrapper" style={{maxWidth: "48rem",}}>
+          {userAvatar ? (
+              <UserAvatar
+              userAvatar={userAvatar}
+              width={40}
+              height={30}
+              shape="square"
+            />
+          ) : (
+             <Avatar
+              width={40}
+              height={30}
+              src={userIcon}
+              className='userIcon'
+             />
+          )}
 
-          <UserPrompt 
-           states={{
-            chat,
-            ...(isPropsExistForEdit && { editProps: states.editProps })
-          }} 
+          <UserPrompt isEditableModel={editableBotValues.includes(chat.botProvider)}
+            states={{
+              chat,
+              ...(isPropsExistForEdit && { editProps: states.editProps }),
+              folderId
+            }}
           />
-       </div>
+        </div>
       </div>
 
       {/* ----- BOT RESPONSE ----- */}
       <div className="botMessageMainContainer">
-        <div
-          className="botMessageWrapper mb-3"
-          style={{
-            maxWidth: "48rem",
-          }}
-        >
+        <div className="botMessageWrapper mb-3">
           <div>
             <Avatar src={botProviderIcon} />
           </div>

@@ -4,7 +4,7 @@ import Team from "../models/teamModel.js";
 import { StatusCodes } from 'http-status-codes';
 import Config from "../models/configurationModel.js";
 import sendEmail from "../utils/sendEmailViaOutlook.js";
-import { AuthMessages } from "../constants/enums.js";
+import { AuthMessages, CustomizeChatInfo } from "../constants/enums.js";
 import { BadRequest, Unauthorized } from "../middlewares/customError.js";
 import ResetToken from "../models/token.js";
 import crypto from 'crypto';
@@ -23,16 +23,18 @@ import config from '../config.js';
  */
 export const registerUser = async (req, res, next) => {
   try {
-    const { fname, lname, password, email, username, companyId, teams, status } = req.body;
+    const { fname, lname, password, email, username, companyId, teams, status, isGoogleLogin } = req.body;
 
     // Check if email already exists
     const emailExist = await User.findOne({ email });
+
     if (emailExist) {
       return next(BadRequest(AuthMessages.EMAIL_ALREADY_EXISTS));
     }
 
     // Check if username already exists
     const usernameExists = await User.findOne({ username });
+
     if (usernameExists) {
       return next(BadRequest(AuthMessages.USERNAME_ALREADY_EXISTS));
     }
@@ -44,7 +46,7 @@ export const registerUser = async (req, res, next) => {
     // Fetch max user tokens from configuration
     const tokens = await Config.findOne({ key: 'tokens' });
     let maxUserTokens = tokens?.value ? parseInt(tokens?.value) : 5000;
-    
+
     // Create the new user
     const newUser = await User.create({
       fname,
@@ -56,7 +58,10 @@ export const registerUser = async (req, res, next) => {
       companyId,
       maxusertokens: maxUserTokens,
       teams,
-      status
+      status,
+      isGoogleLogin,
+      userPreferences : CustomizeChatInfo?.userPreferences,
+      desiredAiResponse : CustomizeChatInfo?.desiredAiResponse
     });
 
     // Send confirmation email
@@ -64,11 +69,112 @@ export const registerUser = async (req, res, next) => {
 
     res.status(StatusCodes.CREATED).json({ msg: AuthMessages.USER_REGISTERED_SUCCESSFULLY });
   } catch (error) {
-    // Handle any errors
-    //console.error("Error registering user:", error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: AuthMessages.FAILED_TO_REGISTER_USER });
+
   }
 };
+
+
+export const authenticationWithSSO = async (req, res) => {
+  try {
+    const { fname, lname, password, email, username, teams, status, isGoogleLogin, role } = req.body;
+    const tokens = await Config.findOne({ key: 'tokens' });
+    let maxUserTokens = tokens?.value ? parseInt(tokens?.value) : 5000;
+
+    const domain = email.split('@')[1];
+
+    if (isGoogleLogin) {
+      const emailExist = await User.findOne({ email });
+      if (emailExist) {
+        const token = await emailExist.createJWT();
+        const teams = emailExist?.teams?.length ? await Team.find({ _id: { $in: emailExist?.teams } }) : [];
+
+          let hasAccess = false;
+      
+          for (const team of teams) {
+            if (team.hasAssistantCreationAccess) {
+              hasAccess = true
+              break
+            } else {
+              hasAccess = false
+            }
+      
+          }
+
+        return res.status(StatusCodes.OK).json({
+          token,
+          userName: emailExist.fname,
+          userid: emailExist._id,
+          compId: emailExist.companyId,
+          role: emailExist.role,
+          user_email: emailExist.email,
+          teams: emailExist.teams,
+          hasAccess: hasAccess
+
+        });
+      } else {
+        const companyIsExist = await Company.findOne(
+          { email: { $regex: `@${domain}$`, $options: 'i' } }
+        );
+
+        if (!companyIsExist) {
+          return next(BadRequest(AuthMessages.COMPANY_NOT_EXISTS));
+        }
+
+        const companyId = companyIsExist._id; 
+        console.log(companyId)
+          const newUser = await User.create({
+            fname,
+            lname,
+            password,
+            email,
+            role,
+            username,
+            companyId, 
+            maxusertokens: maxUserTokens,
+            teams,
+            status,
+            isGoogleLogin
+          });
+
+        if (newUser?.isGoogleLogin) {
+          const token = await newUser.createJWT();
+          const teams = newUser?.teams?.length ? await Team.find({ _id: { $in: newUser?.teams } }) : [];
+
+          let hasAccess = false;
+      
+          for (const team of teams) {
+            if (team.hasAssistantCreationAccess) {
+              hasAccess = true
+              break
+            } else {
+              hasAccess = false
+            }
+      
+          }
+
+          console.log("My team",teams)
+          return res.status(StatusCodes.OK).json({
+            token,
+            userName: newUser.fname,
+            userid: newUser._id,
+            compId: newUser.companyId,
+            role: newUser.role ?? "user",
+            user_email: newUser.email,
+            teams: newUser.teams,
+            hasAccess: hasAccess
+          });
+        }
+      }
+    }
+    else {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: AuthMessages.FAILED_TO_REGISTER_USER });
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: AuthMessages.FAILED_TO_REGISTER_USER });
+  }
+}
 
 /**
  * Asynchronous function for logging in a user.
@@ -129,6 +235,7 @@ export const loginUser = async (req, res, next) => {
     return res.status(StatusCodes.OK).json({
       token,
       userName: user.fname,
+      userAvatar: user.userAvatar,
       userid: user._id,
       compId: user.companyId,
       role: user.role,

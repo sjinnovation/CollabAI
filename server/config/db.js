@@ -9,22 +9,10 @@ const connectDb = async () => {
     });
     console.log(`MongoDb Connected ${conn.connection.host}`);
   } catch (error) {
-    console.log(`Error ${error.message}`);
+    console.log(`Error ${error.message}`, config.MONGO_URI, config.MONGODB_NAME);
     process.exit(1);
   }
 };
 
-// for development 
-// const connectDb = async () => {
-//   try {
-//     const conn = await mongoose.connect("mongodb://localhost:27017", {
-//       dbName: "devsquadgpt_db",
-//     });
-//     console.log(`MongoDb Connected ${conn.connection.host}`);
-//   } catch (error) {
-//     console.log(`Error ${error.message}`);
-//     process.exit(1);
-//   }
-// };
 
 export default connectDb;

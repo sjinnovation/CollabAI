@@ -27,7 +27,7 @@ const NewChat = ({ setChatLog, setShowMenu }) => {
           type="primary"
           block
           icon={<FaPlus />}
-          style={{ backgroundColor: "#2952BF", borderColor: "#2952BF" }}
+          style={{ backgroundColor: "#2952BF", borderColor: "#2952BF", fontWeight: "bold" }}
         >
           New Chat
         </Button>

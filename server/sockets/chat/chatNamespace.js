@@ -1,6 +1,6 @@
 // /sockets/chat/chatNamespace.js
 
-import { createChat, lastEditPrompt } from "./chatHandler.js";
+import { createChat, lastEditPrompt, stopChat } from "./chatHandler.js";
 
 const usersMap = new Map();
 
@@ -17,6 +17,9 @@ export const setupChatNamespace = (chatNamespace) => {
 
     // Register event names and associate them with handlers
     socket.on('chat:last-edit-prompt', lastEditPrompt);
+
+    // Register event names and associate them with handlers
+    socket.on('chat:stop', stopChat);
 
     // ---------- disconnect ----------
     socket.on("disconnect", () => {

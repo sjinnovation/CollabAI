@@ -72,6 +72,12 @@ const extractTextFromXlsx = async (xlsxPath) => {
   });
   return text;
 };
+const extractTextFromJson = async (jsonPath) => {
+  const fileContent = await fs.readFile(jsonPath, 'utf8'); // Correct usage
+  const jsonObject = JSON.parse(fileContent);
+    return JSON.stringify(jsonObject, null, 2); // Returns formatted JSON as a string
+
+};
 
 // Determine the appropriate extraction function based on file extension
 export const extractText = async (filePath) => {
@@ -89,6 +95,8 @@ export const extractText = async (filePath) => {
       return await extractTextFromCsv(filePath);
     case 'xlsx':
       return await extractTextFromXlsx(filePath);
+    case 'json':
+        return await extractTextFromJson(filePath);
     default:
       throw new Error(`Unsupported file type: ${fileExtension}`);
   }
@@ -270,3 +278,16 @@ export const preprocessPDFs = async (req, res, next) => {
     next(InternalServer(CommonMessages.INTERNAL_SERVER_ERROR)); // Handle the error response
   }
 };
+
+export function csvToArray(csvString) {
+  const rows = csvString.trim().split("\n");
+  const headers = rows[0].split(",");
+
+  return rows.slice(1).map(row => {
+      const values = row.split(",");
+      return headers.reduce((obj, header, index) => {
+          obj[header] = values[index];
+          return obj;
+      }, {});
+  });
+}

@@ -5,6 +5,7 @@ export const LoginFormFields = [
         rules: [
             {
                 required: true,
+                message: 'Please enter your email!',
             },
         ],
         placeholder: "Enter your email",
@@ -14,7 +15,7 @@ export const LoginFormFields = [
         name: "password",
         type: "password",
         rules: [
-            { required: true, message: 'Please input your password!' },
+            { required: true, message: 'Please enter your password!' },
         ],
         placeholder: "Enter your password",
         inputFieldClassName:"bg-dark text-white",
@@ -28,7 +29,7 @@ export const LoginFormFields = [
     },
     {
         name: "submit",
-        label: "Login",
+        label: "Log in",
         type: "submit",
         htmlType: "submit",
         className: "login-btn btn-primary mt-4",

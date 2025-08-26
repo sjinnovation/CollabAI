@@ -20,4 +20,36 @@ export const fileSearchFileTypes = [
     ".tex",
     ".ts",
     ".txt",
+    ".ai",
 ];
+
+  
+export const codeInterpreterFileTypes = [
+    ".c",
+    ".cpp",
+    ".csv",
+    ".docx",
+    ".html",
+    ".java",
+    ".json",
+    ".md",
+    ".pdf",
+    ".php",
+    ".pptx",
+    ".py",
+    ".rb",
+    ".tex",
+    ".txt",
+    ".css",
+    ".jpeg",
+    ".jpg",
+    ".js",
+    ".gif",
+    ".png",
+    ".tar",
+    ".ts",
+    ".xlsx",
+    ".xml",
+    ".zip",
+    ".ai"
+  ];

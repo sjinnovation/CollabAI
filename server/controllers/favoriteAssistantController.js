@@ -8,6 +8,7 @@ import {
 	deleteManyFavouriteAssistantService,
 	updateSingleFavouriteAssistantService,
 	countFavouriteAssistantService,
+	getSingleFavoriteAssistantWithoutSkipService,
 } from '../service/favoriteAssistantService.js';
 import { getAllPublicAssistantService } from '../service/publicAssistantService.js';
 
@@ -15,6 +16,8 @@ import { AssistantMessages, CommonMessages, FavoriteAssistantMessages } from '..
 
 import { getSingleAssistantByIdService, } from '../service/assistantService.js';
 import { StatusCodes } from 'http-status-codes';
+import { getAllAssistantUsageMonthly } from '../service/assistantUsageService.js';
+import { getAllAssistantRatingService } from '../service/assistantRatingService.js';
 
 /**
  * @async
@@ -132,6 +135,69 @@ export const getSingleUsersFavAssistWithDetails = async (req, res, next) => {
 			}
 			result.push(assistant);
 		}
+
+		const {assistantUsageSummary, totalDataCount} = await getAllAssistantUsageMonthly();
+		const assistantRating = await getAllAssistantRatingService();
+
+		result = result.map((assistant)=>{
+			const assistantUsage = assistantUsageSummary.find((usage)=> usage?.assistantId === assistant?.assistant_id);
+			const ratings = assistantRating.find((rating)=> rating?._id === assistant?.assistant_id);
+			return {...assistant, usageStats: assistantUsage, rating: ratings};
+		})
+
+		if (favoriteAssistantById) {
+			return res.status(StatusCodes.OK).json({
+				result,totalCount,
+				message: FavoriteAssistantMessages.FAVORITE_ASSISTANT_FETCH_SUCCESSFULLY,
+			});
+		} else {
+			return res.status(StatusCodes.NOT_FOUND).json({ message: CommonMessages.NOT_FOUND_ERROR });
+		}
+	} catch (error) {
+		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: CommonMessages.INTERNAL_SERVER_ERROR });
+	}
+};
+
+/**
+ * @async
+ * @function getSingleUsersFavAssistWithoutSkip
+ * @description Get single user's favorite assistants without using skip.
+ * @param {Object} req - No request body. 'id' must be passed as a route param. Optional query: 'page', 'pageSize'.
+ * @param {Object} res - Returns favorite assistant details.
+ * @throws {Error} On failure to fetch data.
+ * @returns {Response} 200 - Success with assistant details, 404 - Not found, 500 - Internal server error.
+ */
+
+
+export const getSingleUsersFavAssistWithoutSkip = async (req, res, next) => {
+	try {
+		const { page = 1, pageSize = 10 } = req.query;
+		const limit = parseInt(pageSize);
+
+		const { id } = req.params;
+
+		const {favoriteAssistantById, totalCount} = await getSingleFavoriteAssistantWithoutSkipService(id, limit, page);
+
+		let result = [];
+
+		for (const favoriteAssistantData of favoriteAssistantById) {
+			const assistantId = favoriteAssistantData['assistant_id'];
+			const assistant = await getSingleAssistantByIdService(assistantId);
+			if (!assistant || assistant === null) {
+				continue
+			}
+			result.push(assistant);
+		}
+
+		const {assistantUsageSummary, totalDataCount} = await getAllAssistantUsageMonthly();
+		const assistantRating = await getAllAssistantRatingService();
+
+		result = result.map((assistant)=>{
+			const assistantUsage = assistantUsageSummary.find((usage)=> usage?.assistantId === assistant?.assistant_id);
+			const ratings = assistantRating.find((rating)=> rating?._id === assistant?.assistant_id);
+			return {...assistant, usageStats: assistantUsage, rating: ratings};
+		})
+
 		if (favoriteAssistantById) {
 			return res.status(StatusCodes.OK).json({
 				result,totalCount,

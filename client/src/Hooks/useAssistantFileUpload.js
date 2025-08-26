@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { message,Upload } from "antd";
-import { createAssistantWithFiles, updateAssistantWithDetailsAndFiles } from "../api/assistant";
+import { message, Upload } from "antd";
+import {
+  createAssistantWithFiles,
+  updateAssistantWithDetailsAndFiles,
+} from "../api/assistant";
 import {
   retrievalFileTypes,
   codeInterpreterFileTypes,
@@ -8,21 +11,34 @@ import {
 
 import { FileContext } from "../contexts/FileContext";
 import { useContext } from "react";
-const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) => {
+
+const useAssistantFileUpload = (
+  onDeleteFile,
+  selectedTools,
+  getInitialFiles
+) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [countTotalFile, setCountTotalFile] = useState(0)
-  const [totalFileList,setTotalFileList] = useState([]);
-  const {  deletedFileList,setDeletedFileList} = useContext(FileContext);
+  const [countTotalFile, setCountTotalFile] = useState(0);
+  const [totalFileList, setTotalFileList] = useState([]);
+  const {
+    deletedFileList,
+    setDeletedFileList,
+    deleteFileIds,
+    setDeleteFileIds,
+  } = useContext(FileContext);
+
   useEffect(() => {
     const initialFiles = getInitialFiles();
-    const fileListFormatted = initialFiles.map((file, index) => ({
-      uid: `existing-${index}`,
-      name: file,
-      status: "done",
-    }));
+    const fileListFormatted = initialFiles
+      ?.map((file, index) => ({
+        uid: `existing-${index}`,
+        name: file,
+        status: "done",
+      }))
+      .filter((file) => !deleteFileIds.includes(file.uid));
     setFileList(fileListFormatted);
-  }, [getInitialFiles]);
+  }, [getInitialFiles, deleteFileIds]);
 
   const handleCreateOrUpdateAssistantWithFiles = async (
     formData,
@@ -37,16 +53,14 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
         : await createAssistantWithFiles(formData);
 
       if (response.data) {
-        message.success(
-          response.message
-        );
+        message.success(response.message);
         return true;
       }
     } catch (error) {
       message.error(error?.response?.data?.message || error.message);
       return false;
     } finally {
-      setDeletedFileList([])
+      setDeletedFileList([]);
       setUploading(false);
     }
   };
@@ -57,18 +71,20 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
 
     setFileList(newFileList);
     setTotalFileList(newTotalFileList);
-    setDeletedFileList((prev)=>[...prev,file.uid]);
+    setCountTotalFile(newFileList.length);
+    setDeleteFileIds((prev) => [...prev, file.uid]);
 
     if (file.uid.startsWith("existing")) {
       const index = parseInt(file.uid.split("-")[1], 10);
       onDeleteFile(index);
     }
   };
-  const handleAddFile = (file, fileList) => {
-    if (countTotalFile > 20) {
-      return false;
 
+  const handleAddFile = (file, fileListParam) => {
+    if (countTotalFile >= 20) {
+      return false;
     }
+
     const fileExtension = `.${file.name.split(".").pop().toLowerCase()}`;
     let allowedFileTypes = [];
 
@@ -90,19 +106,25 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     const isFileAllowed = uniqueAllowedFileTypes.includes(fileExtension);
 
     if (!isFileAllowed) {
-      message.error(`Unsupported file type: ${file.name} select the files that are supported for your tools enabled.`);
+      message.error(
+        `Unsupported file type: ${file.name}. Please select files that are supported for your enabled tools.`
+      );
       return false;
     }
-    const existingFilenames = totalFileList.map(f => f.name);
-    if (existingFilenames.includes(file.name)) {
-      message.error(`The file "${file.name}" already exists. Please upload a file with a unique name.`);
+
+    const isDuplicate = fileList.some(
+      (existingFile) => existingFile?.name === file?.name
+    );
+    if (isDuplicate) {
+      message.warning(
+        `File '${file.name}' already exists. Please upload a unique file.`
+      );
       return Upload.LIST_IGNORE;
     }
-    else{
-      setFileList((prevList) => [...prevList, file]);
-      setTotalFileList((prevList) => [...prevList, file]);
 
-    }
+    setFileList((prevList) => [...prevList, file]);
+    setTotalFileList((prevList) => [...prevList, file]);
+    setCountTotalFile((prev) => prev + 1);
 
     return false;
   };
@@ -119,7 +141,7 @@ const useAssistantFileUpload = (onDeleteFile, selectedTools, getInitialFiles) =>
     setCountTotalFile,
     countTotalFile,
     totalFileList,
-    setTotalFileList
+    setTotalFileList,
   };
 };
 

@@ -40,7 +40,6 @@ const AssistantThread = ({
     const { setDeletedAssistantThreadId } = useContext(AssistantContext);
 
     // ----------- API Call ----------
-
     const handleUpdateThread = async () => {
         const editedValue = threadInputRef.current.value;
         console.log(editedValue);
@@ -64,7 +63,7 @@ const AssistantThread = ({
     const handleLinkClick = (e) => {
         e.stopPropagation();
         navigate(
-            `/agents/${assistant_name}/${currentAssistantId}/${thread_id}`
+            `/agents/${currentAssistantId}/${thread_id}`
         );
         
     };

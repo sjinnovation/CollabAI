@@ -1,0 +1,21 @@
+.config-container .custom-list {
+    margin-bottom: 0 !important;
+  }
+
+  .models-list {
+    margin-top: 0 !important;
+  }
+
+  .config-container .ant-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .token-column{
+    height: 155px;
+  }
+
+  .token-button{
+     margin-right: 10px;
+    }

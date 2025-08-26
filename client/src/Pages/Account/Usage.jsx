@@ -1,36 +1,35 @@
-import React, { useEffect, useState } from 'react'
-import { Typography } from 'antd';
-import { DatePicker } from 'antd';
-import { getUserID } from '../../Utility/service';
-import { getMonthlyUsageReport } from '../../api/track-usage-api-functions';
-import UserTrackUsageTable from './TrackUsageComponent/UserTrackUsageTable';
-import './Usage.css'
+import React, { useEffect, useState } from "react";
+import { Card, Typography } from "antd";
+import { DatePicker } from "antd";
+import { getUserID } from "../../Utility/service";
+import { getMonthlyUsageReport } from "../../api/track-usage-api-functions";
+import UserTrackUsageTable from "./TrackUsageComponent/UserTrackUsageTable";
+import "./Usage.css";
+import moment from "moment/moment";
+import ProfileHeader from "../../component/Proflie/ProfileHeader";
+import dayjs from "dayjs";
 
 const { MonthPicker } = DatePicker;
 
 const Usage = () => {
-  const [selectedMonth, setSelectedMonth] = useState('');
-  const [loading, setLoading] = useState(false)
-  const [totalUsageReport, setTotalUsageReport] = useState({})
-  const [aggregatedData, setAggregatedData] = useState([])
-
-  const userid = getUserID()
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [totalUsageReport, setTotalUsageReport] = useState({});
+  const [aggregatedData, setAggregatedData] = useState([]);
+  const dateFormat = "YYYY/MM";
+  const userid = getUserID();
 
   const handleMonthChange = (date, dateString) => {
     // console.log("Type:", typeof (dateString))
-    setSelectedMonth(dateString)
-    console.log("SelectedMonth:", selectedMonth)
+    setSelectedMonth(dateString);
+    console.log("SelectedMonth:", selectedMonth);
   };
 
   const handleFetchMonthlyReport = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const {
-        success,
-        trackUsage,
-        aggregatedData,
-        aggregatedDataTotal
-      } = await getMonthlyUsageReport(userid, selectedMonth)
+      const { success, trackUsage, aggregatedData, aggregatedDataTotal } =
+        await getMonthlyUsageReport(userid, selectedMonth);
       if (success) {
         let result = [];
         aggregatedData.reduce((res, value) => {
@@ -49,13 +48,13 @@ const Usage = () => {
           res[value._id.user_id].count += value.count;
           return res;
         }, {});
-        setTotalUsageReport(aggregatedDataTotal)
-        setAggregatedData(result)
-        setLoading(false)
+        setTotalUsageReport(aggregatedDataTotal);
+        setAggregatedData(result);
+        setLoading(false);
       } else {
-        setTotalUsageReport({})
-        setAggregatedData([])
-        setLoading(false)
+        setTotalUsageReport({});
+        setAggregatedData([]);
+        setLoading(false);
       }
       // console.log(result)
     } finally {
@@ -64,9 +63,8 @@ const Usage = () => {
   };
 
   useEffect(() => {
-    handleFetchMonthlyReport()
-  }, [selectedMonth])
-
+    handleFetchMonthlyReport();
+  }, [selectedMonth]);
 
   const columns = [
     {
@@ -74,83 +72,105 @@ const Usage = () => {
       dataIndex: "_id",
       render: (_id) => {
         const date = new Date(_id.year, _id.month - 1);
-        return <p>{date.toLocaleString('default', { month: 'long' })}</p>;
+        return <p>{date.toLocaleString("default", { month: "long" })}</p>;
       },
       onHeaderCell: () => {
         return {
           style: {
-            textAlign: 'center',
-          }
-        };
-      }
-    },
-    {
-      title: 'Prompt Count',
-      dataIndex: 'count',
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
+            textAlign: "center",
+          },
         };
       },
     },
     {
-      title: 'Total Token',
-      dataIndex: 'total_tokens',
+      title: "Prompt Count",
+      dataIndex: "count",
       onHeaderCell: () => {
         return {
           style: {
-            textAlign: 'center',
-          }
+            textAlign: "center",
+          },
         };
       },
     },
     {
-      title: 'Cost',
-      dataIndex: 'total_token_cost',
+      title: "Total Token",
+      dataIndex: "total_tokens",
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
+          },
+        };
+      },
+    },
+    {
+      title: "Cost",
+      dataIndex: "total_token_cost",
       render: (value) => <p>${Number(value).toFixed(5)}</p>,
       onHeaderCell: () => {
         return {
           style: {
-            textAlign: 'center',
-          }
+            textAlign: "center",
+          },
         };
       },
     },
-  ]
+  ];
 
   return (
-    <div>
-      <div className='usage-container'>
-        <MonthPicker
-          defaultValue={selectedMonth}
-          onChange={handleMonthChange}
-        />
-        <div className='usage-report-container'>
-          <Typography><b>Total Token: {totalUsageReport?.total_tokens ? totalUsageReport?.total_tokens : 0 }</b></Typography>
-          <Typography>
-            <b>
-              Total Cost: $
-              {totalUsageReport && !isNaN(Number(totalUsageReport.total_cost))
-                ? Number(totalUsageReport.total_cost).toFixed(5)
-                : "0.00000"
-              }
-            </b>
-          </Typography>
+    <div className="usage-container">
+      <ProfileHeader
+        title="Personal Usage Reports"
+        subHeading="Track your token usage and associated costs. Monitor your AI interactions across different time periods."
+      />
+      <div className="position-relative">
+        <div
+          className="usage-report-container"
+          style={
+            aggregatedData.length > 0
+              ? { position: "absolute", top: "15px" }
+              : { position: "relative", marginBottom: "20px" }
+          }
+        >
+          <MonthPicker
+            defaultValue={dayjs()}
+            format={dateFormat}
+            onChange={handleMonthChange}
+          />
+          <Card className="typo-card" style={{ padding: "0px" }}>
+            <Typography>
+              <b>
+                Total Token:{" "}
+                {totalUsageReport?.total_tokens
+                  ? totalUsageReport?.total_tokens
+                  : 0}
+              </b>
+            </Typography>
+          </Card>
+          <Card className="typo-card" style={{ padding: "0px" }}>
+            <Typography>
+              <b>
+                Total Cost: $
+                {totalUsageReport && !isNaN(Number(totalUsageReport.total_cost))
+                  ? (
+                      Math.ceil(Number(totalUsageReport.total_cost) * 100) / 100
+                    ).toFixed(2)
+                  : "0.00"}
+              </b>
+            </Typography>
+          </Card>
         </div>
-      </div>
-      <div className="track-usage-table">
-      <UserTrackUsageTable
+        <UserTrackUsageTable
           dataProps={{
             loading,
             data: aggregatedData,
-            columns
+            columns,
           }}
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Usage
+export default Usage;

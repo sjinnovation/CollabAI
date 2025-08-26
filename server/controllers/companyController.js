@@ -7,6 +7,9 @@ import StatusCodes from "http-status-codes";
 import sendEmail from "../utils/mailGun.js"
 import { getCompanyPromptsByDate } from "../service/aggregationService.js"
 import config from "../config.js";
+import { uploadImageToS3 } from "../lib/s3.js";
+import { CommonMessages } from "../constants/enums.js";
+import { deleteLocalFile } from "../utils/assistant.js";
 
 export const createCompany = async (req, res) => {
     const { name, email, password, employeeCount, firstname, lastname } = req.body;
@@ -30,22 +33,22 @@ export const createCompany = async (req, res) => {
         const tokens = await Config.findOne({ key: 'tokens' });
         let maxusertokens = tokens.maxusertokens ? parseInt(tokens.maxusertokens) : 5000;
         console.log("isInfo:", name, firstname, lastname)
-        const user = await User.create({
-            fname: firstname,
-            lname: lastname,
-            maxusertokens,
-            password: password,
-            email,
-            role: "admin",
-            username: email,
-            status: "inactive",
-            companyId: CompanyRecord._id,
-        });
+        // const user = await User.create({
+        //     fname: firstname,
+        //     lname: lastname,
+        //     maxusertokens,
+        //     password: password,
+        //     email,
+        //     role: "admin",
+        //     username: email,
+        //     status: "inactive",
+        //     companyId: CompanyRecord._id,
+        // });
 
         if (CompanyRecord) {
             res.status(StatusCodes.OK).json({ message: "Your company profile has been created successfully" });
-            sendEmail(email,"Welcome to CollaborativeAI",{name: firstname,link: config.CLIENT_URL},"../utils/template/userregister.handlebars",false);
-            sendEmail(config.ADMIN_EMAIL,"Notification CollaborativeAI : New User Onboarded ",{name: name,email: email},"../utils/template/adminNotifyNewCompany.handlebars",true);
+            sendEmail(email,"Welcome to CollabAI",{name: firstname,link: config.CLIENT_URL},"../utils/template/userregister.handlebars",false);
+            sendEmail(config.ADMIN_EMAIL,"Notification CollabAI : New User Onboarded ",{name: name,email: email},"../utils/template/adminNotifyNewCompany.handlebars",true);
         }
     }
 };
@@ -58,6 +61,8 @@ export const updateCompanyStatus = async (req, res) => {
 
     if (companyRecord) {
         res.status(StatusCodes.OK).json({ message: "Company Status updated" });
+    }else {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "No changes were made" });
     }
 };
 
@@ -69,6 +74,8 @@ export const updateCompany = async (req, res) => {
 
     if (companyRecord) {
         res.status(StatusCodes.OK).json({ message: "Company Data updated" });
+    }else {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: "No changes were made" });
     }
 };
 
@@ -156,3 +163,65 @@ export const getCompaniesPrompts = async (req, res) => {
     res.status(StatusCodes.OK).json({ companies });
 
 }
+
+
+export const uploadBrandLogo = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const avatarFile = req.file ?? '';
+      const avatar = avatarFile ? avatarFile : null;
+
+      let image_url = null;
+      if (avatar) {
+        image_url = await uploadImageToS3(avatar.path, 'image');
+      }
+
+      const company = await Company.findOneAndUpdate(
+        { _id: id },
+        { brandLogo: image_url },
+        {
+          new: true,
+        }
+      );
+
+      if (company && avatar) {
+        deleteLocalFile(avatar)
+          .then(() => {
+            console.log('Avatar file deleted');
+          })
+          .catch((err) => {
+            console.error('Failed to delete avatar file:', err);
+          });
+      }
+
+      return res.status(StatusCodes.OK).json({
+        message: "Brand logo uploaded successfully",
+        company,
+      });
+    } catch (error) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: CommonMessages.INTERNAL_SERVER_ERROR,
+      });
+    }
+  };
+
+export const deleteBrandLogo = async (req, res) => {
+    const { id } = req.params;
+    const company = await Company.findOneAndUpdate(
+      { _id: id },
+      { brandLogo: "" },
+      {
+        new: true,
+      }
+    );
+    if (company) {
+        return res.status(StatusCodes.OK).json({
+            message: "Brand logo deleted successfully",
+            company,
+        });
+    } else {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            message: "Brand logo not found",
+        });
+    }
+  }; 

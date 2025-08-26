@@ -1,4 +1,3 @@
-
 /**
  * Sends a streaming response from an OpenAI GPT model over a socket connection.
  *
@@ -15,45 +14,61 @@
  */
 
 export const sendOpenAIStreamResponse = async (
-	socket,
-	stream,
-	gptResponse,
-	finalResponseObject,
-	tokenCount,
-	socketEvent
+  socket,
+  stream,
+  gptResponse,
+  finalResponseObject,
+  tokenCount,
+  socketEvent,
+  isActive
 ) => {
-	return new Promise((resolve, reject) => {
-		(async () => {
-			try {
-				// eslint-disable-next-line no-restricted-syntax
-				for await (const part of stream) {
-					let finishReason;
-					finishReason = part.choices[0]?.finish_reason;
-					gptResponse += part.choices[0]?.delta?.content || '';
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const part of stream) {
+          console.log("isActive : ", isActive());
+          if (!isActive()) {
+            stream?.controller?.abort();
+            resolve({
+              completed: true,
+              tokenCount: tokenCount,
+              gptResponse: gptResponse,
+            });
+            return;
+          }
+          let finishReason;
+          finishReason = part.choices[0]?.finish_reason;
+          gptResponse += part.choices[0]?.delta?.content || "";
+          console.log("part :", part);
+          console.log("part.choices[0] :", part.choices[0]);
+          console.log("part.choices[0]?.delta :", part.choices[0]?.delta);
+          console.log("part.choices[0]?.delta?.content :", part.choices[0]?.delta?.content);
+          console.log("part.choices[0]?.finish_reason :", finishReason);
+          console.log("gptResponse :", gptResponse);
 
-					tokenCount++;
-					socket.emit(socketEvent, {
-						...finalResponseObject,
-						promptResponse: gptResponse,
-						isCompleted: false
-					});
+          tokenCount++;
+          socket.emit(socketEvent, {
+            ...finalResponseObject,
+            promptResponse: gptResponse,
+            isCompleted: false,
+          });
 
-					if (finishReason === 'stop' || finishReason === 'length') {
-						resolve({
-							completed: true,
-							tokenCount: tokenCount,
-							gptResponse: gptResponse,
-						});
-						return;
-					}
-				}
-			} catch (error) {
-				reject(error);
-			}
-		})();
-	});
+          if (finishReason === "stop" || finishReason === "length") {
+            resolve({
+              completed: true,
+              tokenCount: tokenCount,
+              gptResponse: gptResponse,
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        reject(error);
+      }
+    })();
+  });
 };
-
 
 /**
  * Sends a Gemini AI stream response to a socket.
@@ -70,39 +85,49 @@ export const sendOpenAIStreamResponse = async (
  */
 
 export const sendGeminiAIStreamResponse = async (
-	socket,
-	stream,
-	gptResponse,
-	finalResponseObject,
-	tokenCount,
-	socketEvent
+  socket,
+  stream,
+  gptResponse,
+  finalResponseObject,
+  tokenCount,
+  socketEvent,
+  isActive
 ) => {
-	return new Promise((resolve, reject) => {
-		(async () => {
-			try {
-				// eslint-disable-next-line no-restricted-syntax
-				for await (const part of stream) {
-					let finishReason;
-					finishReason = part.candidates[0]?.finishReason;
-					const chunkText = part.text();
-					gptResponse += chunkText;
-					tokenCount += chunkText.length;
-					socket.emit(socketEvent, {
-						...finalResponseObject,
-						promptResponse: gptResponse,
-						isCompleted: false
-					});
-				}
-				resolve({
-					completed: true,
-					tokenCount: tokenCount,
-					gptResponse: gptResponse,
-				});
-			} catch (error) {
-				reject(error);
-			}
-		})();
-	});
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const part of stream) {
+          if (!isActive()) {
+            stream?.controller?.abort();
+            resolve({
+              completed: true,
+              tokenCount: tokenCount,
+              gptResponse: gptResponse,
+            });
+            return;
+          }
+          let finishReason;
+          finishReason = part.candidates[0]?.finishReason;
+          const chunkText = part.text();
+          gptResponse += chunkText;
+          tokenCount += chunkText.length;
+          socket.emit(socketEvent, {
+            ...finalResponseObject,
+            promptResponse: gptResponse,
+            isCompleted: false,
+          });
+        }
+        resolve({
+          completed: true,
+          tokenCount: tokenCount,
+          gptResponse: gptResponse,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    })();
+  });
 };
 
 /**
@@ -120,44 +145,161 @@ export const sendGeminiAIStreamResponse = async (
  */
 
 export const sendClaudeAIStreamResponse = async (
-	socket,
-	stream,
-	gptResponse,
-	finalResponseObject,
-	tokenCount,
-	socketEvent
+  socket,
+  stream,
+  gptResponse,
+  finalResponseObject,
+  tokenCount,
+  socketEvent
 ) => {
-	return new Promise((resolve, reject) => {
-		(async () => {
-			try {
-				stream.on('text', (response) => {
-					tokenCount += response.length;
-					gptResponse += response;
-					socket.emit(socketEvent, {
-						...finalResponseObject,
-						promptResponse: gptResponse,
-						isCompleted: false,
-					});
-				});
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        stream.on("text", (response) => {
+          tokenCount += response.length;
+          gptResponse += response;
+          socket.emit(socketEvent, {
+            ...finalResponseObject,
+            promptResponse: gptResponse,
+            isCompleted: false,
+          });
+        });
 
-				stream.on('end', () => {
-					// Once the stream ends, emit the final message with isCompleted: true
-					socket.emit(socketEvent, {
-						...finalResponseObject,
-						promptResponse: gptResponse,
-						isCompleted: false,
-					});
-					// If streaming ends, resolve with completed true
-					resolve({
-						completed: true,
-						gptResponse,
-						tokenCount,
-					});
-				});
-			} catch (error) {
-				reject(error);
-			}
-		})();
-	});
+        stream.on("end", () => {
+          // Once the stream ends, emit the final message with isCompleted: true
+          socket.emit(socketEvent, {
+            ...finalResponseObject,
+            promptResponse: gptResponse,
+            isCompleted: false,
+          });
+          // If streaming ends, resolve with completed true
+          resolve({
+            completed: true,
+            gptResponse,
+            tokenCount,
+          });
+        });
+      } catch (error) {
+        reject(error);
+      }
+    })();
+  });
 };
 
+/**
+ * Sends a streaming response from a DeepSeek model over a socket connection.
+ *
+ * @async
+ * @function sendDeepSeekStreamResponse
+ * @param {Socket} socket - The socket connection over which to send the response.
+ * @param {Stream} stream - The streaming response from the DeepSeek model.
+ * @param {string} gptResponse - The response generated by the DeepSeek model.
+ * @param {object} finalResponseObject - The final response object to be sent over the socket.
+ * @param {number} tokenCount - The number of tokens in the response.
+ * @param {string} socketEvent - The emit message to work with socket.
+ * @param {Function} isActive - Function to check if the chat is still active.
+ * @returns {Promise<object>} A promise that resolves when the streaming response is complete.
+ * @throws {Error} Will throw an error if there is an issue with sending the response.
+ */
+export const sendDeepseekStreamResponse = async (
+  socket,
+  stream,
+  gptResponse,
+  finalResponseObject,
+  tokenCount,
+  socketEvent,
+  isActive
+) => {
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        let fullResponse = "";
+        for await (const chunk of stream) {
+          if (!isActive()) {
+            stream?.controller?.abort();
+            break;
+          }
+          const content = chunk.choices[0]?.delta?.content || "";
+          fullResponse += content;
+          gptResponse += content;
+
+          // Emit partial response to socket
+          socket.emit(socketEvent, {
+            ...finalResponseObject,
+            promptResponse: gptResponse,
+            isCompleted: false,
+          });
+        }
+
+        resolve({
+          completed: true,
+          tokenCount: fullResponse.split(" ").length,
+          gptResponse: fullResponse,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    })();
+  });
+};
+
+/**
+ * Sends a Hugging Face streaming response to the client via socket.
+ *
+ * @async
+ * @function sendHuggingFaceStreamResponse
+ * @param {object} socket - The socket object to emit responses to the client.
+ * @param {object} stream - The streaming response object from Hugging Face.
+ * @param {string} gptResponse - The accumulated response from Hugging Face.
+ * @param {object} finalResponseObject - The final response object to emit to the client.
+ * @param {number} tokenCount - The count of tokens in the response.
+ * @param {string} socketEvent - The event name to emit to the client.
+ * @returns {Promise<object>} A promise that resolves when streaming is complete.
+ * @throws {Error} Will throw an error if there's an issue with the response or streaming.
+ */
+
+import { HuggingfaceMessages } from "../../constants/enums.js";
+
+export const sendHuggingFaceStreamResponse = async (stream) => {
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        if (!stream || !stream.result) {
+          return reject(new Error(HuggingfaceMessages.HF_NO_RES));
+        }
+
+        let responseText = "";
+
+        // Extract response from Hugging Face format
+        const result = stream.result;
+
+        if (Array.isArray(result)) {
+          if (result[0].label) {
+            responseText = result
+              .map((entry) => `${entry.label}: ${entry.score.toFixed(4)}`)
+              .join("\n");
+          } else if (result[0].entity_group) {
+            responseText = result
+              .map(
+                (entry) =>
+                  `${entry.entity_group}: ${entry.word} (Score: ${entry.score.toFixed(4)})`
+              )
+              .join("\n");
+          }
+        } else if (result.generated_text) {
+          responseText = result.generated_text;
+        } else if (typeof result === "string") {
+          responseText = result;
+        }
+
+        resolve({
+          completed: true,
+          gptResponse: responseText,
+          tokenCount: 0, // HuggingFace usually doesn't return tokens
+        });
+      } catch (error) {
+        reject(error);
+      }
+    })();
+  });
+};

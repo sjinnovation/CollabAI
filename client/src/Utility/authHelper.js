@@ -7,4 +7,5 @@ export const saveUserToLocalStorage = (user) => {
     localStorage.role = user?.role;
     localStorage.userName = user?.userName;
     localStorage.userTeamAccess = user?.hasAccess;
+    localStorage.userAvatar = user?.userAvatar ?? "";
 };

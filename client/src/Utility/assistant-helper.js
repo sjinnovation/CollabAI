@@ -46,3 +46,8 @@ export const getAssistantInfo =async (assistantId)=>{
     }
 
   }
+
+  export const getFileExtension = (filename)=>{
+    const index = filename.lastIndexOf(".");
+    return index !== -1 ? filename.slice(index) : "";
+}

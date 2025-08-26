@@ -97,6 +97,41 @@
   }
 }
 
+.login-header{
+  width: 100%;
+}
+.login-header small{
+  color: rgb(192, 184, 184);
+  font-size: x-small;
+  font-weight: bold;
+}
+.login-logo-text{
+  display: flex;
+  justify-content: space-between; 
+  align-items:flex-end;
+  width: 100%;
+}
+.login-logo-text img{
+  width: 180px;
+  height: auto;
+}
+.login-logo-text h4{
+  color:white;
+}
+
+.login-page-info-text{
+  color: rgb(184, 175, 175);
+  font-size: small;
+}
+
+.login-page-logo{
+  height: 20px;
+  width: 20px;
+}
+.bottom-font-size{
+  text-align: center;
+}
+
 @media screen and (max-width: 800px) {
   .form-inner {
     justify-content: center;
@@ -146,6 +181,10 @@
   }
   .login-btn:hover{
     background: #0d6efd!important;
+  }
+
+  .ant-btn {
+    margin: 7px 0 0 0 !important;
   }
 }
 

@@ -1,0 +1,13 @@
+@media only screen and (max-width: 1024px) {
+  .delete--account__container {
+    flex-wrap: wrap;
+  }
+}
+
+@media only screen and (max-width: 780px) {
+  .delete--account__container {
+    flex-direction: column !important;
+    align-items: start !important;
+    gap: 5px;
+  }
+}

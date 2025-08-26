@@ -5,4 +5,76 @@
   .anticon-pushpin {
     display: none;
   }
+
   
+  /* @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.2; }
+    100% { opacity: 1; }
+  } */
+  
+  /* .blinking-dot-container {
+    display: inline-block;
+    position: relative;
+    width: 12px;
+    height: 12px; 
+    animation: blink 2s infinite;
+    box-shadow: 0 0 5px red;
+    border-radius: 50%;
+
+  } */
+  
+  /* .blinking-dot {
+    height: 10px; 
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  } */
+  
+
+.parent {
+    width: 12px;
+    height: 12px;
+    background-color: transparent; /* Make background transparent for border visibility */
+    border: 2px solid rgb(238, 7, 7); /* Initial thin border */
+    border-radius: 50%; /* Makes the parent div rounded */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: growBorder 1.5s infinite; /* Apply the growBorder animation infinitely */
+}
+.child {
+    width: 12px;
+    height: 12px;
+    background-color: darkred;
+    border-radius: 50%; /* Makes the child div rounded */
+    margin: 0; /* No gap needed for this effect */
+}
+@keyframes growBorder {
+    0% {
+        border-width: 0px; /* Initial thin border */
+        transform: scale(1); /* Original size */
+    }
+    25% {
+        border-width: 4px; /* Thicker border */
+        border-color: rgba(245, 74, 6, 0.479);
+        transform: scale(0.9); /* Scale down slightly */
+    }
+    50% {
+        border-width: 8px; /* Thicker border */
+        border-color: rgb(46, 38, 35);
+        transform: scale(0.9); /* Scale down slightly */
+    }
+    75% {
+        border-width: 8px; /* Thicker border */
+        border-color: rgb(49, 48, 48);
+        transform: scale(0.9); /* Scale down slightly */
+    }
+    100% {
+        border-width: 0px; /* Return to thin border */
+        transform: scale(1); /* Return to original size */
+    }
+}

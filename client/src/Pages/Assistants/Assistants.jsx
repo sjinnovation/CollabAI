@@ -433,7 +433,7 @@ const Assistants = () => {
                           </Avatar>
 
                           <div id="chatPrompt" className="text-wrap">
-                            <pre>{chat.chatPrompt}</pre>
+                            <pre>{chat.chatPrompt }</pre>
                           </div>
                         </div>
                       </div>

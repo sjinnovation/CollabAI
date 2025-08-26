@@ -1,4 +1,4 @@
-import { getDistinctPublicAssistantWithQueryService, getPublicAssistantWithQueryService, getPublicFeaturedAssistantWithQueryService, createPublicAssistantService, getAllPublicAssistantService, getSinglePublicAssistantService, getSinglePublicAssistantByIdOrAssistantIdService, deletePublicAssistantService, getAllPublicAssistantPaginatedService, getPublicAssistantWithQueryConditionService } from '../service/publicAssistantService.js';
+import { getDistinctPublicAssistantWithQueryService, getPublicAssistantWithQueryService, getPublicFeaturedAssistantWithQueryService, createPublicAssistantService, getAllPublicAssistantService, getSinglePublicAssistantService, getSinglePublicAssistantByIdOrAssistantIdService, deletePublicAssistantService, getAllPublicAssistantPaginatedService, getPublicAssistantWithQueryConditionService, getPublicAssistantsWithDetailsService } from '../service/publicAssistantService.js';
 import { getSingleAssistantByIdService, getSingleAssistantByIdWithUserDetailsService } from '../service/assistantService.js';
 import {
 	createFavouriteAssistantService,
@@ -23,6 +23,8 @@ import { getSortedAssistantTypes } from '../service/assistantTypeService.js';
 import { doesAssistantExist } from '../lib/openai.js';
 import { getOpenAIInstance } from '../config/openAI.js';
 import PublicAssistant from '../models/public_assistant.js';
+import { getAllAssistantUsageMonthly } from '../service/assistantUsageService.js';
+import { getAllAssistantRatingService } from '../service/assistantRatingService.js';
 
 /**
  * @async
@@ -53,6 +55,9 @@ export const getAllPublicAssistantWithDetails = async (req, res, next) => {
 			queryConditions['assistantTypes'] = type;
 		}
 		const assistantTypesWithoutIcon = await getSortedAssistantTypes();
+		const {assistantUsageSummary, totalDataCount} = await getAllAssistantUsageMonthly();
+		const assistantRating = await getAllAssistantRatingService();
+
 		let countOfAssistant = 0;
 		const assistantByTypes = await Promise.all(
 			assistantTypesWithoutIcon.map(async (type,i) => {
@@ -72,14 +77,24 @@ export const getAllPublicAssistantWithDetails = async (req, res, next) => {
 				}
 				const { assistants, totalCount } = await getPublicAssistantWithQueryConditionService(type?._id, queryConditions,limit,skip);
 
-				if (assistants.length > 0) {
-					countOfAssistant+=assistants?.length;
+				let assistantData = assistants.map((assistant) => {
+				const assistantUsage = assistantUsageSummary.find((usage) => usage.assistantId === assistant.assistant_id);
+				const ratings = assistantRating.find((rating)=> rating?._id === assistant?.assistant_id); 
+					return {
+						...assistant,
+						usageStats: assistantUsage,
+						rating: ratings
+					};
+				});
+
+				if (assistantData.length > 0) {
+					countOfAssistant+=assistantData?.length;
 					return {
 						categoryName: type?.name,
 						categoryInfo: {
 							page,
 							limit,
-							assistants: assistants?.length > 0 ? assistants : [], 
+							assistants: assistantData?.length > 0 ? assistantData : [], 
 							totalAssistantCount : totalCount
  
 						},
@@ -134,10 +149,20 @@ export const getAllPublicAssistantWithDetails = async (req, res, next) => {
 			featuredLimit
 		);
 
+		const featuredAssistantData = featuredAssistants.map((assistant) => {
+			const assistantUsage = assistantUsageSummary.find((usage) => usage.assistantId === assistant.assistant_id);
+			const ratings = assistantRating.find((rating)=> rating?._id === assistant?.assistant_id);	
+			return {
+				...assistant,
+				usageStats: assistantUsage,
+				rating: ratings
+			};
+		});
+
 		const featuredAssistant = {
 			page: featuredPage,
 			limit: featuredLimit,
-			assistants: featuredAssistants,
+			assistants: featuredAssistantData,
 			totalAssistantCount : totalCount
 		};
 
@@ -150,7 +175,39 @@ export const getAllPublicAssistantWithDetails = async (req, res, next) => {
 	}
 };
 
-
+export const getPublicFeaturedAgents = async (req, res, next) => {
+	try {
+	  const {page = 1, pageSize = 5} = req.query;
+	  const skip = 0;
+	  const limit = Number(page) * Number(pageSize);
+	  const queryConditions = {};
+	  const {assistantUsageSummary, totalDataCount} = await getAllAssistantUsageMonthly();
+	  const assistantRating = await getAllAssistantRatingService();
+	  const {featuredAssistants, totalCount} = await getPublicFeaturedAssistantWithQueryService(
+	  queryConditions, 
+	  skip,
+	  limit
+	  );
+  
+	  const featuredAssistantData = featuredAssistants.map((assistant) => {
+	  const assistantUsage = assistantUsageSummary.find((usage) => usage.assistantId === assistant.assistant_id);
+	  const ratings = assistantRating.find((rating)=> rating?._id === assistant?.assistant_id); 
+	  return {
+		...assistant,
+		usageStats: assistantUsage,
+		rating: ratings
+	  };
+	  });
+  
+	  return res.status(StatusCodes.OK).json({
+	  data: {agents: featuredAssistantData, totalCount},
+	  message: PublicAssistantMessages.PUBLIC_FEATURED_AGENTS_FETCH_SUCCESSFULLY,
+	  });
+	
+	} catch (error) {
+	  return next(InternalServer(CommonMessages.INTERNAL_SERVER_ERROR));
+}
+}
 
 
 /**
@@ -334,67 +391,29 @@ export const deleteSinglePublicAssistant = async (req, res) => {
  * @throws {Error} Will throw an error if it fails to get public assistant
  * @returns {Response} 200 - Returns success message  and assistant details. And 500 - returns internal server error . And 404 - if the assistant is not found
  */
-
 export const getSingleUsersPubAssistWithDetails = async (req, res, next) => {
-	try {
-		const { page = 1, pageSize = 10, searchQuery = "" } = req.query;
-		const skip = (Number(page) - 1) * Number(pageSize);
-		const limit = parseInt(pageSize);
-		const openai = await getOpenAIInstance();
+  try {
+    const { page = 1, pageSize = 10, searchQuery = "" } = req.query;
+    const openai = await getOpenAIInstance();
 
-		let query = {}
+    const { assistants, totalCount } =
+      await getPublicAssistantsWithDetailsService({
+        page,
+        pageSize,
+        searchQuery,
+        openaiInstance: openai,
+      });
 
-		if (typeof searchQuery === "string" && searchQuery?.length) {
-			query = {
-				name: { $regex: new RegExp(searchQuery, "i") },
-				is_public: true
-			}
-		}
-
-
-		const { allPublicAssistant, totalCount } = await getAllPublicAssistantPaginatedService(skip, limit, query);
-		let allPublicAssistantList = [];
-		let result = [];
-
-		if (allPublicAssistant && allPublicAssistant?.length > 0) {
-			for (const assistant of allPublicAssistant) {
-				const isExistingAssistant = await doesAssistantExist(openai, assistant?.assistant_id);
-				if (isExistingAssistant === true) {
-					allPublicAssistantList.push(assistant);
-
-				}
-
-			}
-			for (const publicAssistantData of allPublicAssistantList) {
-				const assistantId = publicAssistantData['assistant_id'];
-				const assistantData = await getSingleAssistantByIdWithUserDetailsService(assistantId);
-				const count = await countFavouriteAssistantService(assistantId);
-
-				if (!assistantData) {
-					continue
-				}
-				let assistant = {
-					...assistantData,
-					count
-				};
-				assistant.userInfo = assistant?.userId?.fname + " " + assistant?.userId?.lname
-				assistant.userId = assistant?.userId?._id;
-				result.push(assistant);
-			}
-
-		}
-
-
-
-		if (allPublicAssistant) {
-			return res.status(StatusCodes.OK).json({ message: PublicAssistantMessages.PUBLIC_ASSISTANT_FETCH_SUCCESSFULLY, result, totalCount });
-
-		} else {
-			return res.status(StatusCodes.NOT_FOUND).json({ message: CommonMessages.NOT_FOUND_ERROR });
-		}
-	} catch (error) {
-		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: CommonMessages.INTERNAL_SERVER_ERROR });
-	}
+    return res.status(StatusCodes.OK).json({
+      message: PublicAssistantMessages.PUBLIC_ASSISTANT_FETCH_SUCCESSFULLY,
+      result: assistants,
+      totalCount,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: CommonMessages.INTERNAL_SERVER_ERROR,
+    });
+  }
 };
 
 export const syncAllAssistantWithOpenAI = async (req, res) => {

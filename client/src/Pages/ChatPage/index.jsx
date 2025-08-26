@@ -1,11 +1,8 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import axios from "axios";
-import { Select, Typography } from "antd";
+import { useContext, useEffect, useRef, useState } from "react";
 
 // libraries
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaArrowDown } from "react-icons/fa";
-
 import { message } from "antd";
 
 // components
@@ -13,6 +10,7 @@ import ChatSkeleton from "../../component/Chat/ChatSkeleton";
 import PromptTemplatesIntro from "../../component/ChatPage/PromptTemplatesIntro";
 import ChatPromptInputForm from "../../component/ChatPage/ChatPromptInputForm";
 import MessageContainer from "../../component/Chat/MessageContainer";
+import HuggingFaceIcon from "../../assests/images/huggingface.png";
 
 // hooks & contexts
 import useChatPage from "../../Hooks/useChatPage";
@@ -21,41 +19,39 @@ import { SidebarContext } from "../../contexts/SidebarContext";
 
 // services & helpers
 import {
-  generateThreadId,
-  getIdsFromItems,
-  getItemsFromIds,
-  inputElementAutoGrow,
-  scrollToBottomForRefElement,
+  generateThreadId, inputElementAutoGrow, scrollToBottomForRefElement
 } from "../../Utility/chat-page-helper";
 import { getGptResponse } from "../../api/chat-page-api";
 import useSocket from "../../Hooks/useSocket";
 import { CHAT_EVENTS } from "../../constants/sockets/chat";
-
-// api
+import { axiosSecureInstance } from "../../api/axios";
+import { HfMessages } from "../../constants/huggingfaceConstants";
+import useSocketMonitor from "../../logger/socketLog";
+import SocketStatus from "../../component/Chat/SocketStatus";
+import AiRecommendationsAndSuggestions from "../../component/ChatPage/AiRecommendationsAndSuggestions";
 
 const ChatPage = () => {
   const { thread_id } = useParams();
-  // ----- STATES ----- //
-  const [selectedTags, setSelectedTags] = useState([]);
+  //***** STATES***** //
   const [inputPrompt, setInputPrompt] = useState("");
   const [selectedChatModel, setSelectedChatModel] = useState("openai");
-  const [showScrollToBottomButton, setShowScrollToBottomButton] =
-    useState(true);
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [showScrollToBottomButton, setShowScrollToBottomButton] = useState(true);
   const [showPromptDropdown, setShowPromptDropdown] = useState(false);
   const [currentThreadId, setCurrentThreadId] = useState(null);
+  const [showQMessage, setShowQMessage] = useState(false);
 
-  // ----- REFS ----- //
+  //***** REFS***** //
   const chatLogWrapperRef = useRef(null);
   const promptInputRef = useRef(null);
   const cancelTokenSourceRef = useRef();
   const timeOutIds = [];
 
-  // ----- HOOK & CONTEXT VARIABLES ----- //
+  //***** HOOK & CONTEXT VARIABLES***** //
   const { currentPromptTemplate } = useContext(PromptTemplateContext);
   const {
     chatLog,
     templateCategories,
-    tagList,
     errorMessage,
     isFetchingChatLog,
     isFirstMessage,
@@ -65,100 +61,73 @@ const ChatPage = () => {
     setIsFirstMessage,
     setIsGeneratingResponse,
     fetchChatLogPerThread,
-    fetchTagList,
     fetchTemplates,
     updateLastPrompt,
   } = useChatPage();
-
+  const location = useLocation();
+  const [assistantId,setAssistantId] = useState(null);
+  const [dynamicBotOptions, setDynamicBotOptions] = useState([]);
   const navigate = useNavigate();
-  const { setTriggerNavContent } = useContext(SidebarContext);
+  const { setTriggerNavContent, setShowMenu } = useContext(SidebarContext);
+
   // Get a ref to the socket instance
   const chatSocketRef = useSocket(CHAT_EVENTS.CHAT_NAMESPACE);
+  const { resetStreamCounters, updateChatContext, monitorEmit } = useSocketMonitor(chatSocketRef);
 
-  //----- Edit last Prompt --------//
-  const emitUpdateLastPrompt = async (payload, promptId, newPrompt) => {
-    const payloadData = {
-      ...payload,
-      chatLog,
-    };
+  const handleScrollToBottomButton = () => {
+    const scrollableDiv = chatLogWrapperRef.current;
+    if (scrollableDiv) {
+      const isScrolledUp = scrollableDiv.scrollTop >= 0;
+      const isAtBottom = scrollableDiv.scrollTop + scrollableDiv.clientHeight >=
+        scrollableDiv.scrollHeight - 1;
 
-    const chatSocket = chatSocketRef.current;
-
-    if (chatSocket) {
-      chatSocket.emit(CHAT_EVENTS.EDIT_LAST_CHAT, payloadData);
-    } else {
-      const { success, data } = await updateLastPrompt(promptId, newPrompt);
-
-      if (success) {
-        onChatEditedEvent({
-          ...payload,
-          success,
-          promptResponse: data?.promptResponse,
-          isCompleted: true,
-          promptId: data.promptId,
-        });
-      } else {
-        // console.log("An unexpected error occurred. Please reload the page.")
-        setErrorMessage(
-          "An unexpected error occurred. Please reload the page."
-        );
-      }
+      setShowScrollToBottomButton(isScrolledUp && !isAtBottom);
     }
   };
-
-  const onChatEditedEvent = (response) => {
-    const {
-      success,
-      message,
-      userPrompt,
-      promptResponse,
-      botProvider,
-      promptId,
-      threadId,
-      isCompleted,
-      chatLog,
-    } = response;
-
-    if (success) {
-      setChatLog((prevChatLog) => {
-        const index = prevChatLog.findIndex(
-          (chat) => chat.promptId === promptId
-        );
-        if (index !== -1) {
-          const newChatLog = [...prevChatLog];
-          newChatLog[index] = {
-            ...newChatLog[index],
-            chatPrompt: userPrompt,
-            botMessage: promptResponse,
-          };
-          return newChatLog;
-        }
-        // If the message is not found, just return the previous chat log
-        return prevChatLog;
-      });
-    }
-  };
-
-  // ----- SIDE EFFECTS ----- //
 
   useEffect(() => {
+    const fetchHuggingFaceModels = async () => {
+      try {
+        const response = await axiosSecureInstance.get(`${process.env.REACT_APP_BASE_URL}api/models`);
+        const models = response.data.data;
+
+        const huggingFaceOptions = models.map((model) => ({
+          value: `${model.name}-hf`,
+          label: (
+            <div className="d-flex align-items-center gap-2">
+              <span className="model-label">
+                <img
+                  src={model.image_url || HuggingFaceIcon}
+                  alt="HuggingFaceIcon"
+                  style={{ width: "20px", height: "20px" }}
+                />
+                {model.nickname}
+              </span>
+            </div>
+          ),
+          inputOutputType: model.inputOutputType,
+          image_url: model.image_url,
+        }));
+
+        setDynamicBotOptions(huggingFaceOptions);
+      } catch (error) {
+        message.error(HfMessages.HF_FETCH_MODL_FAIL);
+      }
+    };
+
+    fetchHuggingFaceModels();
+  }, []);
+
+  // ***** SIDE EFFECTS **** //
+  useEffect(() => {
     if (thread_id && !isFirstMessage) {
-      console.log(
-        "not first message and thread_id exists -> empty chat-log and fetch new chat-log"
-      );
       // not first message and thread_id exists -> empty chat-log and fetch new chat-log
       setChatLog([]);
       fetchChatLogPerThread(thread_id);
     } else if (thread_id && isFirstMessage) {
-      console.log(
-        "is first message -> no need to fetch chat-log, thread_id has been added to url"
-      );
       // is first message -> no need to fetch chat-log, thread_id has been added to url
       setIsFirstMessage(false);
     } else if (!thread_id) {
-      console.log(
-        "new thread created exception -> empty chat-log and set isFirstMessage to false"
-      );
       // new thread created exception -> empty chat-log and set isFirstMessage to false
       setChatLog([]);
       setIsFirstMessage(false);
@@ -184,7 +153,6 @@ const ChatPage = () => {
   }, [chatLogWrapperRef.current]);
 
   useEffect(() => {
-    fetchTagList();
     fetchTemplates();
 
     if (promptInputRef.current) {
@@ -226,9 +194,80 @@ const ChatPage = () => {
     return unbindSocketEvents;
   }, [chatSocketRef.current]);
 
+  //***** Edit last Prompt ******//
+  const onChatEditedEvent = (response) => {
+    const {
+      success,
+      userPrompt,
+      promptResponse,
+      promptId,
+    } = response;
+
+    if (success) {
+      setChatLog((prevChatLog) => {
+        const index = prevChatLog.findIndex(
+          (chat) => chat.promptId === promptId
+        );
+        if (index !== -1) {
+          const newChatLog = [...prevChatLog];
+          newChatLog[index] = {
+            ...newChatLog[index],
+            chatPrompt: userPrompt,
+            botMessage: promptResponse,
+          };
+          return newChatLog;
+        }
+        // If the message is not found, just return the previous chat log
+        return prevChatLog;
+      });
+    }
+  };
+
+  const emitUpdateLastPrompt = async (payload, promptId, newPrompt) => {
+    const payloadData = {
+      ...payload,
+      chatLog,
+    };
+
+    const chatSocket = chatSocketRef.current;
+
+    if (chatSocket) {
+      // Monitor the emit event
+      //monitorEmit(CHAT_EVENTS.EDIT_LAST_CHAT, payloadData);
+      chatSocket.emit(CHAT_EVENTS.EDIT_LAST_CHAT, payloadData);
+    } else {
+      const { success, data } = await updateLastPrompt(promptId, newPrompt);
+
+      if (success) {
+        onChatEditedEvent({
+          ...payload,
+          success,
+          promptResponse: data?.promptResponse,
+          isCompleted: true,
+          promptId: data.promptId,
+        });
+      } else {
+        setErrorMessage(
+          "An unexpected error occurred. Please reload the page."
+        );
+      }
+    }
+  };
+
+  const handleNewThreadException = (threadId) => {
+    setIsFirstMessage(true);
+    // will navigate only if url is not already set with thread_id
+    if (!thread_id || thread_id !== threadId) {
+      if (location.pathname.startsWith("/chat")) {
+        setShowMenu(true);
+      }
+      navigate(`/chat/${threadId}`, { replace: true });
+    }
+    setTriggerNavContent((state) => state + 1);
+  };
+
   const onChatCreatedEvent = (response) => {
     const {
-      tags,
       success,
       message,
       userPrompt,
@@ -236,56 +275,43 @@ const ChatPage = () => {
       msg_id,
       threadId,
       botProvider,
-      chatLog,
       isFistThreadMessage,
       isCompleted,
       promptId,
     } = response;
 
     if (success) {
-      let tagsList = [];
-      if (tags.length) {
-        tagsList = getItemsFromIds(tagList, tags);
-      }
+      // Update only the specific message
+      setChatLog(prevLog => prevLog.map(msg => 
+        msg.msgId === msg_id 
+          ? {
+              ...msg,
+              chatPrompt: userPrompt,
+              botMessage: promptResponse,
+              botProvider,
+              promptId,
+            }
+          : msg
+      ));
 
-      setChatLog([
-        ...chatLog,
-        {
-          chatPrompt: userPrompt,
-          botMessage: promptResponse,
-          tags: tagsList,
-          msg_id,
-          botProvider,
-          promptId,
-        },
-      ]);
       // scroll to bottom
       scrollToBottomForRefElement(chatLogWrapperRef);
     } else {
       setIsGeneratingResponse(false);
       return setErrorMessage(message);
     }
-    // if user is making the first message in the thread -> trigger update threads in the sidebar
+
+    // Handle first message in thread
     if (isFistThreadMessage && isCompleted) {
       handleNewThreadException(threadId);
     }
 
-    // after the whole chat completion is done, reset the generating response state
-    isCompleted && setIsGeneratingResponse(false);
-  };
-
-  const handleNewThreadException = (threadId) => {
-    console.log("[HELPER LOG] navigating to new route", threadId);
-    setIsFirstMessage(true);
-
-    // will navigate only if url is not already set with thread_id
-    if (!thread_id) {
-      navigate(`/chat/${threadId}`, { replace: true });
+    // Only set generating response to false when explicitly told
+    if (isCompleted) {
+      setIsGeneratingResponse(false);
     }
-    setTriggerNavContent((state) => state + 1);
   };
 
-  // ----- HANDLE API CALLS ----- //
   /**
    * Handles the submission of a prompt in the chat page.
    *
@@ -296,111 +322,143 @@ const ChatPage = () => {
   const handlePromptSubmit = async (e, prompt = null) => {
     e?.preventDefault();
     if (isGeneratingResponse) return;
+    setShowQMessage(false);
 
     try {
       scrollToBottomForRefElement(chatLogWrapperRef);
       setErrorMessage(null);
       setIsGeneratingResponse(true);
 
-      const tagIds = getIdsFromItems(selectedTags);
-      setSelectedTags([]);
       const threadId = currentThreadId ? currentThreadId : generateThreadId();
       let isFistThreadMessage = currentThreadId ? false : true;
 
+      // Update monitoring context
+      updateChatContext(threadId, selectedChatModel);
+      resetStreamCounters();
+
       if (inputPrompt.trim() !== "") {
-        const msgId = new Date().toISOString();
-        let userInputtedPrompt = prompt ?? inputPrompt;
-
-        setChatLog([
-          ...chatLog,
-          {
-            chatPrompt: userInputtedPrompt,
-            msgId,
-            botProvider: selectedChatModel,
-          },
-        ]);
-
+        const prompts = (prompt ?? inputPrompt).split('----').map(p => p.trim()).filter(Boolean);
         setInputPrompt("");
         promptInputRef.current.style.height = "51px";
 
-        const compid = localStorage.getItem("compId");
-        const body = {
-          threadId,
-          // userPrompt: temp,
-          botProvider: selectedChatModel,
-          userPrompt: userInputtedPrompt,
-          temp: userInputtedPrompt,
-          chatLog,
-          compId: compid,
-          tags: tagIds,
-          msg_id: msgId,
-          isFistThreadMessage,
-        };
+        let previousResponse = "";
 
-        // Access the chat namespace socket if needed
-        const chatSocket = chatSocketRef.current;
-        if (chatSocket) {
-          chatSocket.emit(CHAT_EVENTS.CREATE_CHAT, body);
-        } else {
-          const { success, promptResponse, message, promptId } =
-            await getGptResponse(body, cancelTokenSourceRef.current);
+        for (const [index, currentPrompt] of prompts.entries()) {
+          const msgId = `${new Date().getTime()}-${index}`;
 
-          if (success) {
-            onChatCreatedEvent({
-              ...body,
-              success,
-              promptResponse,
-              isCompleted: true,
-              promptId,
+          // Update monitoring context with message ID
+          updateChatContext(threadId, selectedChatModel, msgId);
+          
+          // Combine previous response with current prompt if not the first prompt
+          const enhancedPrompt = index === 0 ? currentPrompt 
+            : `Previous response: ${previousResponse}\n\nNew prompt: ${currentPrompt}`;
+          
+          // Add user message to chat log immediately
+          setChatLog( prevLog => [...prevLog,
+            {
+              chatPrompt: currentPrompt, // Show original prompt to user
+              msgId,
+              botProvider: selectedChatModel,
+            },
+          ]);
+
+          const compid = localStorage.getItem("compId");
+          const body = {
+            threadId,
+            botProvider: selectedChatModel,
+            userPrompt: enhancedPrompt, // Send enhanced prompt to backend
+            temp: enhancedPrompt,
+            chatLog,
+            compId: compid,
+            msg_id: msgId,
+            isFistThreadMessage: index === 0 && isFistThreadMessage,
+            selectedmodel: selectedModel,
+          };
+
+          const chatSocket = chatSocketRef.current;
+          if (chatSocket) {
+            // Monitor the emit event
+            monitorEmit(CHAT_EVENTS.CREATE_CHAT, body);
+
+            await new Promise((resolve) => {
+              const handleResponse = (response) => {
+                if (response.msg_id === msgId) {
+                  if (response.isCompleted) {
+                    chatSocket.off(CHAT_EVENTS.CREATED_CHAT, handleResponse);
+                    previousResponse = response.promptResponse; // Store response for next prompt
+                    resolve();
+                  }
+                  
+                  setChatLog(prevLog => prevLog.map(msg => 
+                    msg.msgId === msgId 
+                      ? {
+                          ...msg,
+                          chatPrompt: currentPrompt, // Keep original prompt
+                          botMessage: response.promptResponse,
+                          botProvider: response.botProvider,
+                          promptId: response.promptId,
+                        }
+                      : msg
+                  ));
+                }
+              };
+
+              const handleChatDone = () => {
+                console.log("Chat done event received");
+                setIsGeneratingResponse(false);
+                chatSocket.off(CHAT_EVENTS.CHAT_DONE, handleChatDone); 
+              };
+              
+              chatSocket.on(CHAT_EVENTS.CREATED_CHAT, handleResponse);
+
+              chatSocket.on(CHAT_EVENTS.CHAT_DONE, handleChatDone);
+              
+              chatSocket.emit(CHAT_EVENTS.CREATE_CHAT, body);
             });
           } else {
-            setIsGeneratingResponse(false);
-            return setErrorMessage(message);
+            const { success, promptResponse, message, promptId } = await getGptResponse(body, cancelTokenSourceRef.current);
+
+            if (success) {
+              onChatCreatedEvent({
+                ...body,
+                success,
+                promptResponse,
+                isCompleted: true,
+                promptId,
+              });
+            } else {
+              setIsGeneratingResponse(false);
+              return setErrorMessage(message);
+            }
           }
         }
+        
+        setIsGeneratingResponse(false);
       }
     } catch (error) {
       setIsGeneratingResponse(false);
       setErrorMessage(
-        error?.response?.data?.message ||
-          error?.response?.message ||
+        error?.response?.data?.message || error?.response?.message ||
           "Something went wrong, please reload!"
       );
     }
   };
 
-  // ----- LOCAL HANDLERS ----- //
   const handleStopGeneratingButton = async () => {
-    if (cancelTokenSourceRef.current) {
-      cancelTokenSourceRef.current.cancel("Canceled.!! Ask a new question.");
+    const chatSocket = chatSocketRef.current;
+    if (chatSocket) {
+      // Monitor the emit event
+      monitorEmit(CHAT_EVENTS.STOP_CHAT, {});
+      chatSocket.emit(CHAT_EVENTS.STOP_CHAT, {});
     }
     setIsGeneratingResponse(false);
   };
 
-  const handleSelectTags = (selectedTags) => {
-    setSelectedTags(selectedTags);
-  };
-
-  const handleScrollToBottomButton = () => {
-    const scrollableDiv = chatLogWrapperRef.current;
-
-    if (scrollableDiv) {
-      const isScrolledUp = scrollableDiv.scrollTop >= 0;
-      const isAtBottom =
-        scrollableDiv.scrollTop + scrollableDiv.clientHeight >=
-        scrollableDiv.scrollHeight - 1;
-
-      setShowScrollToBottomButton(isScrolledUp && !isAtBottom);
-    }
-  };
-
   return (
-    <section className="chat-box">
-      {/* <Typography.Title level={5} className="floating-title py-2 px-3 rounded">
-				Multi-provider AI Chat
-			</Typography.Title> */}
-      {/* chatLogWrapper */}
-      <div className="chat-list-container" ref={chatLogWrapperRef}>
+    <>
+      {/* <SocketStatus socketRef={chatSocketRef} /> */}
+      <section className="chat-box">
+      <div className={`chat-list-container ${isGeneratingResponse ? 'chat-list-container-for-generate' : ''}`} ref={chatLogWrapperRef}>
         {/* if chats loading, show skeleton */}
         {isFetchingChatLog ? (
           <ChatSkeleton />
@@ -408,18 +466,21 @@ const ChatPage = () => {
           <>
             {chatLog.length === 0 ? (
               <>
-                {/* ----- TEMPLATE LIST ----- */}
-                <PromptTemplatesIntro
+                {/****** TEMPLATE LIST***** */}
+                {/* <PromptTemplatesIntro
                   templateCategories={templateCategories}
                   setInputPrompt={setInputPrompt}
+                /> */}
+                <AiRecommendationsAndSuggestions
                 />
               </>
             ) : (
               <>
-                {/* ----- CHAT LIST ----- */}
+                {/****** CHAT LIST***** */}
                 {chatLog.map((chat, idx) => (
                   <MessageContainer
                     key={chat.msg_id || idx}
+                    dynamicBotOptions={dynamicBotOptions}
                     states={{
                       chat,
                       idx,
@@ -433,11 +494,9 @@ const ChatPage = () => {
                   />
                 ))}
                 {showScrollToBottomButton && (
-                  <button
-                    onClick={() =>
-                      scrollToBottomForRefElement(chatLogWrapperRef)
+                  <button className="GptScrollUpButton" onClick={
+                      () => scrollToBottomForRefElement(chatLogWrapperRef)
                     }
-                    className="GptScrollUpButton"
                   >
                     <FaArrowDown />
                   </button>
@@ -448,27 +507,30 @@ const ChatPage = () => {
         )}
       </div>
 
-      {/* ----- CHAT INPUT -----  */}
+      {/****** CHAT INPUT*****  */}
       <ChatPromptInputForm
         states={{
-          selectedTags,
-          tags: tagList,
           loading: isGeneratingResponse,
+          setLoading: setIsGeneratingResponse,
           inputPrompt,
           showPromptDropdown,
+          showMessage : showQMessage,
+          dynamicBotOptions,
+          setShowMessage : setShowQMessage,
+          selectedModel,
+          setSelectedModel,
         }}
         refs={{ promptInputRef }}
         actions={{
           onSubmit: handlePromptSubmit,
           handleStopGeneratingButton,
-          handleSelectTags,
-          setSelectedTags,
           setSelectedChatModel,
           setInputPrompt,
           setShowPromptDropdown,
         }}
       />
-    </section>
+      </section>
+    </>
   );
 };
 

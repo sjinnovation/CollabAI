@@ -1,0 +1,90 @@
+.chat-box {
+  position: relative;
+  line-height: 24px;
+  width: 50vw;
+  height: 100%;
+  width: 100%;
+  font-size: 16px;
+}
+
+// chatLogWrapper
+.chat-list-container {
+  // height: 74vh;
+  height: 75vh;
+  overflow-y: auto;
+  width: 100%;
+  .chatLog:nth-last-of-type(1) {
+    margin-bottom: 30px;
+  }
+
+  &.chat-list-container-for-generate {
+    .chatLog:nth-last-of-type(1) {
+      margin-bottom: 80px;
+    }
+  }
+}
+
+.bot-response-control-container {
+  display: flex;
+  align-items: center;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.copy-icon,
+.share-icon {
+  border: none;
+  margin: 0;
+  background: transparent;
+  color: #9b9b9b;
+  font-size: 14px;
+}
+
+.copy-icon:hover,
+.share-icon:hover {
+  background: transparent;
+}
+
+.copy-text {
+  margin-left: 5px;
+}
+
+.bot-response-copy-btn,
+.bot-response-share-btn {
+  display: flex;
+  height: 28px;
+  margin-top: 0px;
+}
+
+
+
+.floating-title {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 9999; /* This will make sure the title is always on top */
+}
+
+.draftMessage {
+  font-size: 14px;
+}
+
+.draftUrl {
+  text-decoration: none;
+  color: #224f99;
+  font-weight: bold;
+  padding: 8px;
+  margin-left: 14px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  background-color: transparent;
+}
+
+.draftUrl:hover {
+  background-color: #eaeaea;
+}

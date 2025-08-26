@@ -1,17 +1,17 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import useDrivePicker from 'react-google-drive-picker';
 import { FileContext } from '../../contexts/FileContext';
+import { getUserID } from '../../Utility/service';
+import { getGoogleAuthCredentials } from '../../api/googleAuthApi';
 
 const useGoogleDrivePicker = (handlePicked) => {
-  const {token,setToken} = useContext(FileContext);
+  const {token,setToken,setIsConnected} = useContext(FileContext);
   const [openPicker] = useDrivePicker();
-const mimeTypes = [
-          'application/pdf', // PDF
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-          'text/plain', // TXT
-          'text/csv', // CSV
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
-      ]
+
+  useEffect(() => {
+    getGoogleAuthCredentials(getUserID(), setIsConnected, setToken);
+  }, []);
+
   const handleOpenPicker = (apiKey) => {
     openPicker({
       clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
@@ -31,11 +31,9 @@ const mimeTypes = [
       token: token,
       showUploadView: false,
       multiselect: true,
-      // Specify allowed mime types
       viewMimeTypes : 'application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.google-apps.spreadsheet,application/vnd.google-apps.presentation,application/vnd.google-apps.document,application/vnd.openxmlformats-officedocument.presentationml.presentation',
 
       supportDrives: true,
-      multiselect: true,
       onAuthenticate: () => console.log('Authentication successful'),
       onError: (error) => console.log('Error loading picker:', error),
       callbackFunction: (data) => {

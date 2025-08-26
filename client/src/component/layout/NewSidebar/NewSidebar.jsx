@@ -5,21 +5,26 @@ import "./NewSidebar.css";
 import NavContentDuplicate from "../../Prompt/NavContentDuplicate";
 
 const NewSidebar = () => {
-  const { triggerNavContent, showMenu } = useContext(SidebarContext);
+  const { triggerNavContent, showMainSidebar } = useContext(SidebarContext);
 
-  useEffect(() => {
-    console.log(showMenu);
-  }, [showMenu]);
+  // useEffect(() => {
+  //   console.log(showMenu);
+  // }, [showMenu]);
 
   return (
     <>
       {/* <aside className={showMenu ? "sideMenuResponsive" : "sideMenu"}> */}
-      <aside className={`sideMenu`}>
+      {/* <aside className={`sideMenu`}> */}
         {/* <NavContent
                     triggerUpdate={triggerNavContent}
                 /> */}
+        {/* <NavContentDuplicate triggerUpdate={triggerNavContent} /> */}
+      {/* </aside> */}
+      <aside className={`sideMenu ${showMainSidebar ? "sideMenu--open" : "sideMenu--closed"}`}>
+      <div className="sideMenu__inner">
         <NavContentDuplicate triggerUpdate={triggerNavContent} />
-      </aside>
+      </div>
+    </aside>
     </>
   );
 };

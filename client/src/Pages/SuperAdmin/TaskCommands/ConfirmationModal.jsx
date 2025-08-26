@@ -4,6 +4,7 @@ import { Modal } from 'antd';
 const ConfirmationModal = ({ open, onConfirm, onCancel, title, content }) => {
   return (
     <Modal
+    centered
     title={title || 'Confirmation'}
     open={open}
     onOk={onConfirm}

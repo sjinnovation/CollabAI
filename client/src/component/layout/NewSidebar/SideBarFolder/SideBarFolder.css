@@ -1,0 +1,211 @@
+.side-folder-design {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+}
+
+.folder-with-icon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.folder-design {
+  display: flex;
+  gap: 10px;
+}
+
+.create-folder__icon {
+    font-size: 30px;
+  display: flex;
+  gap: 10px;
+}
+
+.create-folder__icon {
+    font-size: 30px;
+}
+
+.botton-folder {
+  color: gray !important;
+}
+
+.color-selection {
+  margin-top: 20px;
+  margin-left: 8px;
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  margin-left: 8px;
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  column-gap: 16px;
+  max-width: 220px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  column-gap: 16px;
+  max-width: 220px;
+}
+
+.color-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border 0.2s;
+  position: relative;
+  transition: transform 0.2s;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border 0.2s;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.color-circle:hover {
+  transform: scale(1.1);
+  transform: scale(1.1);
+}
+
+.tick-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 20px;
+}
+
+.color-circle.white {
+  border: 0.5px solid rgb(235, 235, 235);
+  border: 0.5px solid rgb(235, 235, 235);
+}
+
+.folder-name-icon {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.folder-title {
+  font-size: xx-large;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-left: 4px;
+  font-size: xx-large;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-left: 4px;
+}
+
+.folder-title-container {
+  margin-top: 7px;
+  margin-left: 30px;
+  margin-top: 7px;
+  margin-left: 30px;
+}
+
+.folder-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin-right: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin-right: 10px;
+}
+
+.folder-icon:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.folder-list {
+  max-height: 46rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* New search bar styles (inspired by ThreadSidebarWrapper) */
+.folder-search-wrapper {
+  margin: 10px 0;
+  padding: 0 1rem; /* Match .px-3 */
+}
+
+.folder-search {
+  background-color: var(--sidebar-search);
+  color: var(--sidebar-text-color);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.folder-search:focus {
+  outline: none;
+  box-shadow: none;
+  background-color: var(--sidebar-search);
+}
+
+.input-group-text.folder-search {
+  background-color: var(--sidebar-search);
+  border: none;
+  padding: 8px;
+}
+
+.folder-no-data {
+  text-align: center;
+  color: var(--chat-box-text-color);
+  font-size: 14px;
+  margin-top: 20px;
+}
+.folder-item {
+    padding: 6px;
+    border-radius: 8px;
+    height: auto;
+    transition: background 0.2s ease;
+  }
+
+  .folder-item:hover {
+    background-color: var(--sidebar-project-item-hover);
+  }
+
+  .folder-item.active {
+    background-color: var(--sidebar-project-item-active);
+  }
+
+
+  .folder-icon-project{
+    height: 16px;
+    width: 18px;
+  }
+

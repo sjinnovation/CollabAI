@@ -11,10 +11,12 @@ const TeamTable = ({ dataProps }) => {
     {
       title: 'Team',
       dataIndex: 'teamTitle',
+      align: "center",
     },
     {
       title: 'Actions',
       key: 'actions',
+      align: "center",
       render: (text, record) => (
         <div>
           {/* Edit button */}
@@ -76,7 +78,7 @@ const TeamTable = ({ dataProps }) => {
             // fetchUserDetails(page)
           },
         }}
-        scroll={{ x: true, y: '50vh' }}
+        scroll={{ x: 1000, y: '50vh' }}
         bordered
         responsive
       />

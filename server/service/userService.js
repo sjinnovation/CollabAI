@@ -1,5 +1,6 @@
 import User ,{UserRole} from "../models/user.js";
 import { UserMessages, PromptMessages } from "../constants/enums.js";
+import { randomBytes } from "crypto";
 
 export const getUserCustomization = async (userId) => {
     try {
@@ -94,4 +95,25 @@ export const getUserDetails = async (userId) => {
       console.error(error);
       throw error;
     }
+}
+/**
+ * Returns an API key of the form: 
+ * base64url(userId).hex(randomSecret)
+ */
+export const generateApiKey = (userId,baseUrlBE) => {
+  const userIdEncoded = Buffer.from(userId).toString('base64url');
+  const baseUrlEncoded = Buffer.from(baseUrlBE).toString('base64url');
+  const randomSecret = randomBytes(32).toString("hex");
+  return `${userIdEncoded}.${randomSecret}.${baseUrlEncoded}`;
+}
+
+export const getUserIdFromApiKey = async (apiKey) => {
+  try {
+    const [userIdEncoded] = apiKey.split('.');
+    const userId = Buffer.from(userIdEncoded, 'base64url').toString('utf8');
+    return userId;
+  } catch (error) {
+    console.error("Error decoding API key:", error);
+    throw new Error("Invalid API key format");
+  }
 }

@@ -17,7 +17,7 @@ const UserNavLinks = () => {
             style={{ color: theme === "light" ? "#000" : "#fff" }}
           />
         }
-        text="My Profile"
+        text="Account Settings"
         link="/profile"
       />
 
@@ -55,7 +55,7 @@ const UserNavLinks = () => {
             </svg>
           }
           text="My Agents"
-          link="/users-agents"
+          link="/myAgents"
         />
       ) : null}
     </div>

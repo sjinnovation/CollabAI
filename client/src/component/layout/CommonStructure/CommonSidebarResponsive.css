@@ -1,0 +1,9 @@
+@media only screen and (max-width: 1024px) {
+.ant-layout-sider-collapsed.knowledge-base-sidemenu {
+  display: none !important;
+}
+
+.ant-layout-sider-collapsed.knowledge-base-sidemenu .ant-menu-item-icon {
+  display: none !important;
+}
+}

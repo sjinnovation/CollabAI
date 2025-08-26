@@ -1,110 +1,115 @@
-import React, { useState } from 'react'
-import { Button, Table } from 'antd';
+import { Button, Table, Typography } from "antd";
 
 const AssistantUsageTable = ({ dataProps }) => {
-  const { data, loading, actions, totalDataCount } = dataProps;
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    data,
+    loading,
+    actions,
+    totalDataCount,
+    pageSize,
+    currentPage,
+    handlePageChange,
+    handlePageSizeChange,
+    selectionMode,
+    onSelectionChange,
+    selectedRowKeys,
+  } = dataProps;
+
+  const getRowKey = (record) => record.assistantId;
 
   const columns = [
     {
       title: "Month",
       dataIndex: "monthName",
-      width: '20%',
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
-        };
-      },
+      width: "10%",
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
     },
     {
       title: "Assistant Name",
       dataIndex: "assistantName",
-      width: '20%',
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
-        };
-      },
+      width: "30%",
+      render: (assistantName) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Typography.Text>{assistantName}</Typography.Text>
+        </div>
+      ),
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
     },
-  
+    {
+      title: "Agent Owner",
+      dataIndex: "ownerName",
+      width: "15%",
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
+    },
     {
       title: "Total Users",
       dataIndex: "uniqueUserCount",
-      width: '20%',
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
-        };
-      },
+      width: "10%",
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
     },
     {
       title: "Total Usage Count",
       dataIndex: "totalUsageCount",
-      width: '20%',
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
-        };
-      },
+      width: "10%",
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
     },
     {
       title: "Action",
-      width: '20%',
+      width: "10%",
       render: (text, record) => (
         <div>
-          {/* Edit button */}
-
           <Button
             type="link"
-            onClick={() => {
-             actions.handleFetchAllUsersForAnAssistant(record?.assistantId)
-
-            }}
+            onClick={() =>
+              actions.handleFetchAllUsersForAnAssistant(record?.assistantId)
+            }
             style={{ marginRight: 8 }}
           >
-           <span>
-              <i className="bi bi-arrow-up-right-circle "></i>
+            <span>
+              <i className="bi bi-arrow-up-right-circle"></i>
             </span>
           </Button>
         </div>
       ),
-      onHeaderCell: () => {
-        return {
-          style: {
-            textAlign: 'center',
-          }
-        };
-      },
+      onHeaderCell: () => ({ style: { textAlign: "center" } }),
     },
   ];
 
   return (
-    <div>
+    <div className="mt-2">
       <Table
         loading={loading}
         columns={columns}
         dataSource={data}
-        scroll={{ x: true, y: '50vh' }}
+        rowKey={getRowKey}
+        rowSelection={
+          selectionMode
+            ? {
+                selectedRowKeys,
+                onChange: onSelectionChange,
+                preserveSelectedRowKeys: true,
+              }
+            : undefined
+        }
+        scroll={{ x: "max-content" }}
         bordered
-        responsive
         pagination={{
-          pageSize: pageSize,
+          current: currentPage,
+          pageSize,
           total: totalDataCount,
-          onChange: (page) => {
-            actions.handleFetchAssistantMonthlyReport(page)
-          }
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "30", "40", "50"],
+          position: ["topRight"],
+          onChange: handlePageChange,
+          onShowSizeChange: handlePageSizeChange,
+          showTotal: (total, range) => (
+            <span className="fw-semibold">{`${range[0]}-${range[1]} of ${total} items`}</span>
+          ),
         }}
+        className="custom-table assistant-usage-table"
       />
     </div>
-  )
-}
+  );
+};
 
-export default AssistantUsageTable
+export default AssistantUsageTable;

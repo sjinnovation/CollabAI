@@ -1,3 +1,4 @@
+import { STOP_GENERATING_RESPONSE_FOR_ASSISTANT } from "../constants/Api_constants";
 import { axiosOpen, axiosSecureInstance } from "./axios";
 import axios from "axios";
 // [POST] - @desc: handles creating a new chat per assistant
@@ -35,6 +36,16 @@ export const getAssistantChatsPerThread = async ({
     );
     console.log("🚀 ~ getAssistantChatsPerThread ~ response:", response);
 
+    // For modified prompts
+    for (let messageIndex  = 0; messageIndex  < response.data.messages.length; messageIndex ++) {
+      const regex = /User Prompt:\s*\{(.*?)\}/;
+      const match = response.data.messages[messageIndex ].chatPrompt.match(regex);
+      if (!match) {
+        continue;
+      }
+      response.data.messages[messageIndex ].chatPrompt=match[1];
+
+    }
     return {
       messages: response.data.messages || [],
       metadata: response.data.metadata || {},
@@ -47,6 +58,7 @@ export const getAssistantChatsPerThread = async ({
 
 // [GET] - @desc: handles fetching single assistant info
 export const getSingleAssistant = async (assistant_id) => {
+  
   try {
     const response = await axiosSecureInstance.get(
       `api/assistants/${assistant_id}/info`
@@ -74,6 +86,20 @@ export const uploadFilesForAssistant = async (assistant_id, body) => {
     return { success: response.data ? true : false };
   } catch (error) {
     console.log("🚀 ~ uploadFilesForAssistant ~ error:", error);
+    return;
+  }
+};
+
+export const stopGeneratingResponseForAssistant = async (payload) => {
+  try {
+    const response = await axiosSecureInstance.post(
+      STOP_GENERATING_RESPONSE_FOR_ASSISTANT(),
+      payload
+    );
+
+    return {response};
+  } catch (error) {
+    console.log("🚀 ~ stopGeneratingResponse ~ error:", error);
     return;
   }
 };

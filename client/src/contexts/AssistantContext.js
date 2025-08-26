@@ -1,14 +1,40 @@
+// AssistantContext.js
 import { useState, createContext, useEffect } from "react";
 import { getAssistants } from "../api/assistantApiFunctions";
 import { axiosSecureInstance } from "../api/axios";
 import { SEARCH_ASSISTANTS } from "../api/assistant_api_constant";
 
-export const AssistantContext = createContext();
+export const AssistantContext = createContext({
+  triggerUpdateThreads: true, 
+  setTriggerUpdateThreads: () => {},
+  deletedAssistantThreadId: null,
+  setDeletedAssistantThreadId: () => {},
+  assistants: [],
+  setAssistants: () => {},
+  totalPage: 0,
+  setTotalPage: () => {},
+  page: 1,
+  setPage: () => {},
+  loading: false,
+  setLoading: () => {},
+  handleFetchAssistants: () => {},
+  triggerRefetchAssistants: () => {},
+  fetchSearchedAssistants: () => {},
+  setSearchQuery: () => {},
+  searchQuery: "",
+  assistantIdLinked: "",
+  setAssistantIdLinked: () => {},
+  assistantSelected: false,
+  setAssistantSelected: () => {},
+  addAssistantName: "",
+  setAddAssistantName: () => {},
+  setIsResponseThreadFound : () => {},
+});
 
 function AssistantContextProvider(props) {
   const [triggerUpdateThreads, setTriggerUpdateThreads] = useState(true);
-  const [deletedAssistantThreadId, setDeletedAssistantThreadId] =
-    useState(null);
+  const [deletedAssistantThreadId, setDeletedAssistantThreadId] = useState(null);
+  const [isResponseThreadFound, setIsResponseThreadFound] = useState(false);
   const [assistants, setAssistants] = useState([]);
   const [totalPage, setTotalPage] = useState(0);
   const [page, setPage] = useState(1);
@@ -17,7 +43,6 @@ function AssistantContextProvider(props) {
   const [assistantSelected, setAssistantSelected] = useState(false);
   const [assistantIdLinked, setAssistantIdLinked] = useState("");
   const [addAssistantName, setAddAssistantName] = useState("");
-  
 
   useEffect(() => {
     handleFetchAssistants();
@@ -37,8 +62,7 @@ function AssistantContextProvider(props) {
       } else {
         console.error("Error fetching assistants:", error);
       }
-    } finally {
-    }
+    } finally {}
   };
 
   const triggerRefetchAssistants = () => {
@@ -88,6 +112,8 @@ function AssistantContextProvider(props) {
     setAssistantSelected,
     addAssistantName,
     setAddAssistantName,
+    isResponseThreadFound, 
+    setIsResponseThreadFound
   };
 
   return (

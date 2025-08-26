@@ -1,6 +1,7 @@
 import { deleteKnowledgeBase } from "../../api/knowledgeBase";
 import { Layout, Table, Button, Dropdown, Menu, message, Space, Tree, Input, Modal, Tooltip, Tabs,Tag } from 'antd';
 import './RAGTree.css'; 
+import { WebCrawlForm } from "../WebCrawl/webCrawlForm";
 const { confirm } = Modal;
 
 const deleteItem = async (key) => {
@@ -81,3 +82,34 @@ export const removeItemFromFolder = (structure, itemKey) => {
   
   
   };  
+
+
+export const ModalComponent = ({title,form,SubmitText, isImportWebPages,setIsWebCrawlerSyncing, setIsImportWebPages,url,setBaseUrlForSync,setIsLoading,syncingRecordId,setSyncingRecordId,}) => {
+  return (
+    <Modal
+      title={title}
+      visible={isImportWebPages}
+      onOk={() => {
+        setIsImportWebPages(false);
+        setBaseUrlForSync('');
+        setIsLoading(false);
+        form.resetFields();
+
+      }}
+      onCancel={() => {
+        setIsImportWebPages(false);
+        setIsWebCrawlerSyncing(false);
+        setIsLoading(false);
+        setBaseUrlForSync('');
+        form.resetFields();
+
+      }}
+      footer={null}
+    >
+      <WebCrawlForm form={form} SubmitText={SubmitText} setIsImportWebPages={setIsImportWebPages} setIsWebCrawlerSyncing={setIsWebCrawlerSyncing} url={url} setBaseUrlForSync={setBaseUrlForSync} setIsLoading={setIsLoading} syncingRecordId={syncingRecordId} setSyncingRecordId = {setSyncingRecordId}/>
+    </Modal>
+  );
+};
+
+export default ModalComponent;
+

@@ -1,47 +1,145 @@
 /* styles.css */
 .profile--container {
-    display: flex;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 70%;
 }
-
 .profile-card {
-    margin-right: 20px;
+  width: 100%;
+  margin-right: 20px;
+  margin-bottom: 10px;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .profile-card__container {
-    width: 300px;
+  width: 300px;
+  margin-bottom: 20px;
+  border: none;
+  border: none !important;
+  background-color: transparent;
+  &.upload-photo-container {
+    .profile-card__content {
+      /* flex-direction: row !important; */
+    }
+  }
+  .ant-card-body {
+    padding: 0 !important;
+  }
+  .ant-card-head {
+    border: none !important;
+    padding: 0;
+  }
 }
 .profile-card__content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: self-start;
+
 }
 
+.ant-card-head-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-component {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 680px;
+  position: relative;
+  /* padding: 10px; */
+}
 .scrollable-list {
-    max-height: 61vh;
-    overflow-y: auto;
-    margin-bottom: 20px;
+  max-height: 61vh;
+  overflow-y: auto;
+  margin-bottom: 20px;
 }
 
 .profile-card__avatar > img {
-    object-fit: contain;
+  object-fit: cover;
+  border-radius: 10px !important;
 }
 
 .editConfigInputField,
 .editConfigSelectField {
-    width: 290px;
+  width: 290px;
+}
+.profile-info-list {
+  border: none;
+  .ant-list-header, .ant-list-item {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  .profile-info-list-input {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+}
+.action-button-wrapper {
+  position: absolute;
+  right: 0;
+  margin-top: 6px;
+  z-index: 9999999999;
+}
+.custom-disabled-button {
+  width: 130px;
+  height: 100%;
+  &:disabled {
+    background-color: var(--disabled-button);
+    color: var(--disabled-button-text);
+    cursor: not-allowed;
+  }
+}
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 25px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 8px solid lightblue;
+  border-right-color: #444;
+  animation: l2 1s infinite linear;
 }
 
-@media only screen and (max-width: 780px) {
-    .profile--container {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-    .profile-card {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: center;
+@keyframes l2 {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+button:disabled {
+  opacity: .2;
+  cursor: not-allowed;
+}
+
+  div.ant-upload{
+    width: 100%;
+  }
+
+  @media only screen and (max-width: 1024px) {
+    .custom--profile__container {
+      flex-wrap: wrap;
     }
   }
-  
+
+  @media only screen and (max-width: 780px) {
+    .profile--container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .profile-card {
+      margin-bottom: 20px;
+      display: flex;
+    }
+
+    .form-component {
+      max-height: 100%;
+    }
+
+    .custom--profile__container {
+      flex-direction: column !important;
+      gap: 5px;
+    }
+  }

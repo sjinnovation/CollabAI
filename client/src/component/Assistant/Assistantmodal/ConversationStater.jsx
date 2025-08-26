@@ -6,7 +6,8 @@ import {
    Input, 
   Button,
    List, 
-   Space 
+   Space,
+   message 
   } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import { FaTimes } from "react-icons/fa";
@@ -57,6 +58,10 @@ const ConversationStater = ({
   
 
   const handleAddQuestionToParent = () => {
+    if (questions.length >= 4) {
+      message.error("You can add a maximum of 4 questions.")
+      return;
+    }
     if (currentQuestion.trim() !== "") {
       onAddQuestion(currentQuestion);
       setQuestions((prevQuestions) => [...prevQuestions, currentQuestion]);

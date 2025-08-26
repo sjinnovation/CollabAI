@@ -138,6 +138,7 @@ export function categorizePrompts(prompts) {
   yesterdayPrompts.sort(sortFunction);
   prev7DaysPrompts.sort(sortFunction);
   prev30DaysPrompts.sort(sortFunction);
+
   for (const key in monthlyPrompts) {
     monthlyPrompts[key].sort(sortFunction);
   }
@@ -207,9 +208,15 @@ export const copyToClipboard = async (textToCopy) => {
   }
 };
 
-export function getPageTitle(pathname) {
-  const chatRegex = /^\/chat(\/.*)?/; 
-  const agentsRegex = /^\/agents(\/.*)?/; 
+export const isFieldEmpty = (value) => {
+  return value.trim() === "";
+}
+
+export function getPageTitle(pathname,projectName = '') {
+  const chatRegex = /^\/chat(\/.*)?/;
+  const projectsRegex = /^\/projects(\/.*)?/; 
+  const agentsRegex = /^\/agents(\/.*)?/;
+  const userAgentsRegex = /^\/userAgents(\/.*)?/;
 
   if (pageTitle[pathname]) {
     return pageTitle[pathname];
@@ -219,11 +226,20 @@ export function getPageTitle(pathname) {
     return pageTitle["/chat"];
   }
 
-  if(agentsRegex.test(pathname)) {
+   // if (projectsRegex.test(pathname)) {
+  //   // return pageTitle["/projects"];
+  //   let projectInfo = pageTitle["/chat"]
+  //   projectInfo.title = projectName +"'s  AI Chat";
+  //   return projectInfo;
+  // }
+
+  if (agentsRegex.test(pathname)) {
     return pageTitle["/agents"];
+  }
+
+  if (userAgentsRegex.test(pathname)) {
+    return pageTitle["/userAgents"];
   }
 
   return "";
 }
-
-export { convertDate };

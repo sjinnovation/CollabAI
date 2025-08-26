@@ -1,0 +1,112 @@
+.profile-container {
+    height: calc(100vh - 70px);
+    justify-content: space-between;
+    background-color: var(--main-bg-color) !important;
+    
+    .ant-layout-sider {
+      border-right: 0 !important;
+    }
+    .ant-table-body {
+      max-height: 560px !important;
+      margin-bottom: 70px;
+    }
+  
+    .ant-table-selection-column {
+      width: 5% !important;
+    }
+  
+    .custom-row-selected.ant-table-row-selected > .ant-table-cell {
+      background-color: var(--chat-box-bg-color-2) !important;
+    }
+  
+    .ant-table-row-level-1 {
+      background-color: var(--chat-box-bg-color-2);
+      .ant-table-cell-with-append {
+        margin-left: 20px;
+      }
+    }
+    .ant-table-row-selected > .ant-table-cell {
+      background-color: var(--chat-box-bg-color-2) !important;
+    }
+    .ant-form {
+      padding-bottom: 40px;
+    }
+    .scrollable-list {
+      height: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+    }
+  
+    .profile--container {
+      .form-component {
+        height: 100%;
+        flex-grow: 1;
+        max-height: 100%;
+      }
+    }
+  
+    .trash-container {
+      .trash-btn-container {
+        z-index: 99999999999999 !important;
+      }
+  
+      .ant-pagination {
+          margin-top: 0;
+      }
+    }
+    .header-section { 
+      width: 100%;
+      margin-bottom: 10px;
+      .component-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--theme-toggler-dark);
+      }
+      .component-subtitle {
+        font-size: 14px;
+        font-weight: 400;
+        color: gray;
+      }
+    }
+    .customize-chat-container {
+      width: 70%;
+      position: relative;
+      .customize-chat-action {
+        position: absolute;
+      }
+    }
+  
+    .advance-ai-parameters-container {
+      width: 70% !important;
+      position: relative;
+      .ant-list-item {
+        padding-left: 2px !important;
+        padding-right: 0 !important;
+      }
+     }
+  }
+
+  .ant-slider-mark-text{
+    &:first-child{
+      left: 2% !important;
+      top: 5px;
+    }
+  }
+  
+
+
+.trash-container {
+  .ant-table-selection-column {
+    width: 10px !important;
+    min-width: 10px !important;
+    max-width: 10px !important;
+  }
+}
+
+.ant-list-header {
+  border-bottom: 1px solid #d9d9d9; 
+}
+
+.ant-list-item {
+  border: none !important;
+}

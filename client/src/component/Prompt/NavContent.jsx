@@ -8,18 +8,18 @@ import { SidebarContext } from "../../contexts/SidebarContext";
 
 const NavContent = ({ setChatLog, chatLog, setShowMenu, triggerUpdate }) => {
     const [chatThread, setChatThread] = useState([]);
+    const [loadingThread,setLoadingThread] = useState(false);
+
     const userid = getUserID();
 
   // context values
   const { removeThreadId, setRemoveThreadId } = useContext(SidebarContext);
 
-    // console.log(index);
     async function getChatThread() {
         try {
             const response = await axiosSecureInstance.get(
                 "api/prompt/fetchchatthreads/" + userid
             );
-            // console.log(response.data.prompts);
             setChatThread(response.data.prompts);
         } catch (error) {
             console.log(error);
@@ -41,8 +41,8 @@ const NavContent = ({ setChatLog, chatLog, setShowMenu, triggerUpdate }) => {
     }
     
     useEffect(() => {
-        getChatThread();
-    }, [triggerUpdate]);
+        getChatThread().then(setLoadingThread(false));
+    }, [triggerUpdate,loadingThread]);
 
     // [TODO] commenting this as of now, disabling delete feature
     useEffect(() => {
@@ -66,6 +66,8 @@ const NavContent = ({ setChatLog, chatLog, setShowMenu, triggerUpdate }) => {
                                 threadIndex={index}
                                 chatLog={chatThread}
                                 setChatLog={setChatThread}
+                                setLoadingThread = {setLoadingThread}
+
                             />
                         )
                 )}

@@ -109,4 +109,13 @@ export const downloadFile = async (fileId) => {
       console.error('Error downloading file from Google Drive', error);
     }
   };
-    
+  
+  export const extractAllGoogleDriveLinks = (text) => {
+    const regex = /(https?:\/\/(?:drive|docs)\.google\.com\/(?:file\/d\/|drive\/folders\/|document\/d\/|spreadsheets\/d\/|presentation\/d\/|forms\/d\/|open\?id=)([\w-]+))/g;
+    let matches, links = [];
+  
+    while ((matches = regex.exec(text)) !== null) {
+      links.push(matches[0]);
+    }  
+    return links.length > 0? links : null;
+  }

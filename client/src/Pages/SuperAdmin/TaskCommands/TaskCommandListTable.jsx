@@ -74,7 +74,7 @@ const TaskCommandListTable = ({ propsData }) => {
     {
       title: "Actions",
       key: "actions",
-      width: "5%",
+      width: "10%",
       onHeaderCell: () => {
         return {
           style: {
@@ -145,7 +145,7 @@ const TaskCommandListTable = ({ propsData }) => {
           total: filteredTaskCommands?.length,
           onChange: (page, pageSize) => {},
         }}
-        scroll={{ x: true, y: "50vh" }}
+        scroll={{ x: 1000, y: "50vh" }}
         bordered
         responsive
       />

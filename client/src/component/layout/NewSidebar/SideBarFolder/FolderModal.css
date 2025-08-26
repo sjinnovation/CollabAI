@@ -1,0 +1,35 @@
+.create-project-modal-whole {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+  }
+
+  .create-project-modal-whole .ant-modal-content {
+    border-radius: 16px;
+    padding: 30px 30px 20px 30px;
+  }
+
+
+  .create-project-modal{
+    display: flex;
+    gap: 8px;
+    background-color: var(--create-project-modal);
+    padding: 6px;
+    margin-top: 16px;
+    border-radius: 8px;
+  }
+
+  .projects-button{
+    border-radius: 32px;
+    margin-top: 12px;
+  }
+
+  .create-project-subtext{
+    color: var(--create-project-subtext);
+  }
+
+  .create-project-modal-title{
+    font-size: 18px; 
+    font-weight: 600;
+  }

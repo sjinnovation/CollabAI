@@ -7,6 +7,20 @@ import { createOpenAiVectorStore, deleteFilesFromVectorStoreUtils, getFileIdsFro
 import { insertVectorStoreInfoToDB } from "../service/vectorStoreService.js";
 import mongoose from "mongoose";
 
+/**
+ * @async
+ * @function createVectorStore
+ * @description Creates a new vector store for a user using OpenAI services and saves it to the database.
+ * @param {Object} req - Request object; expects 'storeName' and 'userId' in body, and authenticated user in `req.user`.
+ * @param {Object} res - Returns the created vector store data.
+ * @param {Function} next - Express middleware next function for error handling.
+ * @throws {BadRequest} If required fields are missing or store name already exists.
+ * @returns {Response} 
+ *  - 200: Vector store created successfully.
+ *  - 400: Bad request errors forwarded via next().
+ *  - 500: Internal server error.
+ */
+
 export const createVectorStore = async (req, res, next) => {
   const { storeName, userId } = req.body;
   const user = req.user;
@@ -48,6 +62,18 @@ export const createVectorStore = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getVectorStoresByUserId
+ * @description Retrieves both private vector stores of the user and public vector stores of other users.
+ * @param {Object} req - Request object; expects 'id' as the user ID in route parameters.
+ * @param {Object} res - Returns JSON with user's private stores and other users' public stores.
+ * @param {Function} next - Express middleware next function (not used here but typically for error handling).
+ * @throws {Error} If database query fails.
+ * @returns {Response}
+ *  - 200: Returns private and public vector stores.
+ *  - 500: Internal server error.
+ */
 export const getVectorStoresByUserId = async (req, res, next) => {
   const userId = req.params.id;
   try {
@@ -76,7 +102,14 @@ export const getVectorStoresByUserId = async (req, res, next) => {
   }
 }; 
 
-
+/**
+ * @async
+ * @function getFileIdsFromVectorStoreFunc
+ * @description Retrieves file IDs from a vector store by its ID.
+ * @param {Object} req - Request object; expects vector store 'id' in route parameters.
+ * @param {Object} res - Sends back the list of file IDs.
+ * @returns {Response} 200 - Success with file IDs.
+ */
 export const getFileIdsFromVectorStoreFunc = async(req, res)=>{
   const openai = await getOpenAIInstance();
   const fileIds = await getFileIdsFromVectorStore(openai, req.params.id )
@@ -84,6 +117,14 @@ export const getFileIdsFromVectorStoreFunc = async(req, res)=>{
   res.send(fileIds)
 }
 
+/**
+ * @async
+ * @function deleteFilesFromVectorStore
+ * @description Deletes files from a vector store by its ID.
+ * @param {Object} req - Request object; expects vector store 'id' in route parameters.
+ * @param {Object} res - Sends back deletion result.
+ * @returns {Response} 200 - Success with deletion details.
+ */
 export const deleteFilesFromVectorStore = async(req, res)=>{
   const openai = await getOpenAIInstance();
   const deletedVectorStoreFile = await deleteFilesFromVectorStoreUtils(openai, req.params.id )

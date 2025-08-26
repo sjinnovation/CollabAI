@@ -16,6 +16,10 @@ import {
 	setDallEConfig,
 	getDallEConfig,
 	getPersonalizeAssistantSetting,
+	encryptConfigs,
+ 	decryptConfigs,
+ 	migrateConfigs,
+ 	reverseMigration,
 } from '../controllers/configController.js';
 import { authenticateSuperAdmin } from '../middlewares/superadminAuth.js';
 
@@ -57,5 +61,10 @@ configRouter.get('/openai-model', authenticateSuperAdmin, getOpenaiModel);
 
 configRouter.get('/settings', authenticateSuperAdmin, getConfigurations).patch('/settings',authenticateSuperAdmin, updateConfigurations);
 configRouter.get('/settings/personalize-assistant',getPersonalizeAssistantSetting);
+
+configRouter.post('/encrypt', encryptConfigs);
+ configRouter.post('/decrypt', decryptConfigs);
+ configRouter.get('/migrate', migrateConfigs);
+ configRouter.get('/reverse-migration', reverseMigration);
 
 export default configRouter;

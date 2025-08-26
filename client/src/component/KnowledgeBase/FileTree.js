@@ -12,12 +12,13 @@ export const FileTree = ({ dataProps }) => {
       if(selectedFolder !==null){
         if(!info?.node?.title?.includes(".")){
           setSelectedFolder(selectedKeys[0]);
-          setSelectedFile(info.node);
+          setSelectedFile(info.node.title);
           const selectedFolderFiles = getFilesFromFolder(folderStructure, selectedKeys[0]);
+        }else{
+          setSelectedFolder('');
+          setSelectedFile('');
         }
       }
-
-
       
   };
 
@@ -26,7 +27,7 @@ export const FileTree = ({ dataProps }) => {
     const nodes = Array.isArray(data) ? data : [];
     return nodes.map(item => (
       <TreeNode
-        title={item.type === 'folder' ? item.title : item.name.split('/').pop()}
+        title={item.type === 'folder' ? item.name : item.name.split('/').pop()}
         key={item.key}
         icon={item.type === 'folder' ? <FolderOpenOutlined size={"large"}/> : <FileOutlined size={"large"}/>}
       >
@@ -63,37 +64,31 @@ export const getFilesFromFolder = (structure, folderKey) => {
     return [];
   };
 export const formatToTreeData = (data) => {
-    const tree = [];
 
-    data.forEach(file => {
-      const pathParts = file.name.split('/');
-      const fileName = pathParts.pop();
-      let currentLevel = tree;
-      pathParts.forEach((part, index) => {
-        let existingPath = currentLevel.find(child => child.title === part);
+  const folders = data.filter(item => !item.name.includes('.')).map(item => ({
+    ...item,
+    type: 'folder', 
+  }));
+  const files = data.filter(item => item.name.includes('.')).map(item => ({
+    ...item,
+    type: 'file',
+  }));
+  const folderMap = new Map();
+  folders.forEach(folder => {
+    folder.children = []; 
+    folderMap.set(folder.name, folder);
+  });
 
-        if (!existingPath) {
-          existingPath = { title: part, key: `${part}-${index}`, type: 'folder', children: [] };
-          currentLevel.push(existingPath);
-        }
-        if (!existingPath.children) {
-          existingPath.children = [];
-        }
-        currentLevel = existingPath.children ;
-      });
+  const standaloneFiles = [];
+  files.forEach(file => {
+    const folderName = file.name.split('/')[0]; 
+    if (folderMap.has(folderName)) {
+      folderMap.get(folderName).children.push(file);
+    } else {
+      standaloneFiles.push(file);
+    }
+  });
 
-      if(fileName){
-        const isFile = fileName.includes(".");
-        currentLevel.push({
-          title: fileName,
-          key: file._id,
-          type: isFile ? 'file' : 'folder',
-          ...file,
-        });
-        
-      }
-      
-    });
+  return [...Array.from(folderMap.values()), ...standaloneFiles];
+}
 
-    return tree;
-  };

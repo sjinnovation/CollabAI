@@ -1,13 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Spin } from 'antd'; 
 import { REACT_APP_WORKBOARD_REDIRECT_URI } from '../../constants/Api_constants';
 import { axiosSecureInstance } from '../../api/axios';
+import { getUserID } from '../../Utility/service';
+import { createWorkBoardCredentials } from '../../api/workBoard';
+import { FileContext } from '../../contexts/FileContext';
+
+const userId = getUserID();
 
 const ConnectionWithWorkboard = () => {
   const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
+
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -20,10 +26,7 @@ const ConnectionWithWorkboard = () => {
 
       const getAccessTokenFromBackend = async () => {
         try {
-          const response = await axiosSecureInstance.post(`api/workboard/workboard-auth`, {
-            code: code,
-            redirectUri: redirectUri,
-          });
+          const response =  await createWorkBoardCredentials(code,redirectUri);
 
           if (response.status === 200) {
             const { accessToken } = response.data;

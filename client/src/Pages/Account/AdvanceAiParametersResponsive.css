@@ -1,0 +1,6 @@
+@media screen and (max-width: 1024px) {
+  .account-settings-ai-tabs {
+    position: unset !important;
+    display: flex;
+  }
+}

@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
-import UserTrackUsageTable from '../../Account/TrackUsageComponent/UserTrackUsageTable'
-import { Avatar, DatePicker, Typography } from 'antd';
-import './TrackUsage.css'
-import { getDailyUsageReport } from '../../../api/track-usage-api-functions';
-import { useEffect } from 'react';
-import { UserOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from "react"
+import UserTrackUsageTable from "../../../Pages/Account/TrackUsageComponent/UserTrackUsageTable"
+import { Avatar, DatePicker, Typography, Dropdown, Button, Menu ,Input} from "antd"
+import { UserOutlined, ExportOutlined , DownOutlined } from "@ant-design/icons"
+import { getDailyUsageReport } from "../../../api/track-usage-api-functions"
+import "./TrackUsage.css"
+import { dailyusageheaders} from "../../../constants/export_constants"
+import ProfileHeader from "../../../component/Proflie/ProfileHeader"
 
 const DailyUsage = () => {
     const [loading, setLoading] = useState(false)
@@ -12,12 +13,18 @@ const DailyUsage = () => {
     const [aggregatedData, setAggregatedData] = useState([])
     const [usageReport, setUsageReport] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
-
+    const [selectedRows, setSelectedRows] = useState([])
+    const [selectionMode, setSelectionMode] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('');
 
     const handleDateChange = (date, dateString) => {
-        console.log(dateString);
         setSelectedDate(dateString);
     };
+
+    const handleSearchChange = (e) => {
+      setSearchTerm(e.target.value);
+    };
+
     const handleFetchDailyReport = async () => {
         setLoading(true)
         try {
@@ -49,88 +56,164 @@ const DailyUsage = () => {
 
     }, [selectedDate])
 
-    const columns = [
-        {
-          title: "Date",
-          dataIndex: "_id",
-          width: '20%',
-          render: (_id) => <p>{_id?.month}/{_id?.day}/{_id?.year}</p>,
-          onHeaderCell: () => {
-            return {
-              style: {
-                textAlign: 'center',
-              }
-            };
+    const filteredData = aggregatedData.filter(item => {
+      const fullName = `${item.user_info.fname} ${item.user_info.lname}`.toLowerCase();
+      const email = item.user_info.email.toLowerCase();
+      return fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
+    });
+
+    const exportToCSV = (data) => {
+      const csvData = data.map((item) => [
+        `${item._id.month}/${item._id.day}/${item._id.year}`,
+        `${item.user_info.fname} ${item.user_info.lname}`,
+        item.user_info.email,
+        item.count,
+        item.total_tokens,
+        `$${Number(item.total_token_cost).toFixed(5)}`,
+      ])
+
+      const csvContent = [dailyusageheaders, ...csvData].map((row) => row.join(",")).join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+      link.setAttribute("href", url)
+      link.setAttribute("download", `usage_report_${selectedDate || "all"}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+
+    const handleExportMenuClick = ({ key }) => {
+      if (key === "selected") {
+        setSelectionMode(true)
+      } else {
+        exportToCSV(aggregatedData)
+      }
+    }
+
+    const handleExportSelected = () => {
+      const selectedData = aggregatedData.filter((item) =>
+        selectedRows.some(
+          (row) =>
+            `${row._id.year}-${row._id.month}-${row._id.day}-${row.user_info.email}` ===
+            `${item._id.year}-${item._id.month}-${item._id.day}-${item.user_info.email}`,
+        ),
+      )
+      exportToCSV(selectedData)
+      setSelectionMode(false)
+      setSelectedRows([])
+    }
+
+  const columns = [
+    {
+      title: "Date",
+      dataIndex: "_id",
+      width: "20%",
+      render: (_id) => (
+        <p>
+          {_id?.month}/{_id?.day}/{_id?.year}
+        </p>
+      ),
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
           },
-        },
-        {
-          title: "User",
-          dataIndex: "user_info",
-          width: '20%',
-          render: (day) => (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Avatar style={{ marginRight: "20px" }} icon={<UserOutlined />} />
-              <div style={{ textAlign: "left" }}>
-                <Typography>{`${day?.fname} ${day?.lname}`}</Typography>
-                <Typography>{day?.email}</Typography>
-              </div>
-            </div>
-          ),
-          onHeaderCell: () => {
-            return {
-              style: {
-                textAlign: 'center',
-              }
-            };
+        };
+      },
+    },
+    {
+      title: "User",
+      dataIndex: "user_info",
+      width: "20%",
+      render: (day) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar style={{ marginRight: "20px" }} icon={<UserOutlined />} className="track-usage-icon-size"/>
+          <div style={{ textAlign: "left" }}>
+            <Typography>{`${day?.fname} ${day?.lname}`}</Typography>
+            <Typography>{day?.email}</Typography>
+          </div>
+        </div>
+      ),
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
           },
-        },
-        {
-          title: "Prompt Count",
-          dataIndex: "count",
-          width: '20%',
-          onHeaderCell: () => {
-            return {
-              style: {
-                textAlign: 'center',
-              }
-            };
+        };
+      },
+    },
+    {
+      title: "Prompt Count",
+      dataIndex: "count",
+      width: "20%",
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
           },
-        },
-        {
-          title: "Total Token",
-          dataIndex: "total_tokens",
-          width: '20%',
-          onHeaderCell: () => {
-            return {
-              style: {
-                textAlign: 'center',
-              }
-            };
+        };
+      },
+    },
+    {
+      title: "Total Token",
+      dataIndex: "total_tokens",
+      width: "20%",
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
           },
-        },
-        {
-          title: "Cost",
-          dataIndex: "total_token_cost",
-          width: '20%',
-          render: (value) => <p>${Number(value).toFixed(5)}</p>,
-          onHeaderCell: () => {
-            return {
-              style: {
-                textAlign: 'center',
-              }
-            };
+        };
+      },
+    },
+    {
+      title: "Cost",
+      dataIndex: "total_token_cost",
+      width: "20%",
+      render: (value) => <p>${Number(value).toFixed(5)}</p>,
+      onHeaderCell: () => {
+        return {
+          style: {
+            textAlign: "center",
           },
-        },
-    ];
+        };
+      },
+    },
+  ];
+
+    const exportMenu = (
+      <Menu onClick={handleExportMenuClick}>
+        <Menu.Item key="selected">Export Selected Data</Menu.Item>
+        <Menu.Item key="all">Export All Data</Menu.Item>
+      </Menu>
+    )
 
     return (
-        <div className=''>
+      <div className="track-usage-styles ">
+        <div className='daily-usage-container'>
+        <ProfileHeader title="Daily Report" subHeading=" Track your daily usage." />
             <div className='usage-report-container'>
-                <DatePicker
-                    format="YYYY-MM-DD"
-                    onChange={handleDateChange}
-                    placeholder="Select Date"
-                />
+            <div className="controls-container">
+          <DatePicker format="YYYY-MM-DD" onChange={handleDateChange} placeholder="Select Date" />
+          <Input
+          placeholder="Search by name or email"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{ margin: '0 10px' }}
+        />
+          {selectionMode ? (
+            <Button className="export-btn" onClick={handleExportSelected} icon={<ExportOutlined />}>
+              Export Selected
+            </Button>
+          ) : (
+            <Dropdown overlay={exportMenu} placement="bottomRight">
+              <Button className="export-btn" icon={<ExportOutlined />}>
+                Export to CSV <DownOutlined />
+              </Button>
+            </Dropdown>
+          )}
+        </div>
                 <div className='total-usage-report-container'>
                     <Typography><b>Total Token: {totalUsageReport?.total_tokens ? totalUsageReport?.total_tokens : 0 }</b></Typography>
                     <Typography>
@@ -149,13 +232,17 @@ const DailyUsage = () => {
                 <UserTrackUsageTable
                     dataProps={{
                         loading,
-                        data: aggregatedData,
-                        columns
+                        data: filteredData,
+                        columns,
+                        selectionMode,
+                        onSelectionChange: (selectedRowKeys, selectedRows) => setSelectedRows(selectedRows),
+                        selectedRows,
                     }}
                 />
 
             </div>
         </div>
+</div>
     )
 }
 

@@ -17,6 +17,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { RiLogoutCircleLine } from "react-icons/ri";
 import useAuth from "../../Hooks/useAuth";
 import NavLinks from "./NavLink";
+import UserAvatar from "../UserAvatar/UserAvatar";
+import { ProfileContext } from "../../contexts/ProfileContext";
+import './NavLinksContainer.css';
+import SupportLinks from "../layout/NewSidebar/SupportLinks";
 
 const NavLinksContainer = ({ chatLog, setChatLog }) => {
   const { theme } = useContext(ThemeContext);
@@ -25,26 +29,37 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
 
   const navigate = useNavigate();
   const { setAuth } = useAuth();
+  const { userAvatar } = useContext(ProfileContext);
 
   const userId = getUserID();
+
+  const handleFetchUserData = async () => {
+    try {
+      if (!userId) {
+        return null;
+      }
+      const result = await getUserData(userId, setRole);
+      if (!result) {
+        console.error("Failed to fetch user data: No response received.");
+        return;
+      }
+      const { success, data, error } = result;
+      if (success) {
+
+      } else {
+        console.error("Error fetching user data:", error);
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+    }
+  };
+
 
   useEffect(() => {
     handleFetchUserData();
   }, []);
 
   //------------------ API Calls -----------------------------
-
-  const handleFetchUserData = async () => {
-    try {
-      const { success, data, error } = await getUserData(userId, setRole);
-      if (success) {
-        console.log("User Role:", data);
-      } else {
-        console.error("Error fetching user data:", error);
-      }
-    } finally {
-    }
-  };
 
   const handleLogout = () => {
     setAuth({
@@ -54,7 +69,6 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
     logout();
     navigate("/login", { replace: true });
   };
-  
 
   //---------------------- Nav Links ---------------------
   const menu = (
@@ -83,22 +97,28 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
         </>
       )}
 
-        <>
+
+      <>
+        <Menu.Item>
+          <SupportLinks />
+        </Menu.Item>
+      </>
+
+      <>
         <Link className="text-decoration-none" onClick={handleLogout}>
-         <div className="navPrompt logout">
-          <RiLogoutCircleLine  className="logout-icon" />
+          <div className="navPrompt logout">
+            <RiLogoutCircleLine className="logout-icon" />
             <p className="logout-text">Log Out</p>
           </div>
         </Link>
-        </>
+      </>
 
-    
     </Menu>
   );
 
   return (
     <div
-      className="navLinks bottom-navLinks"
+      className="navLinks bottom-navLinks bottom-nav__position"
       style={{
         padding: "0.875rem",
         width: "100%",
@@ -112,11 +132,18 @@ const NavLinksContainer = ({ chatLog, setChatLog }) => {
       >
         <div className="ant-dropdown sidebar-user-profile-btn" >
           <>
-            <CgProfile
-              size={22}
-              className="user-btn-icon"
-              style={{ color: theme === "light" ? "#000" : "#fff" }}
-            />
+            {userAvatar ? (
+              <UserAvatar
+                userAvatar={userAvatar}
+                width={40}
+                height={30}
+                shape="square"
+              />
+            ) : (
+              <CgProfile
+                size={22}
+              />
+            )}
             {userName && userName}
           </>
         </div>

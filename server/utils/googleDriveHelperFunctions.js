@@ -1,15 +1,56 @@
 import {encode, decode} from 'gpt-3-encoder'; 
 import { getMaxTokenOfModels } from '../service/configService.js';
 
-export const extractAllGoogleDriveLinks = (text) => {
+export const extractAllGoogleDriveLinks = (text,ids =[]) => {
   const regex = /(https?:\/\/(?:drive|docs)\.google\.com\/(?:file\/d\/|drive\/folders\/|document\/d\/|spreadsheets\/d\/|presentation\/d\/|forms\/d\/|open\?id=)([\w-]+))/g;
   let matches, links = [];
 
   while ((matches = regex.exec(text)) !== null) {
     links.push(matches[0]);
+    ids.push(matches[2]);
   }
 
   return links;
+}
+export const extractWorkBoardIdFromQuestion = (text)=>{
+  // const regex = /https:\/\/www\.myworkboard\.com\/wb\/(activity\/mywork\?do=popup&id=\d+|actionitem\?id=\d+)/g;
+  const regex = /https:\/\/www\.myworkboard\.com\/wb\/(activity\/mywork\?[^ ]*id=\d+|actionitem\?id=\d+)/g;
+  const matches = text?.match(regex);
+  let ids = [];
+
+  if (matches) {
+    matches.forEach((url) => {
+      const urlObj = new URL(url);
+      const id = urlObj.searchParams.get("id");
+      if (id) {
+        ids.push(id);
+      }
+    });
+  }
+  
+  return ids.length > 0 ? ids : null;
+};
+
+export const replaceWorkBoardLinks = (text) => {
+  // const linkRegex = /https:\/\/www\.myworkboard\.com\/wb\/(activity\/mywork\?do=popup&id=\d+|actionitem\?id=\d+)/g;
+  const regex = /https:\/\/www\.myworkboard\.com\/wb\/(activity\/mywork\?[^ ]*id=\d+|actionitem\?id=\d+)/g;
+
+  let modifiedText = text.replace(linkRegex, (match) => {
+    const encodedLink = encodeLink(match);
+    return `[ENCODED_LINK:${encodedLink}]`;
+  });
+
+  const fileNameRegex = /.*fileName\s*:/;
+  modifiedText = modifiedText.replace(fileNameRegex, ''); 
+
+  return modifiedText;
+};
+
+
+export const extractIdFromLink = (url)=>{
+  const urlObj = new URL(url);
+  const id = urlObj.searchParams.get("id");
+  return id ? id : null;
 }
 export const extractFileOrFolderId = (link) => {
   const fileIdRegex = /\/d\/([\w-]+)|open\?id=([\w-]+)/;
@@ -71,3 +112,22 @@ export const longFileContextToUsableFileContext = async (fileDataContext,botProv
   return truncatedPrompt;
 
 };
+
+export const findAppName = async (text)=> {
+  const regex = /(?:WorkBoardUpdateComment\s*:\s*(?<WorkBoardUpdateComment>.*?),\s*)?appName\s*:\s*(?<appName>[^,]+)\s*,\s*fileIdOrUrl\s*:\s*(?<fileIdOrUrl>[^,\s]+)\s*,\s*fileName\s*:\s*(?<fileName>[^,]+?)(?:,|$)/;
+  const match = text.match(regex);
+  
+  if (match) {
+    return {
+      WorkBoardUpdateComment: match.groups.WorkBoardUpdateComment ? match.groups.WorkBoardUpdateComment.trim() : null,
+      appName: match.groups.appName.trim(),
+      fileIdOrUrl : match.groups.fileIdOrUrl.trim(),
+    };
+  } else {
+    return {
+      WorkBoardUpdateComment: 'null',
+      appName: 'null',
+      fileIdOrUrl : 'null',
+    }
+  }
+}

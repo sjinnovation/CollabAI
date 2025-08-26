@@ -1,67 +1,22 @@
 import { useState, useEffect } from 'react';
 import { getConfig, updateConfig } from '../../api/settings';
 import { DallEResolutions } from '../../constants/setting_constant';
-import { Select, message, List } from 'antd';
+import "./style.css"
+import { Select, message, List, Button } from 'antd';
 const { Option } = Select;
 
-const DalleConfig = () => {
-  const [resolutions, setResolutions] = useState([]);
-  const [formState, setFormState] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
-
-  const getConfigData = async () => {
-    try {
-      const response = await getConfig();
-      if (response) {
-        setFormState({
-          dallEModel: response.dallEModel,
-          dallEQuality: response.dallEQuality,
-          dallEResolution: response.dallEResolution,
-        });
-        setResolutions(DallEResolutions[response.dallEModel] || []);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    getConfigData();
-  }, []);
-
-  const handleUpdateClick = async () => {
-    setIsEditing(!isEditing);
-    if (isEditing) {
-      const response = await updateConfig(formState);
-      if (response) {
-        message.success(response.message);
-        getConfigData();
-      } else {
-        message.error(response.message);
-      }
-    }
-  };
-
-  const handleModelChange = (value) => {
-    setFormState({
-      ...formState,
-      dallEModel: value,
-      dallEResolution: "",
-    });
-    setResolutions(DallEResolutions[value] || []);
-  };
-
+const DalleConfig = ({ isEditing, formState, setFormState, handleModelChange, resolutions }) => {
   const data = [
-    { title: 'Model', description: formState?.dallEModel || '' },
+    { title: 'Choose a Model', description: formState?.dallEModel || '' },
     { title: 'Quality', description: formState?.dallEQuality || '' },
     { title: 'Resolution', description: formState?.dallEResolution || '' },
   ];
 
   return (
-    <>
+    <div className="config-container-w">
       <List
-        header={<div>Change Settings</div>}
         size="medium"
+        className="custom-list"
         bordered
         dataSource={data}
         renderItem={(item) => (
@@ -70,9 +25,9 @@ const DalleConfig = () => {
               title={item.title}
               description={
                 isEditing ? (
-                  item.title === 'Model' ? (
+                  item.title === 'Choose a Model' ? (
                     <Select
-                      style={{ width: '290px' }}
+                      className="select-field"
                       name="dallEModel"
                       value={formState?.dallEModel || ''}
                       onChange={handleModelChange}
@@ -82,7 +37,7 @@ const DalleConfig = () => {
                     </Select>
                   ) : item.title === 'Quality' ? (
                     <Select
-                      style={{ width: '290px' }}
+                      className="select-field"
                       name="dallEQuality"
                       value={formState?.dallEQuality || ''}
                       onChange={(e) =>
@@ -97,7 +52,7 @@ const DalleConfig = () => {
                     </Select>
                   ) : item.title === 'Resolution' ? (
                     <Select
-                      style={{ width: '290px' }}
+                      className="select-field"
                       name="dallEResolution"
                       value={formState?.dallEResolution || ''}
                       onChange={(e) =>
@@ -122,25 +77,7 @@ const DalleConfig = () => {
           </List.Item>
         )}
       />
-      <div className="text-end">
-        <a
-          onClick={handleUpdateClick}
-          key="list-loadmore-edit"
-          className="btn btn-outline-dark"
-        >
-          {isEditing ? 'update' : 'edit'}
-        </a>
-        {isEditing && (
-          <a
-            onClick={() => setIsEditing(!isEditing)}
-            key="list-loadmore-cancel"
-            className="btn btn-outline-dark"
-          >
-            cancel
-          </a>
-        )}
-      </div>
-    </>
+    </div>
   );
 };
 

@@ -10,7 +10,7 @@ const DebouncedSearchInput = ({ data }) => {
   const handleSearch = useCallback(
     debounce(value => {
       setSearch(value);
-    }, 500),
+    }, 1500),
     []
   );
 
@@ -22,11 +22,12 @@ const DebouncedSearchInput = ({ data }) => {
       onChange={e => handleSearch(e.target.value)}
       onSearch={value => setSearch(value)}
       style={{
-        maxWidth : customStyle?.width | 370,
-        maxHeight : customStyle?.maxHeight |50,
-        height : customStyle?.height |50,
+        maxWidth : customStyle?.width || 300,
+        maxHeight : customStyle?.maxHeight |40,
+        height : customStyle?.height | 40,
       }}
       loading={loading}
+      enterButton      
     />
   );
 };

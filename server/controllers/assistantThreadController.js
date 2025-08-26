@@ -24,7 +24,6 @@ import AssistantThread from "../models/assistantThreadModel.js";
 export const getAssistantThreadsPerUser = async (req, res, next) => {
   const { _id: userId } = req.user;
   const { assistant_id } = req.query;
-
   try {
     let query = {
       user: userId,
@@ -34,6 +33,26 @@ export const getAssistantThreadsPerUser = async (req, res, next) => {
 
     const threads = await getAssistantThreadsByQuery(query);
 
+    return res.status(StatusCodes.OK).json({
+      message: AssistantThreadMessages.RETRIEVED_SUCCESSFULLY,
+      data: threads,
+    });
+  } catch (error) {
+    return next(InternalServer(AssistantThreadMessages.INTERNAL_SERVER_ERROR));
+  }
+};
+/**
+ * Asynchronous function to retrieve assistant threads for a specific user.
+ * @param {Object} req - Request object, expected to contain threadId.
+ * @param {Object} res - Response object.
+ * @param {Function} next - Next function for error handling.
+ * @returns {JSON} Returns a list of assistant threads for the specified user if successful, otherwise an error message.
+ */
+export const getAssistantThreadsById = async (req, res, next) => {
+  const { threadId } = req.params;
+  try {
+
+    const threads = await getAssistantThreadById(threadId);;
     return res.status(StatusCodes.OK).json({
       message: AssistantThreadMessages.RETRIEVED_SUCCESSFULLY,
       data: threads,

@@ -30,7 +30,7 @@ const PromptTemplatesIntro = ({ setInputPrompt, templateCategories }) => {
         key={template._id}
         className="btn p-3 rounded my-1 px-4 w-100 left"
         style={{ height: "90px", position: "relative" }}
-        onClick={() => setInputPrompt(template.description)}
+        onClick={() => {setInputPrompt(template.description)}}
       >
         <div
           style={{

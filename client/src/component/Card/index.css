@@ -26,7 +26,7 @@
 
 }
 .card-featured .card-item .card-image {
-    max-width: 40%; 
+    max-width: 40%;
     width:30%;
     height: 60%;
     border-radius: 100%;
@@ -35,7 +35,7 @@
 
 }
 .card-featured .card-item #cardDescription{
-    display: 'flex'; 
+    display: 'flex';
     flex-direction: column;
     justify-content: space-between;
 
@@ -49,4 +49,97 @@
 .card-featured .card-text {
     font-family: Arial, sans-serif;
     color: hsl(0, 0%, 30%);
+}
+
+.explore-agent-card {
+    width: 100%;
+    .explore-agent-card-usage-stats-item {
+        width: 100% !important;
+    }
+    .ant-card-meta-title {
+        margin-bottom: 0 !important;
+    }
+    .ant-card-body {
+        padding: 15px !important;
+    }
+    .explore-agent-card-title {
+        font-size: 16px;
+        width: 100%;
+        height: 44px;
+        span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            width: 100%;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+    }
+    .explore-agent-card-divider {
+        margin: 15px 0;
+        border-color: hsl(0, 0%, 80%);
+    }
+
+    .explore-agent-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .explore-agent-card-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .explore-agent-card-action-button {
+                padding: 4px !important;
+                .icon {
+                    font-size: 20px !important;
+                    color: hsl(0, 0%, 30%);
+                }
+            }
+            .not-action {
+                cursor: default;
+                &:hover {
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+
+}
+.card-ribbon{
+    background-color: var(--card-ribbon) !important;
+}
+
+@media screen and (max-width: 1024px) {
+    .explore-agent-card {
+        .explore-agent-card-usage-stats-item {
+            width: auto !important; /* Override width: 100% */
+            flex: 0 0 auto; /* Take natural width */
+            margin-bottom: 8px; /* Space for wrapped items */
+        }
+    }
+    .explore-agent-card-stats {
+        flex-wrap: wrap !important; /* Enable wrapping */
+        flex-direction: row !important; /* Ensure row alignment */
+        width: 100%;
+        gap: 4px; /* Space between items */
+    }
+    .explore-agent-card-usage-stats-item .ant-tag {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap; /* Prevent text wrapping inside tags */
+    }
+    .explore-agent-card-footer-wrapper {
+        flex-wrap: wrap !important; /* Enable wrapping for footer */
+        flex-direction: row !important; /* Ensure row alignment */
+        gap: 8px; /* Space between items */
+        justify-content: flex-start; /* Align items to start, allowing wrapping */
+    }
+    .explore-agent-card-footer-left {
+        flex: 0 0 auto; /* Prevent stretching */
+    }
+    .explore-agent-card-footer .ant-btn {
+        flex: 0 0 auto; /* Ensure Chat Now button takes natural width */
+    }
 }

@@ -60,6 +60,11 @@ export const updateAllModelConfigurations = async (req, res, next) => {
       geminiTopK,
       geminiTopP,
       geminiMaxOutputTokens,
+      deepseekTemperature,
+      deepseekMaxTokens,
+      deepseekTopP,
+      deepseekTopK,
+      deepseekRepetitionPenalty,
     },
   } = req;
   
@@ -183,6 +188,61 @@ export const updateAllModelConfigurations = async (req, res, next) => {
         geminiTopP,
         ConfigMessages.GEMINI_TOP_P_UPDATED,
         ConfigMessages.GEMINI_TOP_P_SAVED
+      );
+    }
+
+    // Update deepseekTemperature
+    if (deepseekTemperature !== undefined) {
+      await updateConfiguration(
+        userId,
+        "deepseekTemperature",
+        deepseekTemperature,
+        ConfigMessages.DEEPSEEK_TEMPERATURE_UPDATED,
+        ConfigMessages.DEEPSEEK_TEMPERATURE_SAVED
+      );
+    }
+
+    // Update deepseekMaxTokens
+    if (deepseekMaxTokens !== undefined) {
+      await updateConfiguration(
+        userId,
+        "deepseekMaxTokens",
+        deepseekMaxTokens,
+        ConfigMessages.DEEPSEEK_MAX_TOKENS_UPDATED,
+        ConfigMessages.DEEPSEEK_MAX_TOKENS_SAVED
+      );
+    }
+
+    // Update deepseekTopP
+    if (deepseekTopP !== undefined) {
+      await updateConfiguration(
+        userId,
+        "deepseekTopP",
+        deepseekTopP,
+        ConfigMessages.DEEPSEEK_TOP_P_UPDATED,
+        ConfigMessages.DEEPSEEK_TOP_P_SAVED
+      );
+    }
+
+    // Update deepseekTopK
+    if (deepseekTopK !== undefined) {
+      await updateConfiguration(
+        userId,
+        "deepseekTopK",
+        deepseekTopK,
+        ConfigMessages.DEEPSEEK_TOP_K_UPDATED,
+        ConfigMessages.DEEPSEEK_TOP_K_SAVED
+      );
+    }
+
+    // Update deepseekRepetitionPenalty
+    if (deepseekRepetitionPenalty !== undefined) {
+      await updateConfiguration(
+        userId,
+        "deepseekRepetitionPenalty",
+        deepseekRepetitionPenalty,
+        ConfigMessages.DEEPSEEK_REPETITION_PENALTY_UPDATED,
+        ConfigMessages.DEEPSEEK_REPETITION_PENALTY_SAVED
       );
     }
 
